@@ -94,6 +94,9 @@ const Property = ({ navigation }) => {
           )}
         />
       </ScrollView>
+      <TouchableOpacity onPress={() => navigation.navigate('ApplyAssessment')}>
+        <Text>AssesmetApply</Text>
+      </TouchableOpacity>
       <View style={styles.footer}>
         <Text style={styles.footerText}>End of Property</Text>
       </View>

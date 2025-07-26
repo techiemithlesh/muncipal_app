@@ -1,4 +1,12 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Modal,
+  Linking,
+} from 'react-native';
 import React from 'react';
 import Header from '../Screen/Header';
 import Colors from '../Constants/Colors';
@@ -13,6 +21,90 @@ const SafDueDetails = ({ route }) => {
   const [ownerList, setOwnerList] = useState([]); // 👈 owners arrayconst
   const [floordata, setFloorData] = useState([]);
   const [taxDetails, setTaxDetails] = useState([]);
+  const [transDtls, setTranDtls] = useState([]);
+  const [memoDtls, setMemoDtls] = useState([]);
+  const [tcVerfivication, setTcVerfivication] = useState([]);
+  const [paymentDtls, setPaynemtDtls] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [uploadedDocs, setUploadedDocs] = useState([]);
+
+  const [docModalVisible, setDocModalVisible] = useState(false);
+
+  const documentview = async id => {
+    try {
+      const storedToken = await AsyncStorage.getItem('token');
+      const token = storedToken ? JSON.parse(storedToken) : null;
+
+      if (!token) {
+        Alert.alert('Error', 'Authentication token not found.');
+        return;
+      }
+
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+
+      const response = await axios.post(
+        `${BASE_URL}/api/property/get-uploaded-doc-list`,
+        { id }, // Send the document/property ID in body
+        { headers },
+      );
+
+      const uploadedDocs = response.data?.data;
+
+      console.log('Uploaded Document List:', uploadedDocs);
+
+      // Do something with the data
+      // For example: open a modal, navigate to another screen, or set state
+      setUploadedDocs(uploadedDocs); // <-- if using useState
+      setDocModalVisible(true);
+    } catch (error) {
+      console.error(
+        'Error fetching uploaded documents:',
+        error?.response || error,
+      );
+      Alert.alert('Error', 'Failed to fetch document list.');
+    }
+  };
+
+  const handleViewReceipt = async tranDtlId => {
+    try {
+      const storedToken = await AsyncStorage.getItem('token');
+      const token = storedToken ? JSON.parse(storedToken) : null;
+
+      if (!token) {
+        console.warn('Token not found');
+        return;
+      }
+
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+
+      const response = await axios.post(
+        `${BASE_URL}/api/property/payment-receipt`,
+        { id: tranDtlId },
+        { headers },
+      );
+
+      setPaynemtDtls(response.data?.data);
+      setPaynemtDtls(response.data?.data);
+      setModalVisible(true);
+
+      // ✅ Print the data
+      console.log('Payment Receipt Response:', response.data?.data);
+
+      // Optional: set in state if you want to display it in modal/screen
+      // setReceiptData(response.data?.data);
+    } catch (error) {
+      console.error(
+        'Error fetching payment receipt:',
+        error?.response || error,
+      );
+    }
+  };
 
   useEffect(() => {
     const fetchSafDetails = async () => {
@@ -30,32 +122,48 @@ const SafDueDetails = ({ route }) => {
           'Content-Type': 'application/json',
         };
 
-        // SAF Detail
+        // Step 1: Fetch SAF Detail
         const response = await axios.post(
           `${BASE_URL}/api/property/get-saf-dtl`,
           { id },
           { headers },
         );
 
-        // Payment Receipt
-        const res = await axios.post(
-          `${BASE_URL}/api/property/payment-receipt`,
-          { id },
-          { headers },
-        );
+        const safData = response.data?.data;
+        const tranDtlId = safData?.tranDtls?.[0]?.id; // ✅ Extract tranDtlId safely
+
+        // Step 2: Fetch Payment Receipt using tranDtlId
+        if (tranDtlId) {
+          const res = await axios.post(
+            `${BASE_URL}/api/property/payment-receipt`,
+            { id: tranDtlId }, // ✅ Pass tranDtls id here
+            { headers },
+          );
+
+          console.log('Payment Detail:', res.data?.data);
+        } else {
+          console.warn('tranDtls ID not found. Skipping payment receipt call.');
+        }
 
         // ✅ Logging
-        console.log('SAF Detail:', response.data?.data);
-        console.log('Payment Detail:', res.data?.data);
-        console.log('Owner Detail:', response.data?.data?.owners?.[0]);
-        console.log('Floor Detail:', response.data?.data?.floors?.[0]);
-        console.log('Tax Detail:', response.data?.data?.tranDtls?.[0]);
+        console.log('SAF Detail:', safData);
+        console.log('Owner Detail:', safData?.owners?.[0]);
+        console.log('Floor Detail:', safData?.floors?.[0]);
+        console.log('Tax Detail:', safData?.tranDtls?.[0]);
+        console.log('Tax tax:', safData?.taxDtl?.[0]);
+        console.log('Tax memoDtls:', safData?.memoDtls?.[0]);
+
+        console.log('Tax tcVerifications:', safData?.tcVerifications?.[0]);
 
         // ✅ Set state
-        setOwnerList(response.data?.data?.owners || []);
-        setFloorData(response.data?.data?.floors || []);
-        setTaxDetails(response.data?.data?.tranDtls || []);
-        setSafData(response.data?.data);
+        setOwnerList(safData?.owners || []);
+        setFloorData(safData?.floors || []);
+        setTaxDetails(safData?.tranDtls || []);
+        setTranDtls(safData?.tranDtls || []);
+        setMemoDtls(safData?.memoDtls || []);
+        setTcVerfivication(safData?.tcVerifications || []);
+
+        setSafData(safData);
       } catch (error) {
         console.error('Error fetching SAF details:', error?.response || error);
       } finally {
@@ -561,7 +669,345 @@ const SafDueDetails = ({ route }) => {
             </ScrollView>
           </View>
         )}
+
+        {transDtls.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.heading}>Payment Details</Text>
+
+            <ScrollView horizontal>
+              <View>
+                {/* Table Header */}
+                <View style={[styles.tableRow, styles.tableHeader]}>
+                  <Text style={styles.tableCell}>SL</Text>
+                  <Text style={styles.tableCell}>Transaction No</Text>
+                  <Text style={styles.tableCell}>Payment Mode</Text>
+                  <Text style={styles.tableCell}>Date</Text>
+                  <Text style={styles.tableCell}>From Qtr / Year</Text>
+                  <Text style={styles.tableCell}>Upto Qtr / Year</Text>
+                  <Text style={styles.tableCell}>Amount</Text>
+                  <Text style={styles.tableCell}>View</Text>
+                </View>
+
+                {/* Table Body */}
+                {transDtls.map((item, index) => (
+                  <View style={styles.tableRow} key={index}>
+                    <Text style={styles.tableCell}>{index + 1}</Text>
+                    <Text style={styles.tableCell}>{item?.tranNo ?? 'NA'}</Text>
+                    <Text style={styles.tableCell}>
+                      {item?.paymentMode ?? 'NA'}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {item?.tranDate
+                        ? new Date(item.tranDate).toLocaleDateString('en-GB')
+                        : 'NA'}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {item?.fromQtr ?? 'NA'} / {item?.fromFyear ?? 'NA'}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {item?.uptoQtr ?? 'NA'} / {item?.uptoFyear ?? 'NA'}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {item?.payableAmt ?? 'NA'}
+                    </Text>
+                    {/* View Button (can be TouchableOpacity if needed) */}
+
+                    <TouchableOpacity
+                      onPress={() => handleViewReceipt(item.id)}
+                    >
+                      <Text style={[styles.tableCell, { color: 'blue' }]}>
+                        View
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+        )}
+
+        {memoDtls && (
+          <View style={styles.card}>
+            <Text style={styles.heading}>Memo Details</Text>
+
+            <ScrollView horizontal>
+              <View>
+                {/* Table Header */}
+                <View style={[styles.tableRow, styles.tableHeader]}>
+                  <Text style={styles.tableCell}>SL</Text>
+                  <Text style={styles.tableCell}>Memo No</Text>
+                  <Text style={styles.tableCell}>Memo Type</Text>
+                  <Text style={styles.tableCell}>Holding No</Text>
+                  <Text style={styles.tableCell}>Quarter</Text>
+                  <Text style={styles.tableCell}>Financial Year</Text>
+                  <Text style={styles.tableCell}>Quarterly Tax</Text>
+                  <Text style={styles.tableCell}>Created At</Text>
+                  <Text style={styles.tableCell}>User Name</Text>
+                </View>
+
+                {/* Table Row */}
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableCell}>1</Text>
+                  <Text style={styles.tableCell}>
+                    {memoDtls.memoNo ?? 'NA'}
+                  </Text>
+                  <Text style={styles.tableCell}>
+                    {memoDtls.memoType ?? 'NA'}
+                  </Text>
+                  <Text style={styles.tableCell}>
+                    {memoDtls.holdingNo ?? 'NA'}
+                  </Text>
+                  <Text style={styles.tableCell}>{memoDtls.qtr ?? 'NA'}</Text>
+                  <Text style={styles.tableCell}>{memoDtls.fyear ?? 'NA'}</Text>
+                  <Text style={styles.tableCell}>
+                    {memoDtls.quarterlyTax ?? 'NA'}
+                  </Text>
+                  <Text style={styles.tableCell}>
+                    {memoDtls.createdAt
+                      ? new Date(memoDtls.createdAt).toLocaleDateString('en-GB')
+                      : 'NA'}
+                  </Text>
+                  <Text style={styles.tableCell}>
+                    {memoDtls.userName ?? 'NA'}
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+          </View>
+        )}
       </View>
+      <TouchableOpacity
+        onPress={() => documentview(id)}
+        style={styles.viewButton}
+      >
+        <Text style={styles.viewButtonText}>👁️ View</Text>
+      </TouchableOpacity>
+
+      <Modal
+        visible={modalVisible}
+        transparent={false}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <ScrollView style={styles.modalContainer}>
+          {/* Header */}
+          <Text style={styles.header}>View Receipt</Text>
+
+          {/* Logo */}
+          <View style={styles.logoWrapper}>
+            <Text style={styles.logoCircle}>🏛️</Text>
+          </View>
+
+          {/* Corporation Name */}
+          <Text style={styles.corpName}>
+            {paymentDtls?.ulbDtl?.ulbName || 'Ranchi Municipal Corporation'}
+          </Text>
+
+          {/* Subheading */}
+          <Text style={styles.receiptType}>
+            {paymentDtls?.description || 'HOLDING TAX RECEIPT'}
+          </Text>
+
+          {/* Horizontal line */}
+          <View style={styles.divider} />
+
+          {/* Meta Info Section */}
+          <View style={styles.metaRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>
+                Receipt No.:{' '}
+                <Text style={styles.bold}>{paymentDtls?.tranNo}</Text>
+              </Text>
+              <Text style={styles.label}>
+                Department:{' '}
+                <Text style={styles.bold}>{paymentDtls?.department}</Text>
+              </Text>
+              <Text style={styles.label}>
+                Account:{' '}
+                <Text style={styles.bold}>
+                  {paymentDtls?.accountDescription}
+                </Text>
+              </Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>
+                Date: <Text style={styles.bold}>{paymentDtls?.tranDate}</Text>
+              </Text>
+              <Text style={styles.label}>
+                Ward No: <Text style={styles.bold}>{paymentDtls?.wardNo}</Text>
+              </Text>
+              <Text style={styles.label}>
+                New Ward No:{' '}
+                <Text style={styles.bold}>{paymentDtls?.newWardNo}</Text>
+              </Text>
+              <Text style={styles.label}>
+                SAF No: <Text style={styles.bold}>{paymentDtls?.safNo}</Text>
+              </Text>
+            </View>
+          </View>
+
+          {/* Owner Info */}
+          <View style={{ marginTop: 10 }}>
+            <Text style={styles.label}>
+              Received From:{' '}
+              <Text style={styles.bold}>{paymentDtls?.ownerName}</Text>
+            </Text>
+            <Text style={styles.label}>
+              Address: <Text style={styles.bold}>{paymentDtls?.address}</Text>
+            </Text>
+            <Text style={styles.label}>
+              A Sum of Rs.:{' '}
+              <Text style={styles.bold}>{paymentDtls?.amount}</Text>
+            </Text>
+            <Text style={styles.label}>
+              (In words):{' '}
+              <Text style={styles.bold}>{paymentDtls?.amountInWords}</Text>
+            </Text>
+            <Text style={styles.label}>
+              Towards:{' '}
+              <Text style={styles.bold}>{paymentDtls?.accountDescription}</Text>{' '}
+              Vide: <Text style={styles.bold}>{paymentDtls?.paymentMode}</Text>
+            </Text>
+          </View>
+
+          {/* Tax Table */}
+          <View style={styles.tableWrapper}>
+            <View style={styles.tableHeaderRow}>
+              <Text style={[styles.col, { flex: 2 }]}>Description</Text>
+              <Text style={styles.col}>From QTR</Text>
+              <Text style={styles.col}>From FY</Text>
+              <Text style={styles.col}>To QTR</Text>
+              <Text style={styles.col}>To FY</Text>
+              <Text style={[styles.col, { flex: 1 }]}>Amount</Text>
+            </View>
+
+            {/* Holding Tax */}
+            <View style={styles.tableRow}>
+              <Text style={[styles.col, { flex: 2 }]}>Holding Tax</Text>
+              <Text style={styles.col}>{paymentDtls?.fromQtr}</Text>
+              <Text style={styles.col}>{paymentDtls?.fromFyear}</Text>
+              <Text style={styles.col}>{paymentDtls?.uptoQtr}</Text>
+              <Text style={styles.col}>{paymentDtls?.uptoFyear}</Text>
+              <Text style={[styles.col, { flex: 1 }]}>
+                {paymentDtls?.holdingTax}
+              </Text>
+            </View>
+
+            {/* RWH */}
+            <View style={styles.tableRow}>
+              <Text style={[styles.col, { flex: 2 }]}>RWH</Text>
+              <Text style={styles.col}>{paymentDtls?.fromQtr}</Text>
+              <Text style={styles.col}>{paymentDtls?.fromFyear}</Text>
+              <Text style={styles.col}>{paymentDtls?.uptoQtr}</Text>
+              <Text style={styles.col}>{paymentDtls?.uptoFyear}</Text>
+              <Text style={[styles.col, { flex: 1 }]}>
+                {paymentDtls?.rwhTax}
+              </Text>
+            </View>
+
+            {/* JSK Rebate (if exists) */}
+            {paymentDtls?.fineRebate?.length > 0 &&
+              paymentDtls.fineRebate.map((item, index) => (
+                <View key={index} style={styles.tableRow}>
+                  <Text style={[styles.col, { flex: 2 }]}>{item.headName}</Text>
+                  <Text style={styles.col}>-</Text>
+                  <Text style={styles.col}>-</Text>
+                  <Text style={styles.col}>-</Text>
+                  <Text style={styles.col}>-</Text>
+                  <Text style={[styles.col, { flex: 1 }]}>{item.amount}</Text>
+                </View>
+              ))}
+
+            {/* Totals */}
+            <View style={styles.tableRow}>
+              <Text style={[styles.col, { flex: 5, fontWeight: 'bold' }]}>
+                Total Amount
+              </Text>
+              <Text style={[styles.col, { flex: 1 }]}>
+                {paymentDtls?.amount}
+              </Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={[styles.col, { flex: 5, fontWeight: 'bold' }]}>
+                Total Paid Amount
+              </Text>
+              <Text style={[styles.col, { flex: 1 }]}>
+                {paymentDtls?.amount}
+              </Text>
+            </View>
+          </View>
+
+          {/* Footer with QR & Contact */}
+          <View style={styles.footerRow}>
+            <View style={{ flex: 1 }}>
+              <View style={styles.qrBox} />
+            </View>
+            <View style={{ flex: 2 }}>
+              <Text style={styles.footerText}>Visit:</Text>
+              <Text style={styles.footerText}>Call: 8002158818</Text>
+              <Text style={styles.footerText}>In collaboration with</Text>
+              <Text style={styles.footerText}>Uinfo Technology PVT LTD.</Text>
+            </View>
+          </View>
+
+          <Text style={styles.generatedNote}>
+            ** This is a computer-generated receipt and does not require
+            signature. **
+          </Text>
+
+          <TouchableOpacity
+            onPress={() => setModalVisible(false)}
+            style={styles.closeButton}
+          >
+            <Text style={{ color: 'white', fontWeight: 'bold' }}>Close</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </Modal>
+      <Modal
+        visible={docModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setDocModalVisible(false)}
+      >
+        <View style={styles.docModalContainer}>
+          <View style={styles.docModalContent}>
+            <Text style={styles.docModalTitle}>📄 Document View</Text>
+
+            <View style={styles.docTableHeader}>
+              <Text style={styles.docCellHeader}>#</Text>
+              <Text style={styles.docCellHeader}>Document Name</Text>
+              <Text style={styles.docCellHeader}>File</Text>
+              <Text style={styles.docCellHeader}>Status</Text>
+            </View>
+
+            <ScrollView>
+              {uploadedDocs?.map((doc, index) => (
+                <View key={doc.id} style={styles.docTableRow}>
+                  <Text style={styles.docCell}>{index + 1}</Text>
+                  <Text style={styles.docCell}>{doc.docName}</Text>
+                  <TouchableOpacity
+                    onPress={() => Linking.openURL(doc.docPath)}
+                  >
+                    <Text style={[styles.docCell, styles.docFileLink]}>
+                      View File
+                    </Text>
+                  </TouchableOpacity>
+                  <Text style={styles.docCell}>
+                    {doc.verifiedStatus === 1 ? 'Pending' : 'Verified'}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={styles.docCloseButton}
+              onPress={() => setDocModalVisible(false)}
+            >
+              <Text style={styles.docCloseButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -661,5 +1107,176 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     borderRightWidth: 0.5,
     borderColor: '#ccc',
+  },
+
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+  },
+  header: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1d2a7e',
+    marginBottom: 10,
+  },
+  logoWrapper: {
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  logoCircle: {
+    fontSize: 30,
+  },
+  corpName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  receiptType: {
+    alignSelf: 'center',
+    marginVertical: 5,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  divider: {
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+    marginVertical: 10,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  label: {
+    fontSize: 13,
+    marginVertical: 2,
+  },
+  bold: {
+    fontWeight: 'bold',
+  },
+  tableWrapper: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginTop: 15,
+  },
+  tableHeaderRow: {
+    flexDirection: 'row',
+    backgroundColor: '#f0f0f0',
+    padding: 6,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    padding: 6,
+    borderTopWidth: 1,
+    borderColor: '#ddd',
+  },
+  col: {
+    flex: 1,
+    fontSize: 12,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    marginTop: 20,
+  },
+  qrBox: {
+    width: 90,
+    height: 90,
+    backgroundColor: '#ccc',
+    alignSelf: 'center',
+  },
+  footerText: {
+    fontSize: 13,
+    marginBottom: 2,
+  },
+  generatedNote: {
+    fontSize: 11,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: 15,
+  },
+  closeButton: {
+    marginTop: 20,
+    padding: 12,
+    backgroundColor: 'blue',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  docModalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  docModalContent: {
+    backgroundColor: '#fff',
+    width: '95%',
+    maxHeight: '85%',
+    borderRadius: 10,
+    padding: 16,
+    elevation: 5,
+  },
+  docModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+    color: '#222',
+  },
+  docTableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+  },
+  docTableRow: {
+    flexDirection: 'row',
+    paddingVertical: 8,
+    borderBottomWidth: 0.5,
+    borderColor: '#ddd',
+    alignItems: 'center',
+  },
+  docCellHeader: {
+    flex: 1,
+    fontWeight: 'bold',
+    fontSize: 13,
+    color: '#333',
+    textAlign: 'center',
+  },
+  docCell: {
+    flex: 1,
+    fontSize: 12,
+    color: '#333',
+    textAlign: 'center',
+  },
+  docFileLink: {
+    color: '#007bff',
+    textDecorationLine: 'underline',
+  },
+  docCloseButton: {
+    backgroundColor: '#007bff',
+    marginTop: 14,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  docCloseButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  viewButton: {
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  viewButtonText: {
+    color: Colors.background,
+    backgroundColor: Colors.borderColor,
+    fontSize: 13,
+    textDecorationLine: 'underline',
+    padding: 20,
   },
 });

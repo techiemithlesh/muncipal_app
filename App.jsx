@@ -15,6 +15,7 @@ import VerifiedStatus from './src/PropertyMenu/VerifiedStatus';
 import SearchAssesment from './src/PropertyMenu/SearchAssesment';
 import SafDueDetails from './src/PropertyMenu/SafDueDetails';
 import { AlertNotificationRoot } from 'react-native-alert-notification';
+import ApplyAssessment from './src/PropertyMenu/ApplyAssessment';
 
 import PreviewScreen from './src/Screen/PreviewScreen';
 
@@ -93,6 +94,11 @@ const App = () => {
           <Stack.Screen
             name="SafDueDetails"
             component={SafDueDetails}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ApplyAssessment"
+            component={ApplyAssessment}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>
