@@ -26,9 +26,7 @@ import Header from '../Screen/Header';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import { BASE_URL } from '../config';
-import { useNavigation } from '@react-navigation/native';
-
-const SearchAssesment = () => {
+const SearchAssesment = ({ navigation }) => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [value, setValue] = useState(); // ward id
   const [keyword, setKeyword] = useState('');
@@ -94,7 +92,6 @@ const SearchAssesment = () => {
     </View>
   );
 
-  const navigation = useNavigation();
   const handleViewPress = item => {
     console.log('View button clicked:', item);
     navigation.navigate('SafDueDetails', { id: item.id });
@@ -164,7 +161,7 @@ const SearchAssesment = () => {
 
   return (
     <View style={styles.container}>
-      <Header />
+      <Header navigation={navigation} />
       <ScrollView>
         <View style={styles.seacrhCont}>
           <View style={styles.searchhead}>
@@ -312,12 +309,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   resultCard: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: responsiveHeight(1.5),
-    marginBottom: responsiveHeight(1),
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: responsiveHeight(2),
+    marginBottom: responsiveHeight(2),
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
   },
   resultText: {
     fontSize: responsiveFontSize(1.8),
@@ -341,17 +341,6 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontSize: responsiveFontSize(1.8),
     marginBottom: 3,
-  },
-  resultCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: responsiveHeight(2),
-    marginBottom: responsiveHeight(2),
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
   },
   slNoText: {
     fontSize: responsiveFontSize(2.2),

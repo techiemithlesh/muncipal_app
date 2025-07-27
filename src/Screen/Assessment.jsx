@@ -17,7 +17,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 const Assessment = ({ navigation }) => {
   return (
     <View style={styles.maindashbaord}>
-      <Header />
+      <Header navigation={navigation} />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.gridContainer}>
           <TouchableOpacity style={styles.box}>

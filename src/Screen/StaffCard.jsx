@@ -94,7 +94,7 @@ const StaffCard = ({ item }) => (
   </View>
 );
 
-const StaffList = () => {
+const StaffList = ({ navigation }) => {
   const [search, setSearch] = useState('');
   const [filteredData, setFilteredData] = useState(staffData);
 
@@ -108,7 +108,7 @@ const StaffList = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
-      <Header />
+      <Header navigation={navigation} />
       <View style={styles.topRow}>
         <TextInput
           style={styles.searchInput}

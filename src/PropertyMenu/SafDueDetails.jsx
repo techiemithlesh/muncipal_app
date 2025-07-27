@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Modal,
   Linking,
+  Alert,
 } from 'react-native';
 import React from 'react';
 import Header from '../Screen/Header';
@@ -14,7 +15,7 @@ import { BASE_URL } from '../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-const SafDueDetails = ({ route }) => {
+const SafDueDetails = ({ route, navigation }) => {
   const { id } = route.params;
   const [safData, setSafData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -132,19 +133,6 @@ const SafDueDetails = ({ route }) => {
         const safData = response.data?.data;
         const tranDtlId = safData?.tranDtls?.[0]?.id; // ✅ Extract tranDtlId safely
 
-        // Step 2: Fetch Payment Receipt using tranDtlId
-        if (tranDtlId) {
-          const res = await axios.post(
-            `${BASE_URL}/api/property/payment-receipt`,
-            { id: tranDtlId }, // ✅ Pass tranDtls id here
-            { headers },
-          );
-
-          console.log('Payment Detail:', res.data?.data);
-        } else {
-          console.warn('tranDtls ID not found. Skipping payment receipt call.');
-        }
-
         // ✅ Logging
         console.log('SAF Detail:', safData);
         console.log('Owner Detail:', safData?.owners?.[0]);
@@ -176,77 +164,77 @@ const SafDueDetails = ({ route }) => {
 
   return (
     <ScrollView style={styles.scroll}>
-      <Header />
+      <Header navigation={navigation} />
       <View style={styles.container}>
         {/* Basic Details Card */}
         <View style={styles.card}>
           <Text style={styles.heading}>Basic Details</Text>
           <View style={styles.row}>
-            <Text style={styles.label}>appStatus:</Text>
+            <Text style={styles.labelFixed}>appStatus:</Text>
             <Text style={styles.value}>{safData?.appStatus ?? 'N/A'}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>safNo :</Text>
+            <Text style={styles.labelFixed}>safNo :</Text>
             <Text style={styles.value}>{safData?.safNo ?? 'N/A'}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Apply Date:</Text>
+            <Text style={styles.labelFixed}>Apply Date:</Text>
             <Text style={styles.value}>{safData?.applyDate ?? 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Ward No:</Text>
+            <Text style={styles.labelFixed}>Ward No:</Text>
             <Text style={styles.value}>{safData?.wardNo ?? 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>New Ward No:</Text>
+            <Text style={styles.labelFixed}>New Ward No:</Text>
             <Text style={styles.value}>{safData?.newWardNo ?? 'N/A'}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Assessment Type:</Text>
+            <Text style={styles.labelFixed}>Assessment Type:</Text>
             <Text style={styles.value}>{safData?.assessmentType ?? 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Property Type:</Text>
+            <Text style={styles.labelFixed}>Property Type:</Text>
             <Text style={styles.value}>{safData?.propertyType ?? 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Ownership Type:</Text>
+            <Text style={styles.labelFixed}>Ownership Type:</Text>
             <Text style={styles.value}>{safData?.ownershipType ?? 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Road Width (ft):</Text>
+            <Text style={styles.labelFixed}>Road Width (ft):</Text>
             <Text style={styles.value}>{safData?.roadWidth ?? 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Plot No:</Text>
+            <Text style={styles.labelFixed}>Plot No:</Text>
             <Text style={styles.value}>{safData?.plotNo ?? 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Area of Plot (sq. ft):</Text>
+            <Text style={styles.labelFixed}>Area of Plot (sq. ft):</Text>
             <Text style={styles.value}>{safData?.areaOfPlot ?? 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Rainwater Harvesting:</Text>
+            <Text style={styles.labelFixed}>Rainwater Harvesting:</Text>
             <Text style={styles.value}>
               {safData?.isWaterHarvesting ? 'Yes' : 'No'}
             </Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Address:</Text>
+            <Text style={styles.labelFixed}>Address:</Text>
             <Text style={styles.value}>{safData?.propAddress ?? 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Zone:</Text>
+            <Text style={styles.labelFixed}>Zone:</Text>
             <Text style={styles.value}>{safData?.zone ?? 'N/A'}</Text>
           </View>
         </View>
@@ -337,26 +325,26 @@ const SafDueDetails = ({ route }) => {
           <Text style={styles.heading}>Electricity Details</Text>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Electricity K. No:</Text>
+            <Text style={styles.labelFixed}>Electricity K. No:</Text>
             <Text style={styles.value}>
               {safData?.electConsumerNo ?? 'N/A'}
             </Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>ACC No.:</Text>
+            <Text style={styles.labelFixed}>ACC No.:</Text>
             <Text style={styles.value}>{safData?.electAccNo ?? 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>BIND/BOOK No.:</Text>
+            <Text style={styles.labelFixed}>BIND/BOOK No.:</Text>
             <Text style={styles.value}>
               {safData?.electBindBookNo ? safData.electBindBookNo : 'N/A'}
             </Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Electricity Consumer Category:</Text>
+            <Text style={styles.labelFixed}>Electricity Consumer Category:</Text>
             <Text style={styles.value}>
               {safData?.electConsCategory ?? 'N/A'}
             </Text>
@@ -368,7 +356,7 @@ const SafDueDetails = ({ route }) => {
           </Text>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Building Plan Approval No:</Text>
+            <Text style={styles.labelFixed}>Building Plan Approval No:</Text>
             <Text style={styles.value}>
               {safData?.buildingPlanApprovalNo
                 ? safData.buildingPlanApprovalNo
@@ -377,7 +365,7 @@ const SafDueDetails = ({ route }) => {
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Building Plan Approval Date:</Text>
+            <Text style={styles.labelFixed}>Building Plan Approval Date:</Text>
             <Text style={styles.value}>
               {safData?.buildingPlanApprovalDate
                 ? safData.buildingPlanApprovalDate
@@ -386,14 +374,14 @@ const SafDueDetails = ({ route }) => {
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Water Consumer No:</Text>
+            <Text style={styles.labelFixed}>Water Consumer No:</Text>
             <Text style={styles.value}>
               {safData?.waterConnNo ? safData.waterConnNo : 'NA'}
             </Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Water Connection Date:</Text>
+            <Text style={styles.labelFixed}>Water Connection Date:</Text>
             <Text style={styles.value}>
               {safData?.waterConnDate ? safData.waterConnDate : 'NA'}
             </Text>
@@ -403,24 +391,24 @@ const SafDueDetails = ({ route }) => {
           <Text style={styles.heading}>Property Details</Text>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Khata No:</Text>
+            <Text style={styles.labelFixed}>Khata No:</Text>
             <Text style={styles.value}>{safData?.khataNo ?? 'NA'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Plot No:</Text>
+            <Text style={styles.labelFixed}>Plot No:</Text>
             <Text style={styles.value}>{safData?.plotNo ?? 'NA'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Village/Mauja Name:</Text>
+            <Text style={styles.labelFixed}>Village/Mauja Name:</Text>
             <Text style={styles.value}>
               {safData?.villageMaujaName ?? 'NA'}
             </Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Area of Plot (in Decimal):</Text>
+            <Text style={styles.labelFixed}>Area of Plot (in Decimal):</Text>
             <Text style={styles.value}>{safData?.areaOfPlot ?? 'NA'}</Text>
           </View>
         </View>
@@ -428,32 +416,32 @@ const SafDueDetails = ({ route }) => {
           <Text style={styles.heading}>Property Address</Text>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Address:</Text>
+            <Text style={styles.labelFixed}>Address:</Text>
             <Text style={styles.value}>{safData?.propAddress ?? 'NA'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>City:</Text>
+            <Text style={styles.labelFixed}>City:</Text>
             <Text style={styles.value}>{safData?.propCity ?? 'NA'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Pin:</Text>
+            <Text style={styles.labelFixed}>Pin:</Text>
             <Text style={styles.value}>{safData?.propPinCode ?? 'NA'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>State:</Text>
+            <Text style={styles.labelFixed}>State:</Text>
             <Text style={styles.value}>{safData?.propState ?? 'NA'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>District:</Text>
+            <Text style={styles.labelFixed}>District:</Text>
             <Text style={styles.value}>{safData?.propDist ?? 'NA'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>
+            <Text style={styles.labelFixed}>
               If Corresponding Address Different:
             </Text>
             <Text style={styles.value}>
@@ -540,7 +528,7 @@ const SafDueDetails = ({ route }) => {
           <Text style={styles.heading}>Additional Property Details</Text>
 
           <View style={styles.row}>
-            <Text style={styles.label}>
+            <Text style={styles.labelFixed}>
               Does Property Have Mobile Tower(s)?
             </Text>
             <Text style={styles.value}>
@@ -549,7 +537,7 @@ const SafDueDetails = ({ route }) => {
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>
+            <Text style={styles.labelFixed}>
               Date of Installation of Mobile Tower:
             </Text>
             <Text style={styles.value}>
@@ -558,14 +546,14 @@ const SafDueDetails = ({ route }) => {
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>
+            <Text style={styles.labelFixed}>
               Total Area Covered by Mobile Tower & its Equipments (Sq. Ft.):
             </Text>
             <Text style={styles.value}>{safData?.towerArea || 'NA'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>
+            <Text style={styles.labelFixed}>
               Does Property Have Hoarding Board(s)?
             </Text>
             <Text style={styles.value}>
@@ -574,7 +562,7 @@ const SafDueDetails = ({ route }) => {
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>
+            <Text style={styles.labelFixed}>
               Date of Installation of Hoarding Board(s):
             </Text>
             <Text style={styles.value}>
@@ -583,35 +571,35 @@ const SafDueDetails = ({ route }) => {
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>
+            <Text style={styles.labelFixed}>
               Total Area of Wall / Roof / Land (in Sq. Ft.):
             </Text>
             <Text style={styles.value}>{safData?.hoardingArea || 'NA'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Is Property a Petrol Pump?</Text>
+            <Text style={styles.labelFixed}>Is Property a Petrol Pump?</Text>
             <Text style={styles.value}>
               {safData?.isPetrolPump ? 'Yes' : 'No'}
             </Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Completion Date of Petrol Pump:</Text>
+            <Text style={styles.labelFixed}>Completion Date of Petrol Pump:</Text>
             <Text style={styles.value}>
               {safData?.petrolPumpCompletionDate || 'NA'}
             </Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>
+            <Text style={styles.labelFixed}>
               Underground Storage Area (in Sq. Ft.):
             </Text>
             <Text style={styles.value}>{safData?.underGroundArea || 'NA'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Rainwater Harvesting Provision?</Text>
+            <Text style={styles.labelFixed}>Rainwater Harvesting Provision?</Text>
             <Text style={styles.value}>
               {safData?.isWaterHarvesting ? 'Yes' : 'No'}
             </Text>
@@ -726,7 +714,7 @@ const SafDueDetails = ({ route }) => {
           </View>
         )}
 
-        {memoDtls && (
+        {Array.isArray(memoDtls) && memoDtls.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.heading}>Memo Details</Text>
 
@@ -745,32 +733,32 @@ const SafDueDetails = ({ route }) => {
                   <Text style={styles.tableCell}>User Name</Text>
                 </View>
 
-                {/* Table Row */}
-                <View style={styles.tableRow}>
-                  <Text style={styles.tableCell}>1</Text>
-                  <Text style={styles.tableCell}>
-                    {memoDtls.memoNo ?? 'NA'}
-                  </Text>
-                  <Text style={styles.tableCell}>
-                    {memoDtls.memoType ?? 'NA'}
-                  </Text>
-                  <Text style={styles.tableCell}>
-                    {memoDtls.holdingNo ?? 'NA'}
-                  </Text>
-                  <Text style={styles.tableCell}>{memoDtls.qtr ?? 'NA'}</Text>
-                  <Text style={styles.tableCell}>{memoDtls.fyear ?? 'NA'}</Text>
-                  <Text style={styles.tableCell}>
-                    {memoDtls.quarterlyTax ?? 'NA'}
-                  </Text>
-                  <Text style={styles.tableCell}>
-                    {memoDtls.createdAt
-                      ? new Date(memoDtls.createdAt).toLocaleDateString('en-GB')
-                      : 'NA'}
-                  </Text>
-                  <Text style={styles.tableCell}>
-                    {memoDtls.userName ?? 'NA'}
-                  </Text>
-                </View>
+                {/* Table Rows */}
+                {memoDtls.map((item, index) => (
+                  <View style={styles.tableRow} key={index}>
+                    <Text style={styles.tableCell}>{index + 1}</Text>
+                    <Text style={styles.tableCell}>{item.memoNo ?? 'NA'}</Text>
+                    <Text style={styles.tableCell}>
+                      {item.memoType ?? 'NA'}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {item.holdingNo ?? 'NA'}
+                    </Text>
+                    <Text style={styles.tableCell}>{item.qtr ?? 'NA'}</Text>
+                    <Text style={styles.tableCell}>{item.fyear ?? 'NA'}</Text>
+                    <Text style={styles.tableCell}>
+                      {item.quarterlyTax ?? 'NA'}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {item.createdAt
+                        ? new Date(item.createdAt).toLocaleDateString('en-GB')
+                        : 'NA'}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {item.userName ?? 'NA'}
+                    </Text>
+                  </View>
+                ))}
               </View>
             </ScrollView>
           </View>
@@ -814,15 +802,15 @@ const SafDueDetails = ({ route }) => {
           {/* Meta Info Section */}
           <View style={styles.metaRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>
+              <Text style={styles.labelFixed}>
                 Receipt No.:{' '}
                 <Text style={styles.bold}>{paymentDtls?.tranNo}</Text>
               </Text>
-              <Text style={styles.label}>
+              <Text style={styles.labelFixed}>
                 Department:{' '}
                 <Text style={styles.bold}>{paymentDtls?.department}</Text>
               </Text>
-              <Text style={styles.label}>
+              <Text style={styles.labelFixed}>
                 Account:{' '}
                 <Text style={styles.bold}>
                   {paymentDtls?.accountDescription}
@@ -830,17 +818,17 @@ const SafDueDetails = ({ route }) => {
               </Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>
+              <Text style={styles.labelFixed}>
                 Date: <Text style={styles.bold}>{paymentDtls?.tranDate}</Text>
               </Text>
-              <Text style={styles.label}>
+              <Text style={styles.labelFixed}>
                 Ward No: <Text style={styles.bold}>{paymentDtls?.wardNo}</Text>
               </Text>
-              <Text style={styles.label}>
+              <Text style={styles.labelFixed}>
                 New Ward No:{' '}
                 <Text style={styles.bold}>{paymentDtls?.newWardNo}</Text>
               </Text>
-              <Text style={styles.label}>
+              <Text style={styles.labelFixed}>
                 SAF No: <Text style={styles.bold}>{paymentDtls?.safNo}</Text>
               </Text>
             </View>
@@ -848,22 +836,22 @@ const SafDueDetails = ({ route }) => {
 
           {/* Owner Info */}
           <View style={{ marginTop: 10 }}>
-            <Text style={styles.label}>
+            <Text style={styles.labelFixed}>
               Received From:{' '}
               <Text style={styles.bold}>{paymentDtls?.ownerName}</Text>
             </Text>
-            <Text style={styles.label}>
+            <Text style={styles.labelFixed}>
               Address: <Text style={styles.bold}>{paymentDtls?.address}</Text>
             </Text>
-            <Text style={styles.label}>
+            <Text style={styles.labelFixed}>
               A Sum of Rs.:{' '}
               <Text style={styles.bold}>{paymentDtls?.amount}</Text>
             </Text>
-            <Text style={styles.label}>
+            <Text style={styles.labelFixed}>
               (In words):{' '}
               <Text style={styles.bold}>{paymentDtls?.amountInWords}</Text>
             </Text>
-            <Text style={styles.label}>
+            <Text style={styles.labelFixed}>
               Towards:{' '}
               <Text style={styles.bold}>{paymentDtls?.accountDescription}</Text>{' '}
               Vide: <Text style={styles.bold}>{paymentDtls?.paymentMode}</Text>
@@ -882,7 +870,7 @@ const SafDueDetails = ({ route }) => {
             </View>
 
             {/* Holding Tax */}
-            <View style={styles.tableRow}>
+            <View style={styles.tableRowModal}>
               <Text style={[styles.col, { flex: 2 }]}>Holding Tax</Text>
               <Text style={styles.col}>{paymentDtls?.fromQtr}</Text>
               <Text style={styles.col}>{paymentDtls?.fromFyear}</Text>
@@ -894,7 +882,7 @@ const SafDueDetails = ({ route }) => {
             </View>
 
             {/* RWH */}
-            <View style={styles.tableRow}>
+            <View style={styles.tableRowModal}>
               <Text style={[styles.col, { flex: 2 }]}>RWH</Text>
               <Text style={styles.col}>{paymentDtls?.fromQtr}</Text>
               <Text style={styles.col}>{paymentDtls?.fromFyear}</Text>
@@ -908,7 +896,7 @@ const SafDueDetails = ({ route }) => {
             {/* JSK Rebate (if exists) */}
             {paymentDtls?.fineRebate?.length > 0 &&
               paymentDtls.fineRebate.map((item, index) => (
-                <View key={index} style={styles.tableRow}>
+                <View key={index} style={styles.tableRowModal}>
                   <Text style={[styles.col, { flex: 2 }]}>{item.headName}</Text>
                   <Text style={styles.col}>-</Text>
                   <Text style={styles.col}>-</Text>
@@ -919,7 +907,7 @@ const SafDueDetails = ({ route }) => {
               ))}
 
             {/* Totals */}
-            <View style={styles.tableRow}>
+            <View style={styles.tableRowModal}>
               <Text style={[styles.col, { flex: 5, fontWeight: 'bold' }]}>
                 Total Amount
               </Text>
@@ -927,7 +915,7 @@ const SafDueDetails = ({ route }) => {
                 {paymentDtls?.amount}
               </Text>
             </View>
-            <View style={styles.tableRow}>
+            <View style={styles.tableRowModal}>
               <Text style={[styles.col, { flex: 5, fontWeight: 'bold' }]}>
                 Total Paid Amount
               </Text>
@@ -1051,7 +1039,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: '#eee',
   },
-  label: {
+  labelFixed: {
+    fontSize: 13,
+    marginVertical: 2,
     fontWeight: '600',
     color: '#555',
     width: 120,
@@ -1082,23 +1072,13 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    paddingVertical: 8,
+    padding: 6,
+    borderTopWidth: 1,
+    borderColor: '#ddd',
   },
 
   tableHeader: {
     backgroundColor: '#f0f0f0',
-  },
-
-  tableCell: {
-    flex: 1,
-    paddingHorizontal: 4,
-    fontSize: 12,
-  },
-
-  headerText: {
-    fontWeight: 'bold',
   },
 
   tableCell: {
@@ -1107,6 +1087,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     borderRightWidth: 0.5,
     borderColor: '#ccc',
+    fontSize: 12,
+  },
+
+  headerText: {
+    fontWeight: 'bold',
   },
 
   modalContainer: {
@@ -1165,7 +1150,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     padding: 6,
   },
-  tableRow: {
+  tableRowModal: {
     flexDirection: 'row',
     padding: 6,
     borderTopWidth: 1,

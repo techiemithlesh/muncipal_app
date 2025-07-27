@@ -65,7 +65,7 @@ const Property = ({ navigation }) => {
   if (loading) {
     return (
       <View style={styles.maindashbaord}>
-        <Header />
+        <Header navigation={navigation} />
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
@@ -75,7 +75,7 @@ const Property = ({ navigation }) => {
 
   return (
     <View style={styles.maindashbaord}>
-      <Header />
+      <Header navigation={navigation} />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <FlatList
           data={propertyChildren}
