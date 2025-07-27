@@ -81,51 +81,51 @@ const FieldVarification = ({ navigation }) => {
     return (
       <View style={styles.card}>
         <View style={styles.row}>
-          <Text style={styles.label}>Ward No.:</Text>
+          <Text style={styles.cardLabel}>Ward No.:</Text>
           <Text style={styles.value}>{item?.safNo}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Assessment Type:</Text>
+          <Text style={styles.cardLabel}>Assessment Type:</Text>
           <Text style={styles.value}>{item?.assessmentType}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Property Type:</Text>
+          <Text style={styles.cardLabel}>Property Type:</Text>
           <Text style={styles.value}>{item?.propertyType}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Applicant Name:</Text>
+          <Text style={styles.cardLabel}>Applicant Name:</Text>
           <Text style={styles.value}>{item?.id}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Mobile No.:</Text>
+          <Text style={styles.cardLabel}>Mobile No.:</Text>
           <Text style={styles.value}>{item?.mobileNo}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Property Type:</Text>
+          <Text style={styles.cardLabel}>Property Type:</Text>
           <Text style={styles.value}>{item?.propertyType}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Ward No.:</Text>
+          <Text style={styles.cardLabel}>Ward No.:</Text>
           <Text style={styles.value}>{item?.wardNo}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>SAF No.:</Text>
+          <Text style={styles.cardLabel}>SAF No.:</Text>
           <Text style={styles.value}>{item?.safNo}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Holding No.:</Text>
+          <Text style={styles.cardLabel}>Holding No.:</Text>
           <Text style={styles.value}>{item?.propertyAddress}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Property Address:</Text>
+          <Text style={styles.cardLabel}>Property Address:</Text>
           <Text style={styles.value}>{item?.propAddress}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Apply Date:</Text>
+          <Text style={styles.cardLabel}>Apply Date:</Text>
           <Text style={styles.value}>{item?.applyDate}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Forward Date:</Text>
+          <Text style={styles.cardLabel}>Forward Date:</Text>
           <Text style={styles.value}>{item?.receivingDate}</Text>
         </View>
 
@@ -133,7 +133,7 @@ const FieldVarification = ({ navigation }) => {
           style={styles.button1}
           onPress={() => navigation.navigate('SurveyPage', { id: item.id })}
         >
-          <Text style={styles.buttonText}>Survey</Text>
+          <Text style={styles.surveyButtonText}>Survey</Text>
         </TouchableOpacity>
       </View>
     );
@@ -234,7 +234,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f2f2f2',
     paddingVertical: 10,
-    backgroundColor: 'blue',
   },
   iconContainer: {
     flexDirection: 'row',
@@ -288,7 +287,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontSize: 14,
+    fontWeight: '600',
     color: '#333',
     marginBottom: 6,
   },
@@ -296,7 +295,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    padding: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    backgroundColor: '#f8f8f8',
   },
   button: {
     backgroundColor: '#007BFF',
@@ -308,6 +310,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
+    fontWeight: '700',
     fontSize: 16,
   },
   dropdown: {
@@ -324,7 +327,6 @@ const styles = StyleSheet.create({
   selectedTextStyle: {
     color: '#000',
   },
-  applicationList: {},
   applicationList: {
     margin: 20,
   },
@@ -346,7 +348,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  label: {
+  cardLabel: {
     fontWeight: '600',
     color: '#333',
   },
@@ -360,7 +362,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
-  buttonText: {
+  surveyButtonText: {
     color: '#fff',
     fontWeight: '700',
     fontSize: 16,
@@ -372,7 +374,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 
-  input: {
+  calendarInput: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,

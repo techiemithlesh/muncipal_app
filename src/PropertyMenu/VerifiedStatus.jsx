@@ -113,10 +113,6 @@ const VerifiedStatus = ({ route }) => {
     );
   };
 
-  const deletePhoto = index => {
-    setPhotos(prevPhotos => prevPhotos.filter((_, i) => i !== index));
-  };
-
   const renderItem = (label, value) => (
     <View key={label} style={styles.item}>
       <Text style={styles.label}>{label}:</Text>
@@ -195,17 +191,154 @@ const VerifiedStatus = ({ route }) => {
       <Text style={styles.title}>Verified Status</Text>
 
       {submissionData ? (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Submission Details</Text>
-          {Object.entries(submissionData)
-            .filter(
-              ([key]) =>
-                !key.startsWith('extraFloors') &&
-                key !== 'hasExtraFloors' &&
-                key !== 'totalExtraFloors',
-            )
-            .map(([key, value]) => renderItem(key, value))}
-        </View>
+        <>
+          <SubmissionCard title="Property Details">
+            <SubmissionRow
+              label="Ward No"
+              value={submissionData['Ward No']}
+            />
+            <SubmissionRow
+              label="Verified Ward"
+              value={submissionData['Verified_Ward']}
+            />
+            <SubmissionRow
+              label="New Ward No"
+              value={submissionData['New Ward No (Current)']}
+            />
+            <SubmissionRow
+              label="Verified New Ward"
+              value={submissionData['Verified_NewWard']}
+            />
+            <SubmissionRow
+              label="Zone"
+              value={submissionData['Zone (Current)']}
+            />
+            <SubmissionRow
+              label="Verified Zone"
+              value={submissionData['Verified_Zone']}
+            />
+            <SubmissionRow
+              label="Property Type"
+              value={submissionData['Property Type (Current)']}
+            />
+            <SubmissionRow
+              label="Verified Property Type"
+              value={submissionData['Verified_PropertyType']}
+            />
+          </SubmissionCard>
+
+          {submissionData['Property Type (Current)'] !== 'VACANT LAND' && (
+            <>
+              <SubmissionCard title="Parking Details">
+                <SubmissionRow
+                  label="Usage Type"
+                  value={submissionData['Usage Type (Parking Current)']}
+                />
+                <SubmissionRow
+                  label="Verified Usage"
+                  value={submissionData['Verified_UsageParking']}
+                />
+                <SubmissionRow
+                  label="Occupancy Type"
+                  value={submissionData['Occupancy Type (Parking Current)']}
+                />
+                <SubmissionRow
+                  label="Verified Occupancy"
+                  value={submissionData['Verified_OccupancyParking']}
+                />
+                <SubmissionRow
+                  label="Construction Type"
+                  value={submissionData['Construction Type (Parking Current)']}
+                />
+                <SubmissionRow
+                  label="Verified Construction"
+                  value={submissionData['Verified_ConstructionParking']}
+                />
+                <SubmissionRow
+                  label="Built-up Area"
+                  value={submissionData['Built-up Area (Parking Current)']}
+                />
+                <SubmissionRow
+                  label="Verified Built-up Area"
+                  value={submissionData['Verified_BuiltUpParking']}
+                />
+                <SubmissionRow
+                  label="Date From"
+                  value={submissionData['Date From (Parking Current)']}
+                />
+                <SubmissionRow
+                  label="Verified Date From"
+                  value={submissionData['Verified_DateFromParking']}
+                />
+                <SubmissionRow
+                  label="Date To"
+                  value={submissionData['Date To (Parking Current)']}
+                />
+                <SubmissionRow
+                  label="Verified Date To"
+                  value={submissionData['Verified_DateToParking']}
+                />
+              </SubmissionCard>
+
+              <SubmissionCard title="Basement Details">
+                <SubmissionRow
+                  label="Usage Type"
+                  value={submissionData['Usage Type (Basement Current)']}
+                />
+                <SubmissionRow
+                  label="Verified Usage"
+                  value={submissionData['Verified_UsageBasement']}
+                />
+                <SubmissionRow
+                  label="Occupancy Type"
+                  value={submissionData['Occupancy Type (Basement Current)']}
+                />
+                <SubmissionRow
+                  label="Verified Occupancy"
+                  value={submissionData['Verified_OccupancyBasement']}
+                />
+                <SubmissionRow
+                  label="Construction Type"
+                  value={
+                    submissionData['Construction Type (Basement Current)']
+                  }
+                />
+                <SubmissionRow
+                  label="Verified Construction"
+                  value={submissionData['Verified_ConstructionBasement']}
+                />
+                <SubmissionRow
+                  label="Built-up Area"
+                  value={submissionData['Built-up Area (Basement Current)']}
+                />
+                <SubmissionRow
+                  label="Verified Built-up Area"
+                  value={submissionData['Verified_BuiltUpBasement']}
+                />
+                <SubmissionRow
+                  label="Date From"
+                  value={submissionData['Date From (Basement Current)']}
+                />
+                <SubmissionRow
+                  label="Verified Date From"
+                  value={submissionData['Verified_DateFromBasement']}
+                />
+                <SubmissionRow
+                  label="Date To"
+                  value={submissionData['Date To (Basement Current)']}
+                />
+                <SubmissionRow
+                  label="Verified Date To"
+                  value={submissionData['Verified_DateToBasement']}
+                />
+              </SubmissionCard>
+
+              <SubmissionCard title="Remarks">
+                <Text>{submissionData['Remarks (Preview)']}</Text>
+              </SubmissionCard>
+            </>
+          )}
+        </>
       ) : (
         <Text>No submission data.</Text>
       )}
@@ -374,6 +507,20 @@ const VerifiedStatus = ({ route }) => {
   );
 };
 
+const SubmissionCard = ({ title, children }) => (
+  <View style={styles.section}>
+    <Text style={styles.sectionTitle}>{title}</Text>
+    {children}
+  </View>
+);
+
+const SubmissionRow = ({ label, value }) => (
+  <View style={styles.item}>
+    <Text style={styles.label}>{label}:</Text>
+    <Text style={styles.value}>{String(value)}</Text>
+  </View>
+);
+
 export default VerifiedStatus;
 
 const styles = StyleSheet.create({
@@ -406,7 +553,10 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   item: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 8,
+    paddingHorizontal: 8,
   },
   label: {
     fontSize: 14,
@@ -416,6 +566,8 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 15,
     color: '#000',
+    textAlign: 'right',
+    flex: 1,
   },
   floorCard: {
     backgroundColor: '#fff',

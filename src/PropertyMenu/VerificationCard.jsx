@@ -12,7 +12,8 @@ import {
   responsiveHeight,
   responsiveWidth,
 } from 'react-native-responsive-dimensions';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import MonthPicker from 'react-native-month-year-picker';
+import moment from 'moment';
 
 const VerificationCard = ({
   label,
@@ -28,7 +29,7 @@ const VerificationCard = ({
   inputLabel = 'Enter New Ward No.:',
   inputPlaceholder = 'Enter new ward number',
   showCalendarOnIncorrect = false,
-  calendarValue = '',
+  calendarValue = new Date(),
   setCalendarValue = () => {},
 }) => {
   const isSelectionRequired = selectedVerification === null;
@@ -39,13 +40,15 @@ const VerificationCard = ({
     if (status === 'Correct') {
       setDropdownValue('');
       setInputValue && setInputValue('');
-      setCalendarValue && setCalendarValue('');
+      setCalendarValue && setCalendarValue(new Date());
     }
   };
 
-  const handleConfirm = date => {
-    setCalendarValue(date);
+  const handleConfirm = (event, newDate) => {
     setDatePickerVisible(false);
+    if (event.type === 'set' && newDate) {
+      setCalendarValue(newDate);
+    }
   };
 
   return (
@@ -109,17 +112,15 @@ const VerificationCard = ({
             onPress={() => setDatePickerVisible(true)}
           >
             <Text style={{ color: calendarValue ? '#333' : '#aaa' }}>
-              {calendarValue
-                ? new Date(calendarValue).toLocaleDateString()
-                : 'Select date'}
+              {moment(calendarValue).format('MMYYYY')}
             </Text>
           </TouchableOpacity>
-          <DateTimePickerModal
-            isVisible={isDatePickerVisible}
-            mode="date"
-            onConfirm={handleConfirm}
-            onCancel={() => setDatePickerVisible(false)}
-          />
+          {isDatePickerVisible && (
+            <MonthPicker
+              onChange={handleConfirm}
+              value={calendarValue}
+            />
+          )}
         </View>
       )}
 
@@ -206,7 +207,7 @@ const styles = StyleSheet.create({
   rowlabel: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: '5',
+    padding: 5,
     paddingLeft: 15,
     backgroundColor: 'rgba(13, 148, 136, 1)',
     marginBottom: 5,
