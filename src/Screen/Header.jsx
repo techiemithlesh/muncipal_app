@@ -1,17 +1,16 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import React from 'react';
-``;
 import {
   responsiveHeight,
   responsiveWidth,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-const header = () => {
+const Header = ({ navigation }) => {
   return (
     <View>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.openDrawer()}>
+        <TouchableOpacity onPress={() => navigation?.openDrawer ? navigation.openDrawer() : null}>
           <Icon name="menu" size={28} color="white" />
         </TouchableOpacity>
 
@@ -23,7 +22,7 @@ const header = () => {
   );
 };
 
-export default header;
+export default Header;
 
 const styles = StyleSheet.create({
   header: {

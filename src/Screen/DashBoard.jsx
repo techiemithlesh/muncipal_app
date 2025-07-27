@@ -92,7 +92,7 @@ const DashBoard = ({ navigation }) => {
   if (loading) {
     return (
       <View style={styles.mainDashboard}>
-        <Header />
+        <Header navigation={navigation} />
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
@@ -103,7 +103,7 @@ const DashBoard = ({ navigation }) => {
   if (error) {
     return (
       <View style={styles.mainDashboard}>
-        <Header />
+        <Header navigation={navigation} />
         <View style={styles.loadingContainer}>
           <Text style={styles.errorText}>{error}</Text>
         </View>
@@ -113,7 +113,7 @@ const DashBoard = ({ navigation }) => {
 
   return (
     <View style={styles.mainDashboard}>
-      <Header />
+      <Header navigation={navigation} />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.gridContainer}>{renderMenuItems()}</View>
       </ScrollView>

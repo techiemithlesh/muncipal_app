@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,30 +8,32 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import DatePicker from 'react-native-date-picker';
+import MonthPicker from 'react-native-month-year-picker';
+import moment from 'moment';
 
 const DatePickerForm = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [date, setDate] = useState(new Date());
+  const [show, setShow] = useState(false);
+
+  const showPicker = useCallback((value) => setShow(value), []);
+
+  const onValueChange = useCallback(
+    (event, newDate) => {
+      const selected = newDate || date;
+      showPicker(false);
+      setDate(selected);
+    },
+    [date, showPicker],
+  );
 
   // Format date for display
   const formatDate = date => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  // Handle date confirmation
-  const handleDateConfirm = date => {
-    setSelectedDate(date);
-    setIsDatePickerOpen(false);
+    return moment(date).format('MMYYYY');
   };
 
   // Handle form submission
   const handleSubmit = () => {
-    Alert.alert('Selected Date', `You selected: ${formatDate(selectedDate)}`, [
+    Alert.alert('Selected Date', `You selected: ${formatDate(date)}`, [
       { text: 'OK' },
     ]);
   };
@@ -46,9 +48,9 @@ const DatePickerForm = () => {
           <Text style={styles.label}>Select Date:</Text>
           <TouchableOpacity
             style={styles.dateInput}
-            onPress={() => setIsDatePickerOpen(true)}
+            onPress={() => showPicker(true)}
           >
-            <Text style={styles.dateText}>{formatDate(selectedDate)}</Text>
+            <Text style={styles.dateText}>{formatDate(date)}</Text>
           </TouchableOpacity>
         </View>
 
@@ -58,14 +60,14 @@ const DatePickerForm = () => {
         </TouchableOpacity>
 
         {/* Date Picker Modal */}
-        <DatePicker
-          modal
-          open={isDatePickerOpen}
-          date={selectedDate}
-          mode="date"
-          onConfirm={handleDateConfirm}
-          onCancel={() => setIsDatePickerOpen(false)}
-        />
+        {show && (
+          <MonthPicker
+            onChange={onValueChange}
+            value={date}
+            minimumDate={new Date(2000, 0)}
+            maximumDate={new Date()}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
