@@ -20,6 +20,7 @@ import AssessmentSummary from './src/PropertyMenu/AssessmentSummary';
 import PreviewScreen from './src/Screen/PreviewScreen';
 import ApplyAssessmentComponentized from './src/PropertyMenu/ApplyAssessmentComponentized';
 import { Button, View } from 'react-native';
+import ApplyLicense from './src/Trade/ApplyLicense';
 
 const Stack = createNativeStackNavigator();
 
@@ -111,6 +112,11 @@ const App = ({ navigation }) => {
           <Stack.Screen
             name="ApplyAssessmentComponentized"
             component={ApplyAssessmentComponentized}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ApplyLicense"
+            component={ApplyLicense}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>

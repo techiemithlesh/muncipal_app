@@ -119,6 +119,10 @@ const DashBoard = ({ navigation }) => {
         title="Go to Apply Assessment (Componentized)"
         onPress={() => navigation.navigate('ApplyAssessmentComponentized')}
       />
+      <Button
+        title="Go to ApplyLicense ApplyLicense (ApplyLicense)"
+        onPress={() => navigation.navigate('ApplyLicense')}
+      />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.gridContainer}>{renderMenuItems()}</View>
       </ScrollView>
