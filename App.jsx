@@ -16,7 +16,7 @@ import SearchAssesment from './src/PropertyMenu/SearchAssesment';
 import SafDueDetails from './src/PropertyMenu/SafDueDetails';
 import { AlertNotificationRoot } from 'react-native-alert-notification';
 import ApplyAssessment from './src/PropertyMenu/ApplyAssessment';
-
+import AssessmentSummary from './src/PropertyMenu/AssessmentSummary';
 import PreviewScreen from './src/Screen/PreviewScreen';
 
 const Stack = createNativeStackNavigator();
@@ -99,6 +99,11 @@ const App = () => {
           <Stack.Screen
             name="ApplyAssessment"
             component={ApplyAssessment}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AssessmentSummary"
+            component={AssessmentSummary}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>

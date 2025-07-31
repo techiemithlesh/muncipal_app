@@ -13,9 +13,7 @@ import Header from '../Screen/Header';
 import { BASE_URL } from '../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import MonthPicker from 'react-native-month-year-picker';
-import moment from 'moment';
-
+import DateTimePicker from '@react-native-community/datetimepicker';
 // Reusable address section component
 const AddressSection = ({
   address,
@@ -74,7 +72,7 @@ const AddressSection = ({
 const ApplyAssessment = ({ navigation }) => {
   // water conection deatilas related useState varible
   const [waterConnectionNo, setWaterConnectionNo] = useState('');
-  const [waterConnectionDate, setWaterConnectionDate] = useState(new Date());
+  const [waterConnectionDate, setWaterConnectionDate] = useState('');
 
   // mobile email pan adhar state Varible
   const [mobile, setMobile] = useState('');
@@ -86,6 +84,13 @@ const ApplyAssessment = ({ navigation }) => {
   const [kno, setKno] = useState('');
   const [accNo, setAccNo] = useState('');
   const [bindBookNo, setBindBookNo] = useState('');
+  // property Details realtes Usesate variable
+  const [khataNo, setKhataNo] = useState('');
+  const [plotNo, setPlotNo] = useState('');
+  const [villageName, setVillageName] = useState('');
+  const [plotArea, setPlotArea] = useState('');
+  const [roadWidth, setRoadWidth] = useState('');
+  const [noRoad, setNoRoad] = useState('');
 
   // proprety address related useState Varible
 
@@ -97,17 +102,17 @@ const ApplyAssessment = ({ navigation }) => {
 
   // if mobile tower yes then
   const [towerArea, setTowerArea] = useState('');
-  const [installationDate, setInstallationDate] = useState(new Date());
+  const [installationDate, setInstallationDate] = useState('');
 
   // hoarifing area
   const [hoardingArea, setHoardingArea] = useState('');
-  const [hoardingInstallationDate, setHoardingInstallationDate] = useState(new Date());
+  const [hoardingInstallationDate, setHoardingInstallationDate] = useState('');
   // if petrol punp yes then
   const [pumpArea, setPumpArea] = useState('');
-  const [pumpInstallationDate, setPumpInstallationDate] = useState(new Date());
+  const [pumpInstallationDate, setPumpInstallationDate] = useState('');
 
   // if raain harvesting yes then
-  const [completionDate, setCompletionDate] = useState(new Date());
+  const [completionDate, setCompletionDate] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const [oldWard, setOldWard] = useState('');
@@ -148,6 +153,12 @@ const ApplyAssessment = ({ navigation }) => {
   const [correspondingState, setCorrespondingState] = useState('');
   const [correspondingPincode, setCorrespondingPincode] = useState('');
 
+  // Owner details state
+  const [dob, setDob] = useState('');
+  const [showDobPicker, setShowDobPicker] = useState(false);
+  const [ownerName, setOwnerName] = useState('');
+  const [guardianName, setGuardianName] = useState('');
+
   const validateMobile = mobile => /^[6-9]\d{9}$/.test(mobile);
   const validateAadhaar = aadhaar => /^\d{12}$/.test(aadhaar);
   const validatePAN = pan => /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan);
@@ -165,7 +176,7 @@ const ApplyAssessment = ({ navigation }) => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateMobile(mobile)) {
       Alert.alert(
         'Invalid Mobile Number',
@@ -188,6 +199,61 @@ const ApplyAssessment = ({ navigation }) => {
       Alert.alert('Invalid Email', 'Please enter a valid email address.');
       return;
     }
+
+    // Collect all form data
+    const formData = {
+      oldWard,
+      newWard,
+      ownershipType,
+      propertyType,
+      zone,
+      gender,
+      relation,
+      mobile,
+      aadhaar,
+      pan,
+      email,
+      armedForces,
+      speciallyAbled,
+      kno,
+      accNo,
+      bindBookNo,
+      electricityCategory,
+      khataNo,
+      plotNo,
+      villageName,
+      plotArea,
+      roadWidth,
+      noRoad,
+      waterConnectionNo,
+      waterConnectionDate,
+      propertyAddress,
+      city,
+      district,
+      state,
+      pincode,
+      dob: dob ? new Date(dob).toLocaleDateString('en-GB') : '',
+      ownerName,
+      guardianName,
+      correspondingAddress: isChecked ? correspondingAddress : '',
+      correspondingCity: isChecked ? correspondingCity : '',
+      correspondingDistrict: isChecked ? correspondingDistrict : '',
+      correspondingState: isChecked ? correspondingState : '',
+      correspondingPincode: isChecked ? correspondingPincode : '',
+      mobileTower,
+      towerArea,
+      installationDate,
+      hoarding,
+      hoardingArea,
+      hoardingInstallationDate,
+      petrolPump,
+      pumpArea,
+      pumpInstallationDate,
+      rainHarvesting,
+      completionDate: completionDate ? completionDate.toISOString() : '',
+    };
+
+    navigation.navigate('AssessmentSummary', { data: formData });
   };
 
   useEffect(() => {
@@ -303,7 +369,7 @@ const ApplyAssessment = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1 }}>
-      <Header navigation={navigation} />
+      <Header />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.header}>Assessment Type</Text>
         <View style={styles.section}>
@@ -371,6 +437,8 @@ const ApplyAssessment = ({ navigation }) => {
             style={styles.input}
             placeholder="Owner Name"
             placeholderTextColor="black"
+            value={ownerName}
+            onChangeText={setOwnerName}
           />
           <Dropdown
             style={styles.dropdown}
@@ -381,10 +449,34 @@ const ApplyAssessment = ({ navigation }) => {
             value={gender}
             onChange={item => setGender(item.value)}
           />
+          {/* DOB Date Picker */}
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => setShowDobPicker(true)}
+          >
+            <Text style={{ color: dob ? '#000' : '#999' }}>
+              {dob ? new Date(dob).toLocaleDateString('en-GB') : 'DOB *'}
+            </Text>
+          </TouchableOpacity>
+          {showDobPicker && (
+            <DateTimePicker
+              value={dob ? new Date(dob) : new Date()}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                setShowDobPicker(false);
+                if (event.type === 'set' && selectedDate) {
+                  setDob(selectedDate.toISOString());
+                }
+              }}
+            />
+          )}
           <TextInput
             style={styles.input}
             placeholder="Guardian Name"
             placeholderTextColor="black"
+            value={guardianName}
+            onChangeText={setGuardianName}
           />
           <Dropdown
             style={styles.dropdown}
@@ -493,6 +585,44 @@ const ApplyAssessment = ({ navigation }) => {
           />
         </View>
 
+        <Text style={styles.header}>Water Connection Details</Text>
+        <View style={styles.section}>
+          <TextInput
+            style={styles.input}
+            placeholder="Water Connection No"
+            placeholderTextColor="#000"
+            value={waterConnectionNo}
+            onChangeText={setWaterConnectionNo}
+          />
+
+          {/* Date Picker for Water Connection Date */}
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => setShowWaterConnectionDatePicker(true)}
+          >
+            <Text style={{ color: waterConnectionDate ? '#000' : '#999' }}>
+              {waterConnectionDate
+                ? new Date(waterConnectionDate).toLocaleDateString('en-GB')
+                : 'Water Connection Date (DD/MM/YYYY)'}
+            </Text>
+          </TouchableOpacity>
+          {showWaterConnectionDatePicker && (
+            <DateTimePicker
+              value={
+                waterConnectionDate ? new Date(waterConnectionDate) : new Date()
+              }
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                setShowWaterConnectionDatePicker(false);
+                if (event.type === 'set' && selectedDate) {
+                  setWaterConnectionDate(selectedDate.toISOString());
+                }
+              }}
+            />
+          )}
+        </View>
+
         <Text style={styles.header}>Property Address</Text>
         <AddressSection
           address={propertyAddress}
@@ -511,7 +641,7 @@ const ApplyAssessment = ({ navigation }) => {
           onPress={handleCheckboxToggle}
         >
           <View style={[styles.checkbox, isChecked && styles.checked]} />
-          <Text style={styles.checkboxLabel}>
+          <Text style={styles.label}>
             If Corresponding Address Different from Property Address
           </Text>
         </TouchableOpacity>
@@ -556,7 +686,6 @@ const ApplyAssessment = ({ navigation }) => {
                 placeholder="Eg. 200 SQMTR"
                 value={towerArea}
                 onChangeText={setTowerArea}
-                placeholderTextColor="#000"
               />
 
               <Text style={styles.label}>
@@ -568,18 +697,24 @@ const ApplyAssessment = ({ navigation }) => {
                 onPress={() => setShowInstallationDatePicker(true)}
               >
                 <Text style={{ color: installationDate ? '#000' : '#999' }}>
-                  {moment(installationDate).format('MMYYYY')}
+                  {installationDate
+                    ? new Date(installationDate).toLocaleDateString('en-GB')
+                    : 'DD-MM-YYYY'}
                 </Text>
               </TouchableOpacity>
               {showInstallationDatePicker && (
-                <MonthPicker
-                  onChange={(event, newDate) => {
+                <DateTimePicker
+                  value={
+                    installationDate ? new Date(installationDate) : new Date()
+                  }
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
                     setShowInstallationDatePicker(false);
-                    if (event.type === 'set' && newDate) {
-                      setInstallationDate(newDate);
+                    if (event.type === 'set' && selectedDate) {
+                      setInstallationDate(selectedDate.toISOString());
                     }
                   }}
-                  value={installationDate}
                 />
               )}
             </View>
@@ -610,18 +745,28 @@ const ApplyAssessment = ({ navigation }) => {
                 <Text
                   style={{ color: hoardingInstallationDate ? '#000' : '#999' }}
                 >
-                  {moment(hoardingInstallationDate).format('MMYYYY')}
+                  {hoardingInstallationDate
+                    ? new Date(hoardingInstallationDate).toLocaleDateString(
+                        'en-GB',
+                      )
+                    : 'Date of Installation of Hoarding Board(s) *'}
                 </Text>
               </TouchableOpacity>
               {showHoardingInstallationDatePicker && (
-                <MonthPicker
-                  onChange={(event, newDate) => {
+                <DateTimePicker
+                  value={
+                    hoardingInstallationDate
+                      ? new Date(hoardingInstallationDate)
+                      : new Date()
+                  }
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
                     setShowHoardingInstallationDatePicker(false);
-                    if (event.type === 'set' && newDate) {
-                      setHoardingInstallationDate(newDate);
+                    if (event.type === 'set' && selectedDate) {
+                      setHoardingInstallationDate(selectedDate.toISOString());
                     }
                   }}
-                  value={hoardingInstallationDate}
                 />
               )}
             </>
@@ -652,18 +797,26 @@ const ApplyAssessment = ({ navigation }) => {
                 onPress={() => setShowPumpInstallationDatePicker(true)}
               >
                 <Text style={{ color: pumpInstallationDate ? '#000' : '#999' }}>
-                  {moment(pumpInstallationDate).format('MMYYYY')}
+                  {pumpInstallationDate
+                    ? new Date(pumpInstallationDate).toLocaleDateString('en-GB')
+                    : 'Date of Installation *'}
                 </Text>
               </TouchableOpacity>
               {showPumpInstallationDatePicker && (
-                <MonthPicker
-                  onChange={(event, newDate) => {
+                <DateTimePicker
+                  value={
+                    pumpInstallationDate
+                      ? new Date(pumpInstallationDate)
+                      : new Date()
+                  }
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
                     setShowPumpInstallationDatePicker(false);
-                    if (event.type === 'set' && newDate) {
-                      setPumpInstallationDate(newDate);
+                    if (event.type === 'set' && selectedDate) {
+                      setPumpInstallationDate(selectedDate.toISOString());
                     }
                   }}
-                  value={pumpInstallationDate}
                 />
               )}
             </>
@@ -685,21 +838,25 @@ const ApplyAssessment = ({ navigation }) => {
               onPress={() => setShowDatePicker(true)}
             >
               <Text style={{ color: completionDate ? '#000' : '#999' }}>
-                {moment(completionDate).format('MMYYYY')}
+                {completionDate
+                  ? completionDate.toLocaleDateString('en-GB')
+                  : 'Completion Date of Petrol Pump *'}
               </Text>
             </TouchableOpacity>
 
             {/* DateTimePicker should be outside TouchableOpacity and inside conditional block */}
             {/* DateTimePicker should be outside TouchableOpacity and inside conditional block */}
             {showDatePicker && (
-              <MonthPicker
-                onChange={(event, newDate) => {
+              <DateTimePicker
+                value={completionDate || new Date()}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => {
                   setShowDatePicker(false);
-                  if (event.type === 'set' && newDate) {
-                    setCompletionDate(newDate);
+                  if (event.type === 'set' && selectedDate) {
+                    setCompletionDate(selectedDate);
                   }
                 }}
-                value={completionDate}
               />
             )}
           </View>
