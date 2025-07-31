@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Button } from 'react-native';
-
+import Colors from '../Constants/Colors';
+import Header from '../Screen/Header';
 const Row = ({ label, value }) => (
   <View style={styles.row}>
     <Text style={styles.label}>{label}</Text>
@@ -17,6 +18,8 @@ const Section = ({ title, children }) => (
 
 const AssessmentSummary = ({ route, navigation }) => {
   const data = route.params?.data || {};
+  const isRessessment = route.params?.isRessessment || false;
+  const isMutation = route.params?.isMutation || false;
 
   return (
     <ScrollView style={styles.container}>
@@ -28,7 +31,11 @@ const AssessmentSummary = ({ route, navigation }) => {
       <Section title="Property Details">
         <Row
           label="Assessment Type"
-          value={data.assessmentType || 'New Assessment'}
+          value={
+            isRessessment ? 'Reassessment' : 
+            isMutation ? 'Mutation' : 
+            data.assessmentType || 'New Assessment'
+          }
         />
         <Row label="Zone" value={data.zone} />
         <Row label="Old Ward" value={data.oldWard} />
@@ -150,6 +157,38 @@ const AssessmentSummary = ({ route, navigation }) => {
           />
         )}
       </Section>
+      {Array.isArray(data.floors) && data.floors.length > 0 && (
+        <Section title="Floor Details">
+          {data.floors.map((floor, index) => (
+            <View key={index} style={{ marginBottom: 10 }}>
+              <Text style={{ fontWeight: '600', marginBottom: 4 }}>
+                Floor {index + 1}
+              </Text>
+              <Row label="Floor Name" value={floor.floorName} />
+              <Row label="Usage Type" value={floor.usageType} />
+              <Row label="Occupancy Type" value={floor.occupancyType} />
+              <Row label="Construction Type" value={floor.constructionType} />
+              <Row label="Built-Up Area" value={floor.builtUpArea} />
+              <Row
+                label="From Date"
+                value={
+                  floor.fromDate
+                    ? new Date(floor.fromDate).toLocaleDateString('en-GB')
+                    : ''
+                }
+              />
+              <Row
+                label="Upto Date"
+                value={
+                  floor.uptoDate
+                    ? new Date(floor.uptoDate).toLocaleDateString('en-GB')
+                    : ''
+                }
+              />
+            </View>
+          ))}
+        </Section>
+      )}
       <View style={{ margin: 20 }}>
         <Button title="Back" onPress={() => navigation.goBack()} />
       </View>
@@ -174,7 +213,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 8,
     color: '#333',
+    padding: 10, // or whatever value you want
+    backgroundColor: Colors.headignColor,
   },
+  
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -184,6 +226,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#555',
     flex: 1,
+   
   },
   value: {
     flex: 1,

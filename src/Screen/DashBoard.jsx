@@ -5,6 +5,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Button,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -114,6 +115,10 @@ const DashBoard = ({ navigation }) => {
   return (
     <View style={styles.mainDashboard}>
       <Header navigation={navigation} />
+      <Button
+        title="Go to Apply Assessment (Componentized)"
+        onPress={() => navigation.navigate('ApplyAssessmentComponentized')}
+      />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.gridContainer}>{renderMenuItems()}</View>
       </ScrollView>

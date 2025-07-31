@@ -73,6 +73,7 @@ const ApplyAssessment = ({ navigation }) => {
   // water conection deatilas related useState varible
   const [waterConnectionNo, setWaterConnectionNo] = useState('');
   const [waterConnectionDate, setWaterConnectionDate] = useState('');
+  const [propertyTypeLabel, setPropertyTypeLabel] = useState('');
 
   // mobile email pan adhar state Varible
   const [mobile, setMobile] = useState('');
@@ -164,7 +165,60 @@ const ApplyAssessment = ({ navigation }) => {
   const validatePAN = pan => /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan);
   const validateEmail = email =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.toLowerCase());
+  const [floorDetails, setFloorDetails] = useState([
+    {
+      floorName: '',
+      usageType: '',
+      occupancyType: '',
+      constructionType: '',
+      builtUpArea: '',
+      fromDate: '',
+      uptoDate: '',
+    },
+  ]);
 
+  const [datePicker, setDatePicker] = useState({
+    index: null,
+    field: '',
+    show: false,
+  });
+
+  const handleInputChange = (field, value) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const updateFloorDetail = (index, field, value) => {
+    const updated = [...floorDetails];
+    updated[index][field] = value;
+    setFloorDetails(updated);
+  };
+
+  const handleDateChange = (event, selectedDate) => {
+    if (event.type === 'set' && selectedDate) {
+      const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+      const year = selectedDate.getFullYear();
+      const formatted = `${month}/${year}`;
+
+      const { index, field } = datePicker;
+      updateFloorDetail(index, field, formatted);
+    }
+    setDatePicker({ index: null, field: '', show: false });
+  };
+
+  const addFloor = () => {
+    setFloorDetails(prev => [
+      ...prev,
+      {
+        floorName: '',
+        usageType: '',
+        occupancyType: '',
+        constructionType: '',
+        builtUpArea: '',
+        fromDate: '',
+        uptoDate: '',
+      },
+    ]);
+  };
   const handleCheckboxToggle = () => {
     setIsChecked(!isChecked);
 
@@ -177,6 +231,7 @@ const ApplyAssessment = ({ navigation }) => {
   };
 
   const handleSubmit = async () => {
+    // Validations
     if (!validateMobile(mobile)) {
       Alert.alert(
         'Invalid Mobile Number',
@@ -184,10 +239,12 @@ const ApplyAssessment = ({ navigation }) => {
       );
       return;
     }
+
     if (!validateAadhaar(aadhaar)) {
       Alert.alert('Invalid Aadhaar', 'Aadhaar must be 12 digits.');
       return;
     }
+
     if (!validatePAN(pan)) {
       Alert.alert(
         'Invalid PAN',
@@ -195,12 +252,13 @@ const ApplyAssessment = ({ navigation }) => {
       );
       return;
     }
+
     if (!validateEmail(email)) {
       Alert.alert('Invalid Email', 'Please enter a valid email address.');
       return;
     }
 
-    // Collect all form data
+    // Base form data
     const formData = {
       oldWard,
       newWard,
@@ -253,6 +311,39 @@ const ApplyAssessment = ({ navigation }) => {
       completionDate: completionDate ? completionDate.toISOString() : '',
     };
 
+    // Conditionally add floor details
+    if (propertyTypeLabel !== 'VACANT LAND') {
+      const isValid = floorDetails.every(
+        floor =>
+          floor.floorName &&
+          floor.usageType &&
+          floor.occupancyType &&
+          floor.constructionType &&
+          floor.builtUpArea &&
+          floor.fromDate &&
+          floor.uptoDate,
+      );
+
+      if (!isValid) {
+        Alert.alert(
+          'Validation Error',
+          'Please fill all required fields for each floor.',
+        );
+        return;
+      }
+
+      formData.floors = floorDetails.map(floor => ({
+        floorName: floor.floorName,
+        usageType: floor.usageType,
+        occupancyType: floor.occupancyType,
+        constructionType: floor.constructionType,
+        builtUpArea: floor.builtUpArea,
+        fromDate: floor.fromDate,
+        uptoDate: floor.uptoDate,
+      }));
+    }
+
+    // Navigate to summary screen with full data
     navigation.navigate('AssessmentSummary', { data: formData });
   };
 
@@ -327,6 +418,30 @@ const ApplyAssessment = ({ navigation }) => {
     }
   };
 
+  const floorNameOptions =
+    data?.floorType?.map(floor => ({
+      label: floor.floorName,
+      value: floor.id,
+    })) || [];
+
+  const usageTypeOptions =
+    data?.usageType?.map(usetype => ({
+      label: usetype.usageType,
+      value: usetype.id,
+    })) || [];
+
+  const occupancyTypeOptions =
+    data?.occupancyType?.map(occupy => ({
+      label: occupy.occupancyName,
+      value: occupy.id,
+    })) || [];
+
+  const constructionTypeOptions =
+    data?.constructionType?.map(cunstruct => ({
+      label: cunstruct.constructionType,
+      value: cunstruct.id,
+    })) || [];
+
   const wardDropdownOptions =
     data?.wardList?.map(ward => ({
       label: ward?.wardNo,
@@ -395,19 +510,22 @@ const ApplyAssessment = ({ navigation }) => {
             style={styles.dropdown}
             data={ownershipDropdownOptions}
             labelField="label"
-            valueField="value"
+            valueField="label"
             placeholder="Select Ownership Type"
             value={ownershipType}
-            onChange={item => setOwnershipType(item.value)}
+            onChange={item => setOwnershipType(item.label)}
           />
           <Dropdown
             style={styles.dropdown}
             data={propertyTypeDropdownOptions}
             labelField="label"
-            valueField="value"
+            valueField="label"
             placeholder="Select Property Type"
             value={propertyType}
-            onChange={item => setPropertyType(item.value)}
+            onChange={item => {
+              setPropertyType(item.label);
+              setPropertyTypeLabel(item.label); // store label to compare later
+            }}
           />
 
           <Dropdown
@@ -862,6 +980,111 @@ const ApplyAssessment = ({ navigation }) => {
           </View>
         )}
 
+        {propertyTypeLabel !== 'VACANT LAND' &&
+          floorDetails.map((floor, index) => (
+            <View key={index} style={styles.floorCard}>
+              <Text style={styles.floorTitle}>Floor {index + 1}</Text>
+
+              <Dropdown
+                style={styles.dropdown}
+                data={floorNameOptions}
+                labelField="label"
+                valueField="label"
+                placeholder="Select Floor Name"
+                value={floor.floorName}
+                onChange={item =>
+                  updateFloorDetail(index, 'floorName', item.label)
+                }
+              />
+
+              <Dropdown
+                style={styles.dropdown}
+                data={usageTypeOptions}
+                labelField="label"
+                valueField="label"
+                placeholder="Select Usage Type"
+                value={floor.usageType}
+                onChange={item =>
+                  updateFloorDetail(index, 'usageType', item.label)
+                }
+              />
+
+              <Dropdown
+                style={styles.dropdown}
+                data={occupancyTypeOptions}
+                labelField="label"
+                valueField="label"
+                placeholder="Select Occupancy Type"
+                value={floor.occupancyType}
+                onChange={item =>
+                  updateFloorDetail(index, 'occupancyType', item.label)
+                }
+              />
+
+              <Dropdown
+                style={styles.dropdown}
+                data={constructionTypeOptions}
+                labelField="label"
+                valueField="label"
+                placeholder="Select Construction Type"
+                value={floor.constructionType}
+                onChange={item =>
+                  updateFloorDetail(index, 'constructionType', item.label)
+                }
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="Built Up Area (in Sq. Ft)"
+                keyboardType="numeric"
+                placeholderTextColor="black"
+                value={floor.builtUpArea}
+                onChangeText={text =>
+                  updateFloorDetail(index, 'builtUpArea', text)
+                }
+              />
+
+              {/* From Date */}
+              <TouchableOpacity
+                style={styles.dateInput}
+                onPress={() =>
+                  setDatePicker({ index, field: 'fromDate', show: true })
+                }
+              >
+                <Text style={styles.dateText}>
+                  {floor.fromDate || 'Select From Date (MM/YYYY)'}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Upto Date */}
+              <TouchableOpacity
+                style={styles.dateInput}
+                onPress={() =>
+                  setDatePicker({ index, field: 'uptoDate', show: true })
+                }
+              >
+                <Text style={styles.dateText}>
+                  {floor.uptoDate || 'Select Upto Date (MM/YYYY)'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+
+        {propertyTypeLabel !== 'VACANT LAND' && (
+          <TouchableOpacity onPress={addFloor} style={styles.addBtn}>
+            <Text style={styles.addBtnText}>+ Add Floor</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Render Date Picker only when needed */}
+        {datePicker.show && (
+          <DateTimePicker
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            value={new Date()}
+            onChange={handleDateChange}
+          />
+        )}
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
           <Text style={styles.buttonText}>Submit</Text>
         </TouchableOpacity>
@@ -940,6 +1163,59 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#000',
     flexShrink: 1,
+  },
+  dropdown: {
+    height: 45,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    marginBottom: 12,
+    borderRadius: 6,
+  },
+  input: {
+    height: 45,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    marginBottom: 12,
+    borderRadius: 6,
+  },
+  dateInput: {
+    height: 45,
+    justifyContent: 'center',
+    borderColor: '#ccc',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    marginBottom: 12,
+  },
+  dateText: {
+    color: '#333',
+  },
+  floorCard: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    padding: 12,
+    marginVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+  },
+  floorTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 10,
+    color: '#444',
+  },
+  addBtn: {
+    backgroundColor: '#2e86de',
+    padding: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  addBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 

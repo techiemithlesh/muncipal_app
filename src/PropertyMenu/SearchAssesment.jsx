@@ -114,6 +114,10 @@ const SearchAssesment = ({ navigation }) => {
           },
         );
 
+        const ubid = response.data.data.wardList.ubid || [];
+        console.log(ubid,"my ub")
+        console.log(ubid,"i am passing data to all")
+        console.log(response.data.data,"i am passing data to all")
         setMasterData(response.data.data);
       } catch (error) {
         console.error('Fetch error:', error);

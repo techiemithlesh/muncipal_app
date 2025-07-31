@@ -18,10 +18,12 @@ import { AlertNotificationRoot } from 'react-native-alert-notification';
 import ApplyAssessment from './src/PropertyMenu/ApplyAssessment';
 import AssessmentSummary from './src/PropertyMenu/AssessmentSummary';
 import PreviewScreen from './src/Screen/PreviewScreen';
+import ApplyAssessmentComponentized from './src/PropertyMenu/ApplyAssessmentComponentized';
+import { Button, View } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
-const App = () => {
+const App = ({ navigation }) => {
   return (
     <AlertNotificationRoot>
       <NavigationContainer>
@@ -104,6 +106,11 @@ const App = () => {
           <Stack.Screen
             name="AssessmentSummary"
             component={AssessmentSummary}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ApplyAssessmentComponentized"
+            component={ApplyAssessmentComponentized}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>
