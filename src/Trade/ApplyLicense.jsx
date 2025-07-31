@@ -34,7 +34,7 @@ const categoryOptions = [
   { label: 'Others', value: '3' },
 ];
 
-const ApplyLicense = () => {
+const ApplyLicense = ({ navigation }) => {
   const [applicationType, setApplicationType] = useState('');
   const [firmType, setFirmType] = useState('');
   const [ownershipType, setOwnershipType] = useState('');
@@ -65,6 +65,8 @@ const ApplyLicense = () => {
   const [wardList, setWardList] = useState([]);
   const [wardNos, setWardNos] = useState([]);
   const [ulbIds, setUlbIds] = useState([]);
+  const [newWardOptions, setNewWardOptions] = useState([]);
+  const [wardDropdownOptions, setWardDropdownOptions] = useState([]);
 
   const handleSubmit = async () => {
     const payload = {
@@ -96,6 +98,9 @@ const ApplyLicense = () => {
     };
     setPayload(payload);
     console.log('Submitted Payload:', payload);
+    
+    // Navigate to summary page with the submitted data
+    navigation.navigate('ApplyLicenseSummary', { submittedData: payload });
   };
 
   useEffect(() => {
@@ -125,6 +130,14 @@ const ApplyLicense = () => {
         setWardList(wards);
         setWardNos(wards.map(item => item.wardNo));
         setUlbIds(wards.map(item => item.ulbId));
+        
+        // Create ward dropdown options
+        const wardOptions = wards.map(ward => ({
+          label: ward.wardNo,
+          value: ward.id,
+        }));
+        setWardDropdownOptions(wardOptions);
+        
         console.log('Master data:', masterData);
         fetchNewWardList(wards, headers);
       } else {
@@ -135,24 +148,69 @@ const ApplyLicense = () => {
     }
   };
 
-  const fetchNewWardList = async (wardList, headers) => {
+    const fetchNewWardList = async (wardList, headers) => {
     for (const item of wardList) {
-      const body = { wardNo: item.wardNo, ulbId: item.ulbId };
+      const body = { oldWardId: item.id };
       try {
-        const responseWard = await axios.post(`${BASE_URL}/api/ward`, body, {
+        const responseWard = await axios.post(`${BASE_URL}/api/property/get-new-ward-by-old`, body, {
           headers,
         });
 
         console.log('Raw response:', responseWard?.data);
 
-        const wardNumbers =
-          responseWard?.data?.data?.map(item => item.wardNo) || [];
-        console.log('My new ward numbers:', wardNumbers);
-
-        // setWardList(wardNumbers);
+        if (responseWard?.data?.status) {
+          const newWardOptions = responseWard.data.data.map(ward => ({
+            label: ward.wardNo,
+            value: ward.id,
+          }));
+          console.log('My new ward options:', newWardOptions);
+          // Store the new ward options for the current ward
+          setNewWardOptions(prevOptions => [...prevOptions, ...newWardOptions]);
+        } else {
+          console.warn('Failed to fetch new wards:', responseWard?.data?.message);
+        }
       } catch (error) {
-        console.error(`Error for ${item.wardNo}:`, error.message);
+        console.error(`Error for ward ID ${item.id}:`, error.message);
       }
+    }
+  };
+
+  const handleWardChange = async (selectedWardId) => {
+    setWardNo(selectedWardId);
+    setNewWardNo(''); // Reset new ward when ward changes
+    
+    if (selectedWardId) {
+      try {
+        const storedToken = await AsyncStorage.getItem('token');
+        const token = storedToken ? JSON.parse(storedToken) : null;
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        };
+
+        const response = await axios.post(
+          `${BASE_URL}/api/property/get-new-ward-by-old`,
+          { oldWardId: selectedWardId },
+          { headers },
+        );
+
+        if (response?.data?.status) {
+          const newWardOptions = response.data.data.map(ward => ({
+            label: ward.wardNo,
+            value: ward.id,
+          }));
+          setNewWardOptions(newWardOptions);
+          console.log('New ward options for selected ward:', newWardOptions);
+        } else {
+          console.warn('Failed to fetch new wards for selected ward:', response?.data?.message);
+          setNewWardOptions([]);
+        }
+      } catch (error) {
+        console.error('Error fetching new wards for selected ward:', error);
+        setNewWardOptions([]);
+      }
+    } else {
+      setNewWardOptions([]);
     }
   };
 
@@ -202,13 +260,13 @@ const ApplyLicense = () => {
         <View style={styles.headingBox}>
           <Text style={styles.headingText}>FIRM DETAILS</Text>
         </View>
-        <FormField
-          label="Ward No"
-          type="dropdown"
-          value={wardNo}
-          onChange={setWardNo}
-          options={commonOptions}
-        />
+                 <FormField
+           label="Ward No"
+           type="dropdown"
+           value={wardNo}
+           onChange={handleWardChange}
+           options={wardDropdownOptions}
+         />
         <FormField
           label="Holding No"
           value={holdingNo}
@@ -234,13 +292,13 @@ const ApplyLicense = () => {
         />
         <FormField label="Landmark" value={landmark} onChange={setLandmark} />
         <FormField label="Pin Code" value={pinCode} onChange={setPinCode} />
-        <FormField
-          label="New Ward No"
-          type="dropdown"
-          value={newWardNo}
-          onChange={setNewWardNo}
-          options={commonOptions}
-        />
+                 <FormField
+           label="New Ward No"
+           type="dropdown"
+           value={newWardNo}
+           onChange={setNewWardNo}
+           options={newWardOptions}
+         />
         <FormField
           label="Owner of Business Premises"
           value={ownerOfPremises}
