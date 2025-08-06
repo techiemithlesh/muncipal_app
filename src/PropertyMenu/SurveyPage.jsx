@@ -16,12 +16,13 @@ import {
   Modal,
   KeyboardAvoidingView,
 } from 'react-native';
-import HeaderNavigation from '../Components/HeaderNavigation';
+
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import HeaderLogin from '../Screen/HeaderLogin';
 import MonthYearPicker from 'react-native-month-year-picker';
+import HeaderNavigation from '../Components/HeaderNavigation';
 
 const SurveyPage = ({ route, navigation }) => {
   const { id } = route.params;
@@ -285,6 +286,16 @@ const SurveyPage = ({ route, navigation }) => {
 
   const parkingFloor = data?.floor?.[0];
   const basementFloor = data?.floor?.[1];
+  console.log(parkingFloor, ' parkingFloor floor Date');
+
+  // Add state for date picker modals
+  const [showDateFromParkingPicker, setShowDateFromParkingPicker] =
+    useState(false);
+  const [showDateToParkingPicker, setShowDateToParkingPicker] = useState(false);
+  const [showDateFromBasementPicker, setShowDateFromBasementPicker] =
+    useState(false);
+  const [showDateToBasementPicker, setShowDateToBasementPicker] =
+    useState(false);
 
   return (
     <KeyboardAvoidingView
@@ -428,6 +439,7 @@ const SurveyPage = ({ route, navigation }) => {
                 showCalendarOnIncorrect={true}
                 calendarValue={dateFromParkingDropdown}
                 setCalendarValue={setDateFromParkingDropdown}
+                onCalendarPress={() => setShowDateFromParkingPicker(true)}
               />
               <VerificationCard
                 label="date-To-Parking"
@@ -437,6 +449,7 @@ const SurveyPage = ({ route, navigation }) => {
                 showCalendarOnIncorrect={true}
                 calendarValue={dateToParkingDropdown}
                 setCalendarValue={setDateToParkingDropdown}
+                onCalendarPress={() => setShowDateToParkingPicker(true)}
               />
             </LinearGradient>
             <LinearGradient
@@ -518,6 +531,7 @@ const SurveyPage = ({ route, navigation }) => {
                 showCalendarOnIncorrect={true}
                 calendarValue={dateFromBasementDropdown}
                 setCalendarValue={setDateFromBasementDropdown}
+                onCalendarPress={() => setShowDateFromBasementPicker(true)}
               />
 
               <VerificationCard
@@ -528,6 +542,7 @@ const SurveyPage = ({ route, navigation }) => {
                 showCalendarOnIncorrect={true}
                 calendarValue={dateToBasementDropdown}
                 setCalendarValue={setDateToBasementDropdown}
+                onCalendarPress={() => setShowDateToBasementPicker(true)}
               />
             </LinearGradient>
             <View style={styles.extraFloorContainer}>
@@ -1151,6 +1166,43 @@ const SurveyPage = ({ route, navigation }) => {
             </View>
           </View>
         </Modal>
+        {/* Date pickers for parking and basement */}
+        {showDateFromParkingPicker && (
+          <MonthYearPicker
+            onChange={(event, newDate) => {
+              setShowDateFromParkingPicker(false);
+              if (newDate) setDateFromParkingDropdown(newDate);
+            }}
+            value={dateFromParkingDropdown || new Date()}
+          />
+        )}
+        {showDateToParkingPicker && (
+          <MonthYearPicker
+            onChange={(event, newDate) => {
+              setShowDateToParkingPicker(false);
+              if (newDate) setDateToParkingDropdown(newDate);
+            }}
+            value={dateToParkingDropdown || new Date()}
+          />
+        )}
+        {showDateFromBasementPicker && (
+          <MonthYearPicker
+            onChange={(event, newDate) => {
+              setShowDateFromBasementPicker(false);
+              if (newDate) setDateFromBasementDropdown(newDate);
+            }}
+            value={dateFromBasementDropdown || new Date()}
+          />
+        )}
+        {showDateToBasementPicker && (
+          <MonthYearPicker
+            onChange={(event, newDate) => {
+              setShowDateToBasementPicker(false);
+              if (newDate) setDateToBasementDropdown(newDate);
+            }}
+            value={dateToBasementDropdown || new Date()}
+          />
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

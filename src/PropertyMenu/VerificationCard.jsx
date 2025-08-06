@@ -14,6 +14,7 @@ import {
 } from 'react-native-responsive-dimensions';
 import MonthPicker from 'react-native-month-year-picker';
 import moment from 'moment';
+import { useNavigation } from '@react-navigation/native';
 
 const VerificationCard = ({
   label,
@@ -31,9 +32,10 @@ const VerificationCard = ({
   showCalendarOnIncorrect = false,
   calendarValue = new Date(),
   setCalendarValue = () => {},
+  onCalendarPress,
 }) => {
   const isSelectionRequired = selectedVerification === null;
-  const [isDatePickerVisible, setDatePickerVisible] = useState(false);
+  const navigation = useNavigation();
 
   const handleVerificationChange = status => {
     setSelectedVerification(status);
@@ -41,13 +43,6 @@ const VerificationCard = ({
       setDropdownValue('');
       setInputValue && setInputValue('');
       setCalendarValue && setCalendarValue(new Date());
-    }
-  };
-
-  const handleConfirm = (event, newDate) => {
-    setDatePickerVisible(false);
-    if (event.type === 'set' && newDate) {
-      setCalendarValue(newDate);
     }
   };
 
@@ -109,15 +104,18 @@ const VerificationCard = ({
           <Text style={styles.staticValueLabel}>Select Date:</Text>
           <TouchableOpacity
             style={styles.input}
-            onPress={() => setDatePickerVisible(true)}
+            onPress={typeof onCalendarPress === 'function' ? onCalendarPress : undefined}
           >
             <Text style={{ color: calendarValue ? '#333' : '#aaa' }}>
-              {moment(calendarValue).format('MMYYYY')}
+              {calendarValue && !isNaN(new Date(calendarValue))
+                ? (typeof calendarValue === 'string' || typeof calendarValue === 'number')
+                  ? moment(calendarValue).format('MMMM YYYY')
+                  : moment(calendarValue).isValid()
+                    ? moment(calendarValue).format('MMMM YYYY')
+                    : 'Select Date'
+                : 'Select Date'}
             </Text>
           </TouchableOpacity>
-          {isDatePickerVisible && (
-            <MonthPicker onChange={handleConfirm} value={calendarValue} />
-          )}
         </View>
       )}
 

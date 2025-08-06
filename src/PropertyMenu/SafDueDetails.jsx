@@ -19,7 +19,6 @@ import { BASE_URL } from '../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import HeaderNavigation from '../Components/HeaderNavigation';
 const SafDueDetails = ({ route, navigation }) => {
   const { id } = route.params;
   const [safData, setSafData] = useState(null);
@@ -250,7 +249,7 @@ const SafDueDetails = ({ route, navigation }) => {
 
   return (
     <ScrollView style={styles.scroll}>
-      <HeaderNavigation />
+      <Header navigation={navigation} />
       <View style={styles.container}>
         {/* Basic Details Card */}
         <View style={styles.card}>

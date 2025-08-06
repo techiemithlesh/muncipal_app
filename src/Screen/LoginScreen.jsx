@@ -6,7 +6,10 @@ import {
   TouchableOpacity,
   Alert,
   ImageBackground,
+  ScrollView,
+  KeyboardAvoidingView,
 } from 'react-native';
+
 import React, { useState } from 'react';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -79,83 +82,96 @@ const LoginScreen = ({ navigation }) => {
       style={styles.backgroundImage}
       resizeMode="cover"
     >
-      <View style={styles.loginContainer}>
-        <Text style={styles.login}>Login</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView>
+          {' '}
+          <View style={styles.loginContainer}>
+            <Text style={styles.login}>Login</Text>
 
-        {/* Selection Options */}
-        <View style={styles.emailuser}>
-          <TouchableOpacity
-            style={styles.optionRow}
-            onPress={() => setSelected('email')}
-          >
-            <View
-              style={[styles.circle, selected === 'email' && styles.selected]}
-            />
-            <Text style={styles.label}>Email</Text>
-          </TouchableOpacity>
+            {/* Selection Options */}
+            <View style={styles.emailuser}>
+              <TouchableOpacity
+                style={styles.optionRow}
+                onPress={() => setSelected('email')}
+              >
+                <View
+                  style={[
+                    styles.circle,
+                    selected === 'email' && styles.selected,
+                  ]}
+                />
+                <Text style={styles.label}>Email</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.optionRow, { marginLeft: 30 }]}
-            onPress={() => setSelected('username')}
-          >
-            <View
-              style={[
-                styles.circle,
-                selected === 'username' && styles.selected,
-              ]}
-            />
-            <Text style={styles.label}>Username</Text>
-          </TouchableOpacity>
-        </View>
+              <TouchableOpacity
+                style={[styles.optionRow, { marginLeft: 30 }]}
+                onPress={() => setSelected('username')}
+              >
+                <View
+                  style={[
+                    styles.circle,
+                    selected === 'username' && styles.selected,
+                  ]}
+                />
+                <Text style={styles.label}>Username</Text>
+              </TouchableOpacity>
+            </View>
 
-        {/* Conditional Input */}
-        <View style={styles.emailContainer}>
-          <Text>{selected === 'email' ? 'Email' : 'Username'}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={`Enter your ${selected}`}
-            value={selected === 'email' ? email : userName}
-            onChangeText={text =>
-              selected === 'email' ? setEmail(text) : setUserName(text)
-            }
-            keyboardType={selected === 'email' ? 'email-address' : 'default'}
-          />
-        </View>
+            {/* Conditional Input */}
+            <View style={styles.emailContainer}>
+              <Text>{selected === 'email' ? 'Email' : 'Username'}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder={`Enter your ${selected}`}
+                value={selected === 'email' ? email : userName}
+                onChangeText={text =>
+                  selected === 'email' ? setEmail(text) : setUserName(text)
+                }
+                keyboardType={
+                  selected === 'email' ? 'email-address' : 'default'
+                }
+              />
+            </View>
 
-        {/* Password Field */}
-        <View style={styles.emailContainer}>
-          <Text>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            value={password}
-            onChangeText={setPassword}
-          />
-        </View>
+            {/* Password Field */}
+            <View style={styles.emailContainer}>
+              <Text>Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                value={password}
+                onChangeText={setPassword}
+              />
+            </View>
 
-        {/* Remember Me & Forgot Password */}
-        <View style={styles.remfogpass}>
-          <TouchableOpacity
-            style={[styles.checkbox, checked && styles.checked]}
-            onPress={() => setChecked(!checked)}
-          >
-            {checked && <Text style={styles.checkmark}>✓</Text>}
-          </TouchableOpacity>
-          <Text>Remember Me</Text>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ForgotPassword')}
-          >
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
-        </View>
+            {/* Remember Me & Forgot Password */}
+            <View style={styles.remfogpass}>
+              <TouchableOpacity
+                style={[styles.checkbox, checked && styles.checked]}
+                onPress={() => setChecked(!checked)}
+              >
+                {checked && <Text style={styles.checkmark}>✓</Text>}
+              </TouchableOpacity>
+              <Text>Remember Me</Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ForgotPassword')}
+              >
+                <Text style={styles.forgotText}>Forgot Password?</Text>
+              </TouchableOpacity>
+            </View>
 
-        {/* Login Button */}
-        <View style={styles.emailContainer}>
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Login</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+            {/* Login Button */}
+            <View style={styles.emailContainer}>
+              <TouchableOpacity style={styles.button} onPress={handleLogin}>
+                <Text style={styles.buttonText}>Login</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ImageBackground>
   );
 };

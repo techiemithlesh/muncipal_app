@@ -1,30 +1,150 @@
 // screens/SubmitSummaryScreen.js
 import React from 'react';
-import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
 import { useEffect } from 'react';
+import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
+import HeaderNavigation from '../Components/HeaderNavigation';
+
+const Card = ({ title, children }) => (
+  <View style={styles.card}>
+    {title && <Text style={styles.cardTitle}>{title}</Text>}
+    {children}
+  </View>
+);
 
 const SubmitVarification = ({ route }) => {
-  const {
-    submissionData,
-    floorsData,
-    hasExtraFloors,
-    location,
-    photo1,
-    photo2,
-    photo3,
-  } = route.params;
+  const { submissionData, location, photo1, photo2, photo3 } = route.params;
+
   useEffect(() => {
-    console.log('--- VerifiedStatus Data ---');
-    console.log('submissionData:', submissionData);
-    console.log('floorsData:', floorsData);
-    console.log('hasExtraFloors:', hasExtraFloors);
-    console.log('Extra Floors:', submissionData?.extraFloors);
+    console.log('Submission Data:', submissionData);
+    console.log('Location:', location);
+    console.log('Photo 1:', photo1);
+    console.log('Photo 2:', photo2);
+    console.log('Photo 3:', photo3);
   }, []);
+  const handleSubmit = () => {
+    // Handle submission logic here
+    console.log('Submission completed');
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <HeaderNavigation />
       <Text style={styles.title}>Submitted Data</Text>
-      {/* Location */}
+
+      {/* Group 1: Ward, New Ward, Zone, Property Type */}
+      <Card title="Property Details">
+        <Text>
+          <Text style={{ fontWeight: 'bold' }}>Ward No:</Text>{' '}
+          {submissionData?.['Ward No']}
+        </Text>
+        <Text>
+          <Text style={{ fontWeight: 'bold' }}>Ward No:</Text>{' '}
+          {submissionData?.['Verified_Ward']}
+        </Text>
+        <Text>
+          <Text style={{ fontWeight: 'bold' }}>New Ward No:</Text>{' '}
+          {submissionData?.['New Ward No (Current)']}
+        </Text>
+        <Text>
+          <Text style={{ fontWeight: 'bold' }}>New Ward No:</Text>{' '}
+          {submissionData?.['Verified_NewWard']}
+        </Text>
+
+        <Text>
+          <Text style={{ fontWeight: 'bold' }}>Zone:</Text>{' '}
+          {submissionData?.['Zone (Current)']}
+        </Text>
+        <Text>
+          <Text style={{ fontWeight: 'bold' }}>Property Type:</Text>{' '}
+          {submissionData?.['Property Type (Current)']}
+        </Text>
+      </Card>
+
+      {/* Group 2: Parking Details */}
+      {(submissionData?.['Usage Type (Parking Current)'] ||
+        submissionData?.['Occupancy Type (Parking Current)'] ||
+        submissionData?.['Construction Type (Parking Current)'] ||
+        submissionData?.['Built-up Area (Parking Current)']) && (
+        <Card title="Parking Details">
+          <Text>
+            <Text style={{ fontWeight: 'bold' }}>Usage Type:</Text>{' '}
+            {submissionData?.['Usage Type (Parking Current)']}
+          </Text>
+          <Text>
+            <Text style={{ fontWeight: 'bold' }}>Occupancy Type:</Text>{' '}
+            {submissionData?.['Occupancy Type (Parking Current)']}
+          </Text>
+          <Text>
+            <Text style={{ fontWeight: 'bold' }}>Construction Type:</Text>{' '}
+            {submissionData?.['Construction Type (Parking Current)']}
+          </Text>
+          <Text>
+            <Text style={{ fontWeight: 'bold' }}>Built-up Area:</Text>{' '}
+            {submissionData?.['Built-up Area (Parking Current)']}
+          </Text>
+          <Text>
+            <Text style={{ fontWeight: 'bold' }}>Date From:</Text>{' '}
+            {submissionData?.['Date From (Parking Current)']}
+          </Text>
+          <Text>
+            <Text style={{ fontWeight: 'bold' }}>Date To:</Text>{' '}
+            {submissionData?.['Date To (Parking Current)']}
+          </Text>
+        </Card>
+      )}
+
+      {/* Group 3: Basement Details */}
+      {(submissionData?.['Usage Type (Basement Current)'] ||
+        submissionData?.['Occupancy Type (Basement Current)'] ||
+        submissionData?.['Construction Type (Basement Current)'] ||
+        submissionData?.['Built-up Area (Basement Current)']) && (
+        <Card title="Basement Details">
+          <Text>
+            <Text style={{ fontWeight: 'bold' }}>Usage Type:</Text>{' '}
+            {submissionData?.['Usage Type (Basement Current)']}
+          </Text>
+          <Text>
+            <Text style={{ fontWeight: 'bold' }}>Occupancy Type:</Text>{' '}
+            {submissionData?.['Occupancy Type (Basement Current)']}
+          </Text>
+          <Text>
+            <Text style={{ fontWeight: 'bold' }}>Construction Type:</Text>{' '}
+            {submissionData?.['Construction Type (Basement Current)']}
+          </Text>
+          <Text>
+            <Text style={{ fontWeight: 'bold' }}>Built-up Area:</Text>{' '}
+            {submissionData?.['Built-up Area (Basement Current)']}
+          </Text>
+          <Text>
+            <Text style={{ fontWeight: 'bold' }}>Date From:</Text>{' '}
+            {submissionData?.['Date From (Basement Current)']}
+          </Text>
+          <Text>
+            <Text style={{ fontWeight: 'bold' }}>Date To:</Text>{' '}
+            {submissionData?.['Date To (Basement Current)']}
+          </Text>
+        </Card>
+      )}
+
+      {submissionData?.extraFloors?.length > 0 && (
+        <>
+          <Text style={styles.sectionTitle}>Extra Floors</Text>
+          {submissionData.extraFloors.map((floor, index) => (
+            <View key={index} style={styles.card}>
+              <Text style={styles.cardTitle}>Floor {index + 1}</Text>
+              <Text>Floor Name: {floor.floorName}</Text>
+              <Text>Construction Type: {floor.constructionType}</Text>
+              <Text>Occupancy Type: {floor.occupancyType}</Text>
+              <Text>Usage Type: {floor.usageType}</Text>
+              <Text>From Date: {floor.fromDate}</Text>
+              <Text>To Date: {floor.toDate}</Text>
+            </View>
+          ))}
+        </>
+      )}
+
+      {/* The rest of the data as before */}
       <Text style={styles.sectionTitle}>Location</Text>
       {location ? (
         <View>
@@ -34,115 +154,19 @@ const SubmitVarification = ({ route }) => {
       ) : (
         <Text>No location data</Text>
       )}
-      Ward and Zone
-      {(submissionData?.oldWard ||
-        submissionData?.newWard ||
-        submissionData?.propertype ||
-        submissionData?.zone) && (
-        <View>
-          <Text style={styles.sectionTitle}>Ward & Zone</Text>
-          {submissionData?.oldWard && (
-            <Text>Old Ward: {submissionData.oldWard}</Text>
-          )}
-          {submissionData?.newWard && (
-            <Text>New Ward: {submissionData.newWard}</Text>
-          )}
-          {submissionData?.zone && <Text>Zone: {submissionData.zone}</Text>}
-        </View>
-      )}
-      {/* Basement Section */}
-      {(submissionData?.hasBasement || submissionData?.basementUsageType) && (
-        <View>
-          <Text style={styles.sectionTitle}>Basement</Text>
-          {submissionData?.hasBasement && (
-            <Text>Has Basement: {submissionData.hasBasement}</Text>
-          )}
-          {submissionData?.basementUsageType && (
-            <Text>Usage: {submissionData.basementUsageType}</Text>
-          )}
-        </View>
-      )}
-      {/* Parking Section */}
-      {(submissionData?.hasParking || submissionData?.parkingType) && (
-        <View>
-          <Text style={styles.sectionTitle}>Parking</Text>
-          {submissionData?.hasParking && (
-            <Text>Has Parking: {submissionData.hasParking}</Text>
-          )}
-          {submissionData?.parkingType && (
-            <Text>Parking Type: {submissionData.parkingType}</Text>
-          )}
-        </View>
-      )}
-      {submissionData?.extraFloors?.length > 0 && (
-        <View>
-          <Text style={styles.sectionTitle}>Extra Floor Details</Text>
 
-          {submissionData.extraFloors.map((floor, index) => (
-            <View key={index} style={styles.card}>
-              <Text style={styles.cardTitle}>
-                Floor {index + 1}: {floor.floorName}
-              </Text>
-
-              <Text style={styles.cardText}>
-                Construction Type: {floor.constructionType}
-              </Text>
-              <Text style={styles.cardText}>
-                Occupancy Type: {floor.occupancyType}
-              </Text>
-              <Text style={styles.cardText}>Usage Type: {floor.usageType}</Text>
-              <Text style={styles.cardText}>From Date: {floor.fromDate}</Text>
-              <Text style={styles.cardText}>
-                To Date: {floor.toDate || 'N/A'}
-              </Text>
-            </View>
-          ))}
-        </View>
+      <Text style={styles.sectionTitle}>Captured Photos</Text>
+      {[photo1, photo2, photo3].map((photo, index) =>
+        photo ? (
+          <Image key={index} source={{ uri: photo.uri }} style={styles.image} />
+        ) : (
+          <Text key={index}>Photo {index + 1} not captured</Text>
+        ),
       )}
-      {/* Other Submission Data */}
-      <Text style={styles.sectionTitle}>Other Details</Text>
-      {submissionData ? (
-        Object.entries(submissionData).map(([key, value], index) => {
-          if (
-            [
-              'oldWard',
-              'newWard',
-              'zone',
-              'hasBasement',
-              'basementUsageType',
-              'hasParking',
-              'parkingType',
-            ].includes(key)
-          )
-            return null;
-          return (
-            <Text key={index}>
-              <Text style={{ fontWeight: 'bold' }}>{key}:</Text> {String(value)}
-            </Text>
-          );
-        })
-      ) : (
-        <Text>No submission data</Text>
-      )}
-      {/* Captured Photos in Card Style at Bottom */}
-      <View>
-        <Text style={styles.sectionTitle}>Captured Photos</Text>
-        <View style={styles.cardContainer}>
-          {[
-            { label: 'Front View', photo: photo1 },
-            { label: 'Basement', photo: photo2 },
-            { label: 'Parking Area', photo: photo3 },
-          ].map(({ label, photo }, index) => (
-            <View key={index} style={styles.card}>
-              <Text style={styles.cardTitle}>{label}</Text>
-              {photo ? (
-                <Image source={{ uri: photo.uri }} style={styles.cardImage} />
-              ) : (
-                <Text style={styles.noPhotoText}>Photo not captured</Text>
-              )}
-            </View>
-          ))}
-        </View>
+      <View style={styles.submitButtonContainer}>
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          <Text style={styles.submitButtonText}>Submit</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -151,9 +175,25 @@ const SubmitVarification = ({ route }) => {
 export default SubmitVarification;
 
 const styles = StyleSheet.create({
+  submitButtonContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  submitButton: {
+    backgroundColor: '#2e86de',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
   container: {
     padding: 16,
-    paddingBottom: 40,
   },
   title: {
     fontSize: 22,
@@ -164,74 +204,28 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 18,
     fontWeight: 'bold',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    paddingBottom: 4,
-  },
-  subLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  floorSection: {
-    marginTop: 10,
-    paddingLeft: 10,
-  },
-  cardContainer: {
-    marginTop: 10,
-    marginBottom: 20,
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    marginVertical: 10,
-    elevation: 3, // Android shadow
-    shadowColor: '#000', // iOS shadow
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    alignItems: 'center',
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-  cardImage: {
-    width: '100%',
-    height: 100,
     borderRadius: 10,
-    resizeMode: 'cover',
-  },
-  noPhotoText: {
-    fontStyle: 'italic',
-    color: '#888',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    padding: 16,
     marginVertical: 10,
-  },
-  card: {
-    backgroundColor: '#fff',
-    padding: 12,
-    marginVertical: 8,
-    borderRadius: 10,
     shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    elevation: 2,
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 5,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#2e86de',
   },
-  cardText: {
-    fontSize: 14,
-    marginBottom: 2,
+  image: {
+    width: 150,
+    height: 150,
+    marginTop: 10,
+    borderRadius: 8,
   },
 });

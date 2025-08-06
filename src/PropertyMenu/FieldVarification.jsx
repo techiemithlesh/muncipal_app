@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: responsiveWidth(2),
-
+    backgroundColor: 'orange',
     color: 'white',
     marginTop: responsiveHeight(4),
     marginLeft: responsiveHeight(2),
@@ -256,16 +256,16 @@ const styles = StyleSheet.create({
     borderRadius: 4,
 
     // Shadow for iOS
-    // shadowColor: '#000',
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 4,
-    // },
-    // shadowOpacity: 0.3,
-    // shadowRadius: 4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
 
-    // // Shadow for Android
-    // elevation: 5,
+    // Shadow for Android
+    elevation: 5,
   },
 
   title: {
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 10,
     padding: 16,
-    margin: 8,
+    margin: 16,
     elevation: 4, // Android shadow
     shadowColor: '#000', // iOS shadow
     shadowOffset: { width: 0, height: 2 },

@@ -15,7 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomAlert from '../Components/CustomAlert';
-import HeaderNavigation from '../Components/HeaderNavigation';
+import PropertyDetails from './components/PropertyDetails';
 // Reusable address section component
 const AddressSection = ({
   address,
@@ -474,7 +474,7 @@ const ApplyAssessment = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1 }}>
-      <HeaderNavigation />
+      <Header />
       <CustomAlert
         visible={alertVisible}
         message={alertMessage}
@@ -721,125 +721,21 @@ const ApplyAssessment = ({ navigation }) => {
         </View>
 
         <Text style={styles.header}>Property Details</Text>
-        <View style={styles.section}>
-          <Text style={styles.label}>Khata No. *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="sfdsfsa"
-            placeholderTextColor="#000"
-            value={khataNo}
-            onChangeText={setKhataNo}
-            onFocus={() => showFieldAlert('Khata No.')}
-          />
-
-          <Text style={styles.label}>Plot No. *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="hbnm,"
-            placeholderTextColor="#000"
-            value={plotNo}
-            onChangeText={setPlotNo}
-            onFocus={() => showFieldAlert('Plot No.')}
-          />
-
-          <Text style={styles.label}>Village/Mauja Name *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="dsafsa"
-            placeholderTextColor="#000"
-            value={villageName}
-            onChangeText={setVillageName}
-            onFocus={() => showFieldAlert('Village/Mauja Name')}
-          />
-
-          <Text style={styles.label}>Area of Plot (in Decimal) *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="100.00"
-            placeholderTextColor="#000"
-            value={plotArea}
-            onChangeText={setPlotArea}
-            keyboardType="numeric"
-            onFocus={() => showFieldAlert('Area of Plot')}
-          />
-
-          <Text style={styles.label}>Road Width (in ft) *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="12.00"
-            placeholderTextColor="#000"
-            value={roadWidth}
-            onChangeText={setRoadWidth}
-            keyboardType="numeric"
-            onFocus={() => showFieldAlert('Road Width')}
-          />
-
-          <Text style={styles.label}>
-            In Case of No Road Enter "0" (For Vacant Land Only)
-          </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="0"
-            placeholderTextColor="#000"
-            value={noRoad}
-            onChangeText={setNoRoad}
-            keyboardType="numeric"
-            onFocus={() => showFieldAlert('In Case of No Road')}
-          />
-        </View>
-
-        <Text style={styles.header}>Water Connection Details</Text>
-        <View style={styles.section}>
-          <Text style={styles.label}>Water Connection No *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Water Connection No"
-            placeholderTextColor="#000"
-            value={waterConnectionNo}
-            onChangeText={setWaterConnectionNo}
-            onFocus={() => showFieldAlert('Water Connection No')}
-          />
-          <Text style={styles.label}>Water Connection Date *</Text>
-          {/* Date Picker for Water Connection Date */}
-          <TouchableOpacity
-            style={styles.dateInput}
-            onPress={() => setShowWaterConnectionDatePicker(true)}
-          >
-            <Text style={styles.dateText}>
-              {waterConnectionDate
-                ? new Date(waterConnectionDate).toLocaleDateString('en-GB')
-                : 'Water Connection Date (DD/MM/YYYY)'}
-            </Text>
-          </TouchableOpacity>
-          {showWaterConnectionDatePicker && (
-            <DateTimePicker
-              value={
-                waterConnectionDate ? new Date(waterConnectionDate) : new Date()
-              }
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setShowWaterConnectionDatePicker(false);
-                if (event.type === 'set' && selectedDate) {
-                  setWaterConnectionDate(selectedDate.toISOString());
-                }
-              }}
-            />
-          )}
-        </View>
-
-        <Text style={styles.header}>Property Address</Text>
-        <AddressSection
-          address={propertyAddress}
-          setAddress={setPropertyAddress}
-          city={city}
-          setCity={setCity}
-          district={district}
-          setDistrict={setDistrict}
-          stateValue={state}
-          setStateValue={setState}
-          pincode={pincode}
-          setPincode={setPincode}
+        <PropertyDetails
+          khataNo={khataNo}
+          setKhataNo={setKhataNo}
+          plotNo={plotNo}
+          setPlotNo={setPlotNo}
+          villageName={villageName}
+          setVillageName={setVillageName}
+          plotArea={plotArea}
+          setPlotArea={setPlotArea}
+          roadWidth={roadWidth}
+          setRoadWidth={setRoadWidth}
+          noRoad={noRoad}
+          setNoRoad={setNoRoad}
+          showFieldAlert={showFieldAlert}
+          styles={styles}
         />
         <TouchableOpacity
           style={styles.checkboxContainer}
