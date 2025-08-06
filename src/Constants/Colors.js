@@ -1,5 +1,5 @@
 const Colors = {
-  primary: '#3498db',
+  primary: '#173a7b',
   secondary: '#2ecc71',
   danger: '#e74c3c',
   warning: '#f1c40f',
@@ -9,7 +9,7 @@ const Colors = {
   textSecondary: '#c9d2d2ff',
   white: '#ffffff',
   black: '#000000',
-  headignColor:'#04c4c4ff',
+  headignColor:'#173a7b',
   borderColor:'#3498db'
 };
 

@@ -11,6 +11,7 @@ import {
 import { responsiveHeight } from 'react-native-responsive-dimensions';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import HeaderNavigation from '../Components/HeaderNavigation';
 
 const Property = ({ navigation }) => {
   const [propertyChildren, setPropertyChildren] = useState([]);
@@ -75,7 +76,7 @@ const Property = ({ navigation }) => {
 
   return (
     <View style={styles.maindashbaord}>
-      <Header navigation={navigation} />
+      <HeaderNavigation />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <FlatList
           data={propertyChildren}

@@ -10,6 +10,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from './Header';
+import HeaderNavigation from '../Components/HeaderNavigation';
 
 const DashBoard = ({ navigation }) => {
   const [menuItems, setMenuItems] = useState([]);
@@ -93,7 +94,6 @@ const DashBoard = ({ navigation }) => {
   if (loading) {
     return (
       <View style={styles.mainDashboard}>
-        <Header navigation={navigation} />
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
@@ -114,7 +114,7 @@ const DashBoard = ({ navigation }) => {
 
   return (
     <View style={styles.mainDashboard}>
-      <Header navigation={navigation} />
+      <HeaderNavigation />
       <Button
         title="Go to Apply Assessment (Componentized)"
         onPress={() => navigation.navigate('ApplyAssessmentComponentized')}
@@ -123,6 +123,29 @@ const DashBoard = ({ navigation }) => {
         title="Go to ApplyLicense ApplyLicense (ApplyLicense)"
         onPress={() => navigation.navigate('ApplyLicense')}
       />
+
+      <Button
+        title="Go to Search Trade (Search)"
+        onPress={() => navigation.navigate('Search')}
+      />
+      <Button
+        title="InboxScreen (InboxScreen)"
+        onPress={() => navigation.navigate('InboxScreen')}
+      />
+      <Button
+        title="RenewLicense (RenewLicense)"
+        onPress={() => navigation.navigate('RenewLicense')}
+      />
+      {/* <Button
+        title="Apply Water Connection"
+        onPress={() => navigation.navigate('ApplyWaterConnection')}
+      /> */}
+
+      <Button
+        title="Sulinder (License)"
+        onPress={() => navigation.navigate('SurrenderLicense')}
+      />
+
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.gridContainer}>{renderMenuItems()}</View>
       </ScrollView>

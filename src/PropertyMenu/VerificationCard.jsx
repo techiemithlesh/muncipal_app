@@ -116,10 +116,7 @@ const VerificationCard = ({
             </Text>
           </TouchableOpacity>
           {isDatePickerVisible && (
-            <MonthPicker
-              onChange={handleConfirm}
-              value={calendarValue}
-            />
+            <MonthPicker onChange={handleConfirm} value={calendarValue} />
           )}
         </View>
       )}
@@ -190,7 +187,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: responsiveFontSize(1.8),
     color: 'white',
-    marginBottom: responsiveHeight(1),
     fontWeight: '500',
   },
   value: {
@@ -201,7 +197,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: responsiveWidth(4),
-    marginTop: 5,
     marginBottom: 10,
   },
   rowlabel: {
@@ -210,12 +205,8 @@ const styles = StyleSheet.create({
     padding: 5,
     paddingLeft: 15,
     backgroundColor: 'rgba(13, 148, 136, 1)',
-    marginBottom: 5,
   },
-  promptContainer: {
-    paddingHorizontal: responsiveWidth(4),
-    marginBottom: 5,
-  },
+  promptContainer: {},
   promptText: {
     fontSize: responsiveFontSize(1.6),
     color: 'black',
@@ -262,22 +253,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#aaa',
     borderRadius: 8,
-    padding: 12,
-    marginTop: 10,
-    marginBottom: 10,
-    marginHorizontal: responsiveWidth(4),
+    padding: 10,
+    // marginTop: 2,
+    // marginBottom: 2,
+    // marginTop: 10,
+    // marginBottom: 10,
+    marginHorizontal: responsiveWidth(2),
   },
   divider: {
     height: 1,
     backgroundColor: '#e0e0e0',
-    marginVertical: 10,
-    marginHorizontal: responsiveWidth(4),
+    // marginVertical: 10,
+    // marginHorizontal: responsiveWidth(4),
   },
   staticValueContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: responsiveWidth(4),
-    marginBottom: 10,
+    // marginBottom: 10,
   },
   staticValueLabel: {
     fontSize: responsiveFontSize(1.8),
@@ -296,7 +289,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     paddingHorizontal: responsiveWidth(4),
-    marginBottom: 10,
+    // marginBottom: 10,
   },
   input: {
     borderWidth: 1,

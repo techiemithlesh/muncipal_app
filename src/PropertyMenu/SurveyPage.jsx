@@ -14,8 +14,9 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
+  KeyboardAvoidingView,
 } from 'react-native';
-
+import HeaderNavigation from '../Components/HeaderNavigation';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -181,10 +182,12 @@ const SurveyPage = ({ route, navigation }) => {
     hideToPicker();
   };
 
-  const formatDate = (date) => {
+  const formatDate = date => {
     if (!date) return 'Select Date';
     const d = new Date(date);
-    return `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
+    return `${d.toLocaleString('default', {
+      month: 'long',
+    })} ${d.getFullYear()}`;
   };
 
   useEffect(() => {
@@ -284,859 +287,872 @@ const SurveyPage = ({ route, navigation }) => {
   const basementFloor = data?.floor?.[1];
 
   return (
-    <ScrollView style={styles.surveyContainer}>
-      <HeaderLogin />
-      <View style={styles.gradientWrapper}>
-        <LinearGradient
-          colors={['#007BFF', '#00BFFF']}
-          style={styles.gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
-          <Text style={styles.title}>Self Assessment - Field Survey</Text>
-        </LinearGradient>
-      </View>
-      {data && (
-        <View style={styles.card}>
-          <Text style={styles.label}>
-            Your Application No.:{' '}
-            <Text style={styles.value}>{data.safNo}</Text>
-          </Text>
-          <Text style={styles.label}>
-            Application Type:{' '}
-            <Text style={styles.value}>{data.assessmentType}</Text>
-          </Text>
-          <Text style={styles.label}>
-            Applied Date: <Text style={styles.value}>{data.applyDate}</Text>
-          </Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+    >
+      <ScrollView style={styles.surveyContainer}>
+        <HeaderNavigation />
+        <View style={styles.gradientWrapper}>
+          <LinearGradient
+            colors={['#007BFF', '#00BFFF']}
+            style={styles.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Text style={styles.title}>Self Assessment - Field Survey</Text>
+          </LinearGradient>
         </View>
-      )}
-      {/* Ward No. Card */}
-      <VerificationCard
-        label="Ward No."
-        value={data?.wardNo || ''}
-        dropdownOptions={wardDropdownOptions}
-        selectedVerification={wardVerification}
-        setSelectedVerification={setWardVerification}
-        dropdownValue={wardDropdown}
-        setDropdownValue={setWardDropdown}
-      />
-      {/* New Ward No. Card */}
-      <VerificationCard
-        label="New Ward No."
-        value={data?.newWardNo || ''}
-        dropdownOptions={wardDropdownOptions || []}
-        selectedVerification={newWardVerification}
-        setSelectedVerification={setNewWardVerification}
-        dropdownValue={newWardDropdown}
-        setDropdownValue={setNewWardDropdown}
-      />
-      {/* Zone Card */}
-      <VerificationCard
-        label="Zone"
-        value={data?.zone || ''}
-        dropdownOptions={zoneDropdownOptions}
-        selectedVerification={zoneVerification}
-        setSelectedVerification={setZoneVerification}
-        dropdownValue={zoneDropdown}
-        setDropdownValue={setZoneDropdown}
-      />
-      <VerificationCard
-        label="Property Type"
-        value={data?.propertyType || ''}
-        dropdownOptions={propertyDropdownOptions || []}
-        selectedVerification={propertyVerification}
-        setSelectedVerification={setPropertyVerification}
-        dropdownValue={propertyDropdown}
-        setDropdownValue={setPropertyDropdown}
-      />
-      {data?.propertyType !== 'VACANT LAND' && (
-        <>
-          {/* #################### Parking ############# */}
-          <LinearGradient
-            colors={['red', 'black']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientContainer} // use your own style
-          >
-            <Text
-              style={{
-                marginTop: 10,
-                marginBottom: 5,
-                marginLeft: 15,
-                marginRight: 8,
-                color: 'white', // white text to contrast background
-                fontWeight: 'bold',
-                fontSize: 16,
-              }}
-            >
-              PARKING
+        {data && (
+          <View style={styles.card}>
+            <Text style={styles.label}>
+              Your Application No.:{' '}
+              <Text style={styles.value}>{data.safNo}</Text>
             </Text>
-            <VerificationCard
-              label="Usage-Type"
-              value={parkingFloor?.usageType || ''}
-              dropdownOptions={usageTypeDropdownOptions || []}
-              selectedVerification={usageType}
-              setSelectedVerification={setUsageType}
-              dropdownValue={usageTypeDropdown}
-              setDropdownValue={setUsageTypeDropdown}
-            />
-            <VerificationCard
-              label="occupancy-Type"
-              value={parkingFloor?.occupancyName || ''}
-              dropdownOptions={occupancyTypeDropdownOptions || []}
-              selectedVerification={occupancyType}
-              setSelectedVerification={setOccupancyType}
-              dropdownValue={occupancyTypeDropdown}
-              setDropdownValue={setOccupancyTypeDropdown}
-            />
-            <VerificationCard
-              label="construction-Type"
-              value={parkingFloor?.constructionType || ''}
-              dropdownOptions={constructionTypeDropdownOptions || []}
-              selectedVerification={constructionType}
-              setSelectedVerification={setConstructionType}
-              dropdownValue={constructionTypeDropdown}
-              setDropdownValue={setConstructionTypeDropdown}
-            />
-            <VerificationCard
-              label="buildup-Area"
-              value={parkingFloor?.builtupArea || ''}
-              dropdownOptions={buildupAreaDropdownOptions || []}
-              selectedVerification={buildupArea}
-              setSelectedVerification={setBuildupArea}
-              dropdownValue={buildupAreaDropdown}
-              setDropdownValue={setBuildupAreaDropdown}
-              showInputOnIncorrect={true}
-              inputValue={builtupAreaIput}
-              setInputValue={setBuiltupAreaInput}
-              inputLabel="Enter new builtup area:"
-              inputPlaceholder="Enter new builtup area"
-            />
-            <VerificationCard
-              label="date-From-Parking"
-              value={parkingFloor?.dateFrom || ''}
-              selectedVerification={dateFromParking}
-              setSelectedVerification={setDateFromParking}
-              showCalendarOnIncorrect={true}
-              calendarValue={dateFromParkingDropdown}
-              setCalendarValue={setDateFromParkingDropdown}
-            />
-            <VerificationCard
-              label="date-To-Parking"
-              value={parkingFloor?.dateUpto || ''}
-              selectedVerification={dateToParking}
-              setSelectedVerification={setDateToParking}
-              showCalendarOnIncorrect={true}
-              calendarValue={dateToParkingDropdown}
-              setCalendarValue={setDateToParkingDropdown}
-            />
-          </LinearGradient>
-          <LinearGradient
-            colors={['red', 'black']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientContainer} // use your own style
-          >
-            <Text
-              style={{
-                marginTop: 10,
-                marginBottom: 5,
-                marginLeft: 15,
-                marginRight: 8,
-                color: 'white', // white text to contrast background
-                fontWeight: 'bold',
-                fontSize: 16,
-              }}
-            >
-              BASEMENT
+            <Text style={styles.label}>
+              Application Type:{' '}
+              <Text style={styles.value}>{data.assessmentType}</Text>
             </Text>
-
-            <VerificationCard
-              label="Usage-Type (Basement)"
-              value={basementFloor?.usageType || ''}
-              selectedVerification={usageTypeBasement}
-              setSelectedVerification={setUsageTypeBasement}
-              showInputOnIncorrect={true}
-              inputValue={usageTypeInputBasement}
-              setInputValue={setUsageTypeInputBasement}
-              inputLabel="Enter new usage type (Basement):"
-              inputPlaceholder="Enter new usage type (Basement)"
-            />
-
-            <VerificationCard
-              label="Occupancy-Type (Basement)"
-              value={basementFloor?.occupancyName || ''}
-              selectedVerification={occupancyTypeBasement}
-              setSelectedVerification={setOccupancyTypeBasement}
-              showInputOnIncorrect={true}
-              inputValue={occupancyTypeInputBasement}
-              setInputValue={setOccupancyTypeInputBasement}
-              inputLabel="Enter new occupancy type (Basement):"
-              inputPlaceholder="Enter new occupancy type (Basement)"
-            />
-
-            <VerificationCard
-              label="Construction-Type (Basement)"
-              value={basementFloor?.constructionType || ''}
-              selectedVerification={constructionTypeBasement}
-              setSelectedVerification={setConstructionTypeBasement}
-              showInputOnIncorrect={true}
-              inputValue={constructionTypeInputBasement}
-              setInputValue={setConstructionTypeInputBasement}
-              inputLabel="Enter new construction type (Basement):"
-              inputPlaceholder="Enter new construction type (Basement)"
-            />
-
-            <VerificationCard
-              label="buildup-Area (Basement)"
-              value={basementFloor?.builtupArea || ''}
-              dropdownOptions={buildupAreaDropdownOptions || []}
-              selectedVerification={buildupAreaBasement}
-              setSelectedVerification={setBuildupAreaBasement}
-              dropdownValue={buildupAreaDropdownBasement}
-              setDropdownValue={setBuildupAreaDropdownBasement}
-              showInputOnIncorrect={true}
-              inputValue={builtupAreaInputBasement}
-              setInputValue={setBuiltupAreaInputBasement}
-              inputLabel="Enter new builtup area (Basement):"
-              inputPlaceholder="Enter new builtup area (Basement)"
-            />
-
-            <VerificationCard
-              label="date-From-Basement"
-              value={basementFloor?.dateFrom || ''}
-              selectedVerification={dateFromBasement}
-              setSelectedVerification={setDateFromBasement}
-              showCalendarOnIncorrect={true}
-              calendarValue={dateFromBasementDropdown}
-              setCalendarValue={setDateFromBasementDropdown}
-            />
-
-            <VerificationCard
-              label="date-To-Basement"
-              value={basementFloor?.dateUpto || ''}
-              selectedVerification={dateToBasement}
-              setSelectedVerification={setDateToBasement}
-              showCalendarOnIncorrect={true}
-              calendarValue={dateToBasementDropdown}
-              setCalendarValue={setDateToBasementDropdown}
-            />
-          </LinearGradient>
-            <View style={styles.extraFloorContainer}>
-            <View style={styles.row}>
-              <Text style={styles.labelCheckbox}>Do You Want To Add Extra Floor?</Text>
-              <TouchableOpacity
-                style={styles.checkbox}
-                onPress={() => {
-                  setAddExtraFloor(!addExtraFloor);
-                  if (!addExtraFloor && floors.length === 0) {
-                    setFloors([1]); // add first floor when checked
-                  } else if (addExtraFloor) {
-                    setFloors([]); // reset on uncheck
-                  }
+            <Text style={styles.label}>
+              Applied Date: <Text style={styles.value}>{data.applyDate}</Text>
+            </Text>
+          </View>
+        )}
+        {/* Ward No. Card */}
+        <VerificationCard
+          label="Ward No."
+          value={data?.wardNo || ''}
+          dropdownOptions={wardDropdownOptions}
+          selectedVerification={wardVerification}
+          setSelectedVerification={setWardVerification}
+          dropdownValue={wardDropdown}
+          setDropdownValue={setWardDropdown}
+        />
+        {/* New Ward No. Card */}
+        <VerificationCard
+          label="New Ward No."
+          value={data?.newWardNo || ''}
+          dropdownOptions={wardDropdownOptions || []}
+          selectedVerification={newWardVerification}
+          setSelectedVerification={setNewWardVerification}
+          dropdownValue={newWardDropdown}
+          setDropdownValue={setNewWardDropdown}
+        />
+        {/* Zone Card */}
+        <VerificationCard
+          label="Zone"
+          value={data?.zone || ''}
+          dropdownOptions={zoneDropdownOptions}
+          selectedVerification={zoneVerification}
+          setSelectedVerification={setZoneVerification}
+          dropdownValue={zoneDropdown}
+          setDropdownValue={setZoneDropdown}
+        />
+        <VerificationCard
+          label="Property Type"
+          value={data?.propertyType || ''}
+          dropdownOptions={propertyDropdownOptions || []}
+          selectedVerification={propertyVerification}
+          setSelectedVerification={setPropertyVerification}
+          dropdownValue={propertyDropdown}
+          setDropdownValue={setPropertyDropdown}
+        />
+        {data?.propertyType !== 'VACANT LAND' && (
+          <>
+            {/* #################### Parking ############# */}
+            <LinearGradient
+              colors={['red', 'black']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.gradientContainer} // use your own style
+            >
+              <Text
+                style={{
+                  marginTop: 10,
+                  marginBottom: 5,
+                  marginLeft: 15,
+                  marginRight: 8,
+                  color: 'white', // white text to contrast background
+                  fontWeight: 'bold',
+                  fontSize: 16,
                 }}
               >
-                <View
-                  style={addExtraFloor ? styles.checkedBox : styles.uncheckedBox}
-                />
-              </TouchableOpacity>
-            </View>
+                PARKING
+              </Text>
+              <VerificationCard
+                label="Usage-Type"
+                value={parkingFloor?.usageType || ''}
+                dropdownOptions={usageTypeDropdownOptions || []}
+                selectedVerification={usageType}
+                setSelectedVerification={setUsageType}
+                dropdownValue={usageTypeDropdown}
+                setDropdownValue={setUsageTypeDropdown}
+              />
+              <VerificationCard
+                label="occupancy-Type"
+                value={parkingFloor?.occupancyName || ''}
+                dropdownOptions={occupancyTypeDropdownOptions || []}
+                selectedVerification={occupancyType}
+                setSelectedVerification={setOccupancyType}
+                dropdownValue={occupancyTypeDropdown}
+                setDropdownValue={setOccupancyTypeDropdown}
+              />
+              <VerificationCard
+                label="construction-Type"
+                value={parkingFloor?.constructionType || ''}
+                dropdownOptions={constructionTypeDropdownOptions || []}
+                selectedVerification={constructionType}
+                setSelectedVerification={setConstructionType}
+                dropdownValue={constructionTypeDropdown}
+                setDropdownValue={setConstructionTypeDropdown}
+              />
+              <VerificationCard
+                label="buildup-Area"
+                value={parkingFloor?.builtupArea || ''}
+                dropdownOptions={buildupAreaDropdownOptions || []}
+                selectedVerification={buildupArea}
+                setSelectedVerification={setBuildupArea}
+                dropdownValue={buildupAreaDropdown}
+                setDropdownValue={setBuildupAreaDropdown}
+                showInputOnIncorrect={true}
+                inputValue={builtupAreaIput}
+                setInputValue={setBuiltupAreaInput}
+                inputLabel="Enter new builtup area:"
+                inputPlaceholder="Enter new builtup area"
+              />
+              <VerificationCard
+                label="date-From-Parking"
+                value={parkingFloor?.dateFrom || ''}
+                selectedVerification={dateFromParking}
+                setSelectedVerification={setDateFromParking}
+                showCalendarOnIncorrect={true}
+                calendarValue={dateFromParkingDropdown}
+                setCalendarValue={setDateFromParkingDropdown}
+              />
+              <VerificationCard
+                label="date-To-Parking"
+                value={parkingFloor?.dateUpto || ''}
+                selectedVerification={dateToParking}
+                setSelectedVerification={setDateToParking}
+                showCalendarOnIncorrect={true}
+                calendarValue={dateToParkingDropdown}
+                setCalendarValue={setDateToParkingDropdown}
+              />
+            </LinearGradient>
+            <LinearGradient
+              colors={['red', 'black']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.gradientContainer} // use your own style
+            >
+              <Text
+                style={{
+                  marginTop: 10,
+                  marginBottom: 5,
+                  marginLeft: 15,
+                  marginRight: 8,
+                  color: 'white', // white text to contrast background
+                  fontWeight: 'bold',
+                  fontSize: 16,
+                }}
+              >
+                BASEMENT
+              </Text>
 
-            {addExtraFloor && (
-              <>
-                {floors.map((floor, index) => (
-                  <LinearGradient
-                    key={index}
-                    colors={['#ececf2ff', '#eee7e7ff']}
-                    style={styles.card}
-                  >
-                    <View style={styles.rowlabel}>
-                      <Text style={{ color: 'white' }}>
-                        Extra Floor {index + 1}
-                      </Text>
-                    </View>
-                    <View>
-                      <Text style={styles.label}>Floor Name</Text>
-                      <Dropdown
-                        style={styles.dropdown}
-                        placeholderStyle={styles.placeholder}
-                        selectedTextStyle={styles.selectedText}
-                        data={floorNameDropdownOptions}
-                        labelField="label"
-                        valueField="value"
-                        placeholder="Select"
-                        value={floor.floorName}
-                        onChange={item =>
-                          updateFloor(index, 'floorName', item.value)
-                        }
-                      />
+              <VerificationCard
+                label="Usage-Type (Basement)"
+                value={basementFloor?.usageType || ''}
+                selectedVerification={usageTypeBasement}
+                setSelectedVerification={setUsageTypeBasement}
+                showInputOnIncorrect={true}
+                inputValue={usageTypeInputBasement}
+                setInputValue={setUsageTypeInputBasement}
+                inputLabel="Enter new usage type (Basement):"
+                inputPlaceholder="Enter new usage type (Basement)"
+              />
 
-                      <Text style={styles.label}>Construction Type</Text>
-                      <Dropdown
-                        style={styles.dropdown}
-                        placeholderStyle={styles.placeholder}
-                        selectedTextStyle={styles.selectedText}
-                        data={constructionTypeDropdownOptions}
-                        labelField="label"
-                        valueField="value"
-                        placeholder="Select"
-                        value={floor.constructionType}
-                        onChange={item =>
-                          updateFloor(index, 'constructionType', item.value)
-                        }
-                      />
+              <VerificationCard
+                label="Occupancy-Type (Basement)"
+                value={basementFloor?.occupancyName || ''}
+                selectedVerification={occupancyTypeBasement}
+                setSelectedVerification={setOccupancyTypeBasement}
+                showInputOnIncorrect={true}
+                inputValue={occupancyTypeInputBasement}
+                setInputValue={setOccupancyTypeInputBasement}
+                inputLabel="Enter new occupancy type (Basement):"
+                inputPlaceholder="Enter new occupancy type (Basement)"
+              />
 
-                      <Text style={styles.label}>Occupancy Type</Text>
-                      <Dropdown
-                        style={styles.dropdown}
-                        placeholderStyle={styles.placeholder}
-                        selectedTextStyle={styles.selectedText}
-                        data={occupancyTypeDropdownOptions}
-                        labelField="label"
-                        valueField="value"
-                        placeholder="Select"
-                        value={floor.occupancyType}
-                        onChange={item =>
-                          updateFloor(index, 'occupancyType', item.value)
-                        }
-                      />
+              <VerificationCard
+                label="Construction-Type (Basement)"
+                value={basementFloor?.constructionType || ''}
+                selectedVerification={constructionTypeBasement}
+                setSelectedVerification={setConstructionTypeBasement}
+                showInputOnIncorrect={true}
+                inputValue={constructionTypeInputBasement}
+                setInputValue={setConstructionTypeInputBasement}
+                inputLabel="Enter new construction type (Basement):"
+                inputPlaceholder="Enter new construction type (Basement)"
+              />
 
-                      <Text style={styles.label}>Usage Type</Text>
-                      <Dropdown
-                        style={styles.dropdown}
-                        placeholderStyle={styles.placeholder}
-                        selectedTextStyle={styles.selectedText}
-                        data={usageTypeDropdownOptions}
-                        labelField="label"
-                        valueField="value"
-                        placeholder="Select"
-                        value={floor.usageType}
-                        onChange={item =>
-                          updateFloor(index, 'usageType', item.value)
-                        }
-                      />
-                    </View>
+              <VerificationCard
+                label="buildup-Area (Basement)"
+                value={basementFloor?.builtupArea || ''}
+                dropdownOptions={buildupAreaDropdownOptions || []}
+                selectedVerification={buildupAreaBasement}
+                setSelectedVerification={setBuildupAreaBasement}
+                dropdownValue={buildupAreaDropdownBasement}
+                setDropdownValue={setBuildupAreaDropdownBasement}
+                showInputOnIncorrect={true}
+                inputValue={builtupAreaInputBasement}
+                setInputValue={setBuiltupAreaInputBasement}
+                inputLabel="Enter new builtup area (Basement):"
+                inputPlaceholder="Enter new builtup area (Basement)"
+              />
 
-                    <Text style={styles.label}>Date From</Text>
-                    <TouchableOpacity
-                      style={styles.dateBox}
-                      onPress={() => updateFloor(index, 'showFromPicker', true)}
-                    >
-                      <Text style={styles.dateText}>
-                        {floor.fromDate
-                          ? formatDate(floor.fromDate)
-                          : 'Select Date'}
-                      </Text>
-                    </TouchableOpacity>
-                    {floor.showFromPicker && (
-                      <MonthYearPicker
-                        onChange={(event, newDate) => {
-                          updateFloor(index, 'showFromPicker', false);
-                          if (newDate) {
-                            updateFloor(index, 'fromDate', newDate);
-                          }
-                        }}
-                        value={floor.fromDate || new Date()}
-                      />
-                    )}
+              <VerificationCard
+                label="date-From-Basement"
+                value={basementFloor?.dateFrom || ''}
+                selectedVerification={dateFromBasement}
+                setSelectedVerification={setDateFromBasement}
+                showCalendarOnIncorrect={true}
+                calendarValue={dateFromBasementDropdown}
+                setCalendarValue={setDateFromBasementDropdown}
+              />
 
-                    <Text style={styles.label}>Date Upto</Text>
-                    <TouchableOpacity
-                      style={styles.dateBox}
-                      onPress={() => updateFloor(index, 'showToPicker', true)}
-                    >
-                      <Text style={styles.dateText}>
-                        {floor.toDate ? formatDate(floor.toDate) : 'Select Date'}
-                      </Text>
-                    </TouchableOpacity>
-                    {floor.showToPicker && (
-                      <MonthYearPicker
-                        onChange={(event, newDate) => {
-                          updateFloor(index, 'showToPicker', false);
-                          if (newDate) {
-                            updateFloor(index, 'toDate', newDate);
-                          }
-                        }}
-                        value={floor.toDate || new Date()}
-                      />
-                    )}
+              <VerificationCard
+                label="date-To-Basement"
+                value={basementFloor?.dateUpto || ''}
+                selectedVerification={dateToBasement}
+                setSelectedVerification={setDateToBasement}
+                showCalendarOnIncorrect={true}
+                calendarValue={dateToBasementDropdown}
+                setCalendarValue={setDateToBasementDropdown}
+              />
+            </LinearGradient>
+            <View style={styles.extraFloorContainer}>
+              <View style={styles.row}>
+                <Text style={styles.labelCheckbox}>
+                  Do You Want To Add Extra Floor?
+                </Text>
+                <TouchableOpacity
+                  style={styles.checkbox}
+                  onPress={() => {
+                    setAddExtraFloor(!addExtraFloor);
+                    if (!addExtraFloor && floors.length === 0) {
+                      setFloors([1]); // add first floor when checked
+                    } else if (addExtraFloor) {
+                      setFloors([]); // reset on uncheck
+                    }
+                  }}
+                >
+                  <View
+                    style={
+                      addExtraFloor ? styles.checkedBox : styles.uncheckedBox
+                    }
+                  />
+                </TouchableOpacity>
+              </View>
 
-                    <Text style={styles.cardText}></Text>
-                  </LinearGradient>
-                ))}
-
-                <View style={styles.buttonRow}>
-                  <TouchableOpacity
-                    onPress={addFloor}
-                    style={styles.addButton}
-                  >
-                    <Text style={styles.buttonText}>Add Floor</Text>
-                  </TouchableOpacity>
-                  {floors.length > 0 && (
-                    <TouchableOpacity
-                      onPress={removeFloor}
-                      style={styles.removeButton}
-                    >
-                      <Text style={styles.buttonText}>Remove Floor</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </>
-            )}
-          </View>
-
-          {/* Remarks Section */}
-          <View style={styles.remarksContainer}>
-            <Text style={styles.remarksLabel}>Remarks</Text>
-            <TextInput
-              style={styles.remarksInput}
-              placeholder="Enter your remarks here..."
-              placeholderTextColor="#999"
-              multiline
-              numberOfLines={4}
-              value={remarks}
-              onChangeText={setRemarks}
-              textAlignVertical="top"
-            />
-          </View>
-        </>
-      )}
-      <TouchableOpacity
-        style={styles.previewButton}
-        onPress={() => {
-          const getLabelFromOptions = (options, value) => {
-            const found = options?.find(item => item.value === value);
-            return found?.label || value || 'N/A';
-          };
-
-          const getPreviewValue = (
-            original,
-            dropdownValue,
-            verification,
-            options,
-            inputValue = null,
-          ) => {
-            if (verification === 'Correct') return original;
-            if (inputValue) return inputValue;
-            if (dropdownValue instanceof Date) {
-              return formatDate(dropdownValue);
-            }
-            return getLabelFromOptions(options, dropdownValue);
-          };
-
-          const generatedPreview = {
-            'Ward No': data?.wardNo,
-            Verified_Ward: getPreviewValue(
-              data?.wardNo,
-              wardDropdown,
-              wardVerification,
-              wardDropdownOptions,
-            ),
-
-            'New Ward No (Current)': data?.newWardNo,
-            Verified_NewWard: getPreviewValue(
-              data?.newWardNo,
-              newWardDropdown,
-              newWardVerification,
-              wardDropdownOptions,
-            ),
-
-            'Zone (Current)': data?.zone,
-            Verified_Zone: getPreviewValue(
-              data?.zone,
-              zoneDropdown,
-              zoneVerification,
-              zoneDropdownOptions,
-            ),
-            'Property Type (Current)': data?.propertyType,
-            Verified_PropertyType: getPreviewValue(
-              data?.propertyType,
-              propertyDropdown,
-              propertyVerification,
-              propertyDropdownOptions,
-            ),
-          };
-
-          if (data?.propertyType !== 'VACANT LAND') {
-            generatedPreview['Remarks (Preview)'] = remarks ?? 'NA';
-            // Parking
-            generatedPreview['Usage Type (Parking Current)'] =
-              parkingFloor?.usageType;
-            generatedPreview['Verified_UsageParking'] = getPreviewValue(
-              parkingFloor?.usageType,
-              usageTypeDropdown,
-              usageType,
-              usageTypeDropdownOptions,
-            );
-
-            generatedPreview['Occupancy Type (Parking Current)'] =
-              parkingFloor?.occupancyName;
-            generatedPreview['Verified_OccupancyParking'] = getPreviewValue(
-              parkingFloor?.occupancyName,
-              occupancyTypeDropdown,
-              occupancyType,
-              occupancyTypeDropdownOptions,
-            );
-
-            generatedPreview['Construction Type (Parking Current)'] =
-              parkingFloor?.constructionType;
-            generatedPreview['Verified_ConstructionParking'] = getPreviewValue(
-              parkingFloor?.constructionType,
-              constructionTypeDropdown,
-              constructionType,
-              constructionTypeDropdownOptions,
-            );
-
-            generatedPreview['Built-up Area (Parking Current)'] =
-              parkingFloor?.builtupArea;
-            generatedPreview['Verified_BuiltUpParking'] = getPreviewValue(
-              parkingFloor?.builtupArea,
-              buildupAreaDropdown,
-              buildupArea,
-              buildupAreaDropdownOptions,
-              builtupAreaIput,
-            );
-
-            generatedPreview['Date From (Parking Current)'] =
-              parkingFloor?.dateFrom;
-            generatedPreview['Verified_DateFromParking'] = getPreviewValue(
-              parkingFloor?.dateFrom,
-              dateFromParkingDropdown,
-              dateFromParking,
-              null,
-              null,
-              true,
-            );
-
-            generatedPreview['Date To (Parking Current)'] =
-              parkingFloor?.dateUpto;
-            generatedPreview['Verified_DateToParking'] = getPreviewValue(
-              parkingFloor?.dateUpto,
-              dateToParkingDropdown,
-              dateToParking,
-              null,
-              null,
-              true,
-            );
-
-            // Basement
-            generatedPreview['Usage Type (Basement Current)'] =
-              basementFloor?.usageType;
-            generatedPreview['Verified_UsageBasement'] = getPreviewValue(
-              basementFloor?.usageType,
-              null,
-              usageTypeBasement,
-              null,
-              usageTypeInputBasement,
-            );
-
-            generatedPreview['Occupancy Type (Basement Current)'] =
-              basementFloor?.occupancyName;
-            generatedPreview['Verified_OccupancyBasement'] = getPreviewValue(
-              basementFloor?.occupancyName,
-              null,
-              occupancyTypeBasement,
-              null,
-              occupancyTypeInputBasement,
-            );
-
-            generatedPreview['Construction Type (Basement Current)'] =
-              basementFloor?.constructionType;
-            generatedPreview['Verified_ConstructionBasement'] =
-              getPreviewValue(
-                basementFloor?.constructionType,
-                null,
-                constructionTypeBasement,
-                null,
-                constructionTypeInputBasement,
-              );
-
-            generatedPreview['Built-up Area (Basement Current)'] =
-              basementFloor?.builtupArea;
-            generatedPreview['Verified_BuiltUpBasement'] = getPreviewValue(
-              basementFloor?.builtupArea,
-              buildupAreaDropdownBasement,
-              buildupAreaBasement,
-              buildupAreaDropdownOptions,
-              builtupAreaInputBasement,
-            );
-
-            generatedPreview['Date From (Basement Current)'] =
-              basementFloor?.dateFrom;
-            generatedPreview['Verified_DateFromBasement'] = getPreviewValue(
-              basementFloor?.dateFrom,
-              dateFromBasementDropdown,
-              dateFromBasement,
-              null,
-              null,
-              true,
-            );
-
-            generatedPreview['Date To (Basement Current)'] =
-              basementFloor?.dateUpto;
-            generatedPreview['Verified_DateToBasement'] = getPreviewValue(
-              basementFloor?.dateUpto,
-              dateToBasementDropdown,
-              dateToBasement,
-              null,
-              null,
-              true,
-            );
-          }
-
-          // Add remarks if property type is not VACANT LAND
-          if (data?.propertyType !== 'VACANT LAND' && remarks) {
-            generatedPreview['Remarks'] = remarks;
-          }
-
-          setPreviewData(generatedPreview);
-          setIsPreviewVisible(true);
-        }}
-      >
-        <Text style={styles.previewButtonText}>Preview</Text>
-      </TouchableOpacity>
-      <Modal
-        visible={isPreviewVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsPreviewVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Preview Details</Text>
-            <ScrollView style={styles.modalContent}>
-              {/* Combined Card for Ward, Zone, Property Type */}
-              <PreviewCard title="Property Details">
-                <PreviewRow
-                  label="Ward No"
-                  value={previewData['Ward No']}
-                />
-                <PreviewRow
-                  label="Verified Ward"
-                  value={previewData['Verified_Ward']}
-                />
-                <PreviewRow
-                  label="New Ward No"
-                  value={previewData['New Ward No (Current)']}
-                />
-                <PreviewRow
-                  label="Verified New Ward"
-                  value={previewData['Verified_NewWard']}
-                />
-                <PreviewRow
-                  label="Zone"
-                  value={previewData['Zone (Current)']}
-                />
-                <PreviewRow
-                  label="Verified Zone"
-                  value={previewData['Verified_Zone']}
-                />
-                <PreviewRow
-                  label="Property Type"
-                  value={previewData['Property Type (Current)']}
-                />
-                <PreviewRow
-                  label="Verified Property Type"
-                  value={previewData['Verified_PropertyType']}
-                />
-              </PreviewCard>
-
-              {data?.propertyType !== 'VACANT LAND' && (
+              {addExtraFloor && (
                 <>
-                  {/* Parking Card */}
-                  <PreviewCard title="Parking Details">
-                    <PreviewRow
-                      label="Usage Type"
-                      value={previewData['Usage Type (Parking Current)']}
-                    />
-                    <PreviewRow
-                      label="Verified Usage"
-                      value={previewData['Verified_UsageParking']}
-                    />
-                    <PreviewRow
-                      label="Occupancy Type"
-                      value={previewData['Occupancy Type (Parking Current)']}
-                    />
-                    <PreviewRow
-                      label="Verified Occupancy"
-                      value={previewData['Verified_OccupancyParking']}
-                    />
-                    <PreviewRow
-                      label="Construction Type"
-                      value={previewData['Construction Type (Parking Current)']}
-                    />
-                    <PreviewRow
-                      label="Verified Construction"
-                      value={previewData['Verified_ConstructionParking']}
-                    />
-                    <PreviewRow
-                      label="Built-up Area"
-                      value={previewData['Built-up Area (Parking Current)']}
-                    />
-                    <PreviewRow
-                      label="Verified Built-up Area"
-                      value={previewData['Verified_BuiltUpParking']}
-                    />
-                    <PreviewRow
-                      label="Date From"
-                      value={previewData['Date From (Parking Current)']}
-                    />
-                    <PreviewRow
-                      label="Verified Date From"
-                      value={previewData['Verified_DateFromParking']}
-                    />
-                    <PreviewRow
-                      label="Date To"
-                      value={previewData['Date To (Parking Current)']}
-                    />
-                    <PreviewRow
-                      label="Verified Date To"
-                      value={previewData['Verified_DateToParking']}
-                    />
-                  </PreviewCard>
+                  {floors.map((floor, index) => (
+                    <LinearGradient
+                      key={index}
+                      colors={['#ececf2ff', '#eee7e7ff']}
+                      style={styles.card}
+                    >
+                      <View style={styles.rowlabel}>
+                        <Text style={{ color: 'white' }}>
+                          Extra Floor {index + 1}
+                        </Text>
+                      </View>
+                      <View>
+                        <Text style={styles.label}>Floor Name</Text>
+                        <Dropdown
+                          style={styles.dropdown}
+                          placeholderStyle={styles.placeholder}
+                          selectedTextStyle={styles.selectedText}
+                          data={floorNameDropdownOptions}
+                          labelField="label"
+                          valueField="value"
+                          placeholder="Select"
+                          value={floor.floorName}
+                          onChange={item =>
+                            updateFloor(index, 'floorName', item.value)
+                          }
+                        />
 
-                  {/* Basement Card */}
-                  <PreviewCard title="Basement Details">
-                    <PreviewRow
-                      label="Usage Type"
-                      value={previewData['Usage Type (Basement Current)']}
-                    />
-                    <PreviewRow
-                      label="Verified Usage"
-                      value={previewData['Verified_UsageBasement']}
-                    />
-                    <PreviewRow
-                      label="Occupancy Type"
-                      value={previewData['Occupancy Type (Basement Current)']}
-                    />
-                    <PreviewRow
-                      label="Verified Occupancy"
-                      value={previewData['Verified_OccupancyBasement']}
-                    />
-                    <PreviewRow
-                      label="Construction Type"
-                      value={
-                        previewData['Construction Type (Basement Current)']
-                      }
-                    />
-                    <PreviewRow
-                      label="Verified Construction"
-                      value={previewData['Verified_ConstructionBasement']}
-                    />
-                    <PreviewRow
-                      label="Built-up Area"
-                      value={previewData['Built-up Area (Basement Current)']}
-                    />
-                    <PreviewRow
-                      label="Verified Built-up Area"
-                      value={previewData['Verified_BuiltUpBasement']}
-                    />
-                    <PreviewRow
-                      label="Date From"
-                      value={previewData['Date From (Basement Current)']}
-                    />
-                    <PreviewRow
-                      label="Verified Date From"
-                      value={previewData['Verified_DateFromBasement']}
-                    />
-                    <PreviewRow
-                      label="Date To"
-                      value={previewData['Date To (Basement Current)']}
-                    />
-                    <PreviewRow
-                      label="Verified Date To"
-                      value={previewData['Verified_DateToBasement']}
-                    />
-                  </PreviewCard>
+                        <Text style={styles.label}>Construction Type</Text>
+                        <Dropdown
+                          style={styles.dropdown}
+                          placeholderStyle={styles.placeholder}
+                          selectedTextStyle={styles.selectedText}
+                          data={constructionTypeDropdownOptions}
+                          labelField="label"
+                          valueField="value"
+                          placeholder="Select"
+                          value={floor.constructionType}
+                          onChange={item =>
+                            updateFloor(index, 'constructionType', item.value)
+                          }
+                        />
 
-                  {/* Remarks Card */}
-                  <PreviewCard title="Remarks">
-                    <Text>{previewData['Remarks (Preview)']}</Text>
-                  </PreviewCard>
+                        <Text style={styles.label}>Occupancy Type</Text>
+                        <Dropdown
+                          style={styles.dropdown}
+                          placeholderStyle={styles.placeholder}
+                          selectedTextStyle={styles.selectedText}
+                          data={occupancyTypeDropdownOptions}
+                          labelField="label"
+                          valueField="value"
+                          placeholder="Select"
+                          value={floor.occupancyType}
+                          onChange={item =>
+                            updateFloor(index, 'occupancyType', item.value)
+                          }
+                        />
 
-                  {/* Extra Floor Card */}
-                  {addExtraFloor && floors.length > 0 && (
-                    <PreviewCard title="Extra Floor Details">
-                      {floors.map((floor, index) => (
-                        <View key={index} style={styles.floorCard}>
-                          <Text style={styles.previewLabel}>
-                            Extra Floor {index + 1}
-                          </Text>
-                          <PreviewRow
-                            label="Floor Type"
-                            value={getLabelByValue(
-                              floorNameDropdownOptions,
-                              floor.floorName,
-                            )}
-                          />
-                          <PreviewRow
-                            label="Construction Type"
-                            value={getLabelByValue(
-                              constructionTypeDropdownOptions,
-                              floor.constructionType,
-                            )}
-                          />
-                          <PreviewRow
-                            label="Occupancy Type"
-                            value={getLabelByValue(
-                              occupancyTypeDropdownOptions,
-                              floor.occupancyType,
-                            )}
-                          />
-                          <PreviewRow
-                            label="Usage Type"
-                            value={getLabelByValue(
-                              usageTypeDropdownOptions,
-                              floor.usageType,
-                            )}
-                          />
-                          <PreviewRow
-                            label="From Date"
-                            value={
-                              floor.fromDate
-                                ? formatDate(floor.fromDate)
-                                : 'N/A'
+                        <Text style={styles.label}>Usage Type</Text>
+                        <Dropdown
+                          style={styles.dropdown}
+                          placeholderStyle={styles.placeholder}
+                          selectedTextStyle={styles.selectedText}
+                          data={usageTypeDropdownOptions}
+                          labelField="label"
+                          valueField="value"
+                          placeholder="Select"
+                          value={floor.usageType}
+                          onChange={item =>
+                            updateFloor(index, 'usageType', item.value)
+                          }
+                        />
+                      </View>
+
+                      <Text style={styles.label}>Date From</Text>
+                      <TouchableOpacity
+                        style={styles.dateBox}
+                        onPress={() =>
+                          updateFloor(index, 'showFromPicker', true)
+                        }
+                      >
+                        <Text style={styles.dateText}>
+                          {floor.fromDate
+                            ? formatDate(floor.fromDate)
+                            : 'Select Date'}
+                        </Text>
+                      </TouchableOpacity>
+                      {floor.showFromPicker && (
+                        <MonthYearPicker
+                          onChange={(event, newDate) => {
+                            updateFloor(index, 'showFromPicker', false);
+                            if (newDate) {
+                              updateFloor(index, 'fromDate', newDate);
                             }
-                          />
-                          <PreviewRow
-                            label="To Date"
-                            value={
-                              floor.toDate ? formatDate(floor.toDate) : 'N/A'
-                            }
-                          />
-                        </View>
-                      ))}
-                    </PreviewCard>
-                  )}
+                          }}
+                          value={floor.fromDate || new Date()}
+                        />
+                      )}
 
-                  {/* Remarks Card */}
-                  {remarks && (
-                    <PreviewCard title="Remarks">
-                      <Text style={styles.remarksPreviewText}>{remarks}</Text>
-                    </PreviewCard>
-                  )}
+                      <Text style={styles.label}>Date Upto</Text>
+                      <TouchableOpacity
+                        style={styles.dateBox}
+                        onPress={() => updateFloor(index, 'showToPicker', true)}
+                      >
+                        <Text style={styles.dateText}>
+                          {floor.toDate
+                            ? formatDate(floor.toDate)
+                            : 'Select Date'}
+                        </Text>
+                      </TouchableOpacity>
+                      {floor.showToPicker && (
+                        <MonthYearPicker
+                          onChange={(event, newDate) => {
+                            updateFloor(index, 'showToPicker', false);
+                            if (newDate) {
+                              updateFloor(index, 'toDate', newDate);
+                            }
+                          }}
+                          value={floor.toDate || new Date()}
+                        />
+                      )}
+
+                      <Text style={styles.cardText}></Text>
+                    </LinearGradient>
+                  ))}
+
+                  <View style={styles.buttonRow}>
+                    <TouchableOpacity
+                      onPress={addFloor}
+                      style={styles.addButton}
+                    >
+                      <Text style={styles.buttonText}>Add Floor</Text>
+                    </TouchableOpacity>
+                    {floors.length > 0 && (
+                      <TouchableOpacity
+                        onPress={removeFloor}
+                        style={styles.removeButton}
+                      >
+                        <Text style={styles.buttonText}>Remove Floor</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </>
               )}
-            </ScrollView>
+            </View>
 
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setIsPreviewVisible(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
+            {/* Remarks Section */}
+            <View style={styles.remarksContainer}>
+              <Text style={styles.remarksLabel}>Remarks</Text>
+              <TextInput
+                style={styles.remarksInput}
+                placeholder="Enter your remarks here..."
+                placeholderTextColor="#999"
+                multiline
+                numberOfLines={4}
+                value={remarks}
+                onChangeText={setRemarks}
+                textAlignVertical="top"
+              />
+            </View>
+          </>
+        )}
+        <TouchableOpacity
+          style={styles.previewButton}
+          onPress={() => {
+            const getLabelFromOptions = (options, value) => {
+              const found = options?.find(item => item.value === value);
+              return found?.label || value || 'N/A';
+            };
 
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={handleSubmitPreview}
-            >
-              <Text style={styles.submitButtonText}>Submit</Text>
-            </TouchableOpacity>
+            const getPreviewValue = (
+              original,
+              dropdownValue,
+              verification,
+              options,
+              inputValue = null,
+            ) => {
+              if (verification === 'Correct') return original;
+              if (inputValue) return inputValue;
+              if (dropdownValue instanceof Date) {
+                return formatDate(dropdownValue);
+              }
+              return getLabelFromOptions(options, dropdownValue);
+            };
+
+            const generatedPreview = {
+              'Ward No': data?.wardNo,
+              Verified_Ward: getPreviewValue(
+                data?.wardNo,
+                wardDropdown,
+                wardVerification,
+                wardDropdownOptions,
+              ),
+
+              'New Ward No (Current)': data?.newWardNo,
+              Verified_NewWard: getPreviewValue(
+                data?.newWardNo,
+                newWardDropdown,
+                newWardVerification,
+                wardDropdownOptions,
+              ),
+
+              'Zone (Current)': data?.zone,
+              Verified_Zone: getPreviewValue(
+                data?.zone,
+                zoneDropdown,
+                zoneVerification,
+                zoneDropdownOptions,
+              ),
+              'Property Type (Current)': data?.propertyType,
+              Verified_PropertyType: getPreviewValue(
+                data?.propertyType,
+                propertyDropdown,
+                propertyVerification,
+                propertyDropdownOptions,
+              ),
+            };
+
+            if (data?.propertyType !== 'VACANT LAND') {
+              generatedPreview['Remarks (Preview)'] = remarks ?? 'NA';
+              // Parking
+              generatedPreview['Usage Type (Parking Current)'] =
+                parkingFloor?.usageType;
+              generatedPreview['Verified_UsageParking'] = getPreviewValue(
+                parkingFloor?.usageType,
+                usageTypeDropdown,
+                usageType,
+                usageTypeDropdownOptions,
+              );
+
+              generatedPreview['Occupancy Type (Parking Current)'] =
+                parkingFloor?.occupancyName;
+              generatedPreview['Verified_OccupancyParking'] = getPreviewValue(
+                parkingFloor?.occupancyName,
+                occupancyTypeDropdown,
+                occupancyType,
+                occupancyTypeDropdownOptions,
+              );
+
+              generatedPreview['Construction Type (Parking Current)'] =
+                parkingFloor?.constructionType;
+              generatedPreview['Verified_ConstructionParking'] =
+                getPreviewValue(
+                  parkingFloor?.constructionType,
+                  constructionTypeDropdown,
+                  constructionType,
+                  constructionTypeDropdownOptions,
+                );
+
+              generatedPreview['Built-up Area (Parking Current)'] =
+                parkingFloor?.builtupArea;
+              generatedPreview['Verified_BuiltUpParking'] = getPreviewValue(
+                parkingFloor?.builtupArea,
+                buildupAreaDropdown,
+                buildupArea,
+                buildupAreaDropdownOptions,
+                builtupAreaIput,
+              );
+
+              generatedPreview['Date From (Parking Current)'] =
+                parkingFloor?.dateFrom;
+              generatedPreview['Verified_DateFromParking'] = getPreviewValue(
+                parkingFloor?.dateFrom,
+                dateFromParkingDropdown,
+                dateFromParking,
+                null,
+                null,
+                true,
+              );
+
+              generatedPreview['Date To (Parking Current)'] =
+                parkingFloor?.dateUpto;
+              generatedPreview['Verified_DateToParking'] = getPreviewValue(
+                parkingFloor?.dateUpto,
+                dateToParkingDropdown,
+                dateToParking,
+                null,
+                null,
+                true,
+              );
+
+              // Basement
+              generatedPreview['Usage Type (Basement Current)'] =
+                basementFloor?.usageType;
+              generatedPreview['Verified_UsageBasement'] = getPreviewValue(
+                basementFloor?.usageType,
+                null,
+                usageTypeBasement,
+                null,
+                usageTypeInputBasement,
+              );
+
+              generatedPreview['Occupancy Type (Basement Current)'] =
+                basementFloor?.occupancyName;
+              generatedPreview['Verified_OccupancyBasement'] = getPreviewValue(
+                basementFloor?.occupancyName,
+                null,
+                occupancyTypeBasement,
+                null,
+                occupancyTypeInputBasement,
+              );
+
+              generatedPreview['Construction Type (Basement Current)'] =
+                basementFloor?.constructionType;
+              generatedPreview['Verified_ConstructionBasement'] =
+                getPreviewValue(
+                  basementFloor?.constructionType,
+                  null,
+                  constructionTypeBasement,
+                  null,
+                  constructionTypeInputBasement,
+                );
+
+              generatedPreview['Built-up Area (Basement Current)'] =
+                basementFloor?.builtupArea;
+              generatedPreview['Verified_BuiltUpBasement'] = getPreviewValue(
+                basementFloor?.builtupArea,
+                buildupAreaDropdownBasement,
+                buildupAreaBasement,
+                buildupAreaDropdownOptions,
+                builtupAreaInputBasement,
+              );
+
+              generatedPreview['Date From (Basement Current)'] =
+                basementFloor?.dateFrom;
+              generatedPreview['Verified_DateFromBasement'] = getPreviewValue(
+                basementFloor?.dateFrom,
+                dateFromBasementDropdown,
+                dateFromBasement,
+                null,
+                null,
+                true,
+              );
+
+              generatedPreview['Date To (Basement Current)'] =
+                basementFloor?.dateUpto;
+              generatedPreview['Verified_DateToBasement'] = getPreviewValue(
+                basementFloor?.dateUpto,
+                dateToBasementDropdown,
+                dateToBasement,
+                null,
+                null,
+                true,
+              );
+            }
+
+            // Add remarks if property type is not VACANT LAND
+            if (data?.propertyType !== 'VACANT LAND' && remarks) {
+              generatedPreview['Remarks'] = remarks;
+            }
+
+            setPreviewData(generatedPreview);
+            setIsPreviewVisible(true);
+          }}
+        >
+          <Text style={styles.previewButtonText}>Preview</Text>
+        </TouchableOpacity>
+        <Modal
+          visible={isPreviewVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setIsPreviewVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Preview Details</Text>
+              <ScrollView style={styles.modalContent}>
+                {/* Combined Card for Ward, Zone, Property Type */}
+                <PreviewCard title="Property Details">
+                  <PreviewRow label="Ward No" value={previewData['Ward No']} />
+                  <PreviewRow
+                    label="Verified Ward"
+                    value={previewData['Verified_Ward']}
+                  />
+                  <PreviewRow
+                    label="New Ward No"
+                    value={previewData['New Ward No (Current)']}
+                  />
+                  <PreviewRow
+                    label="Verified New Ward"
+                    value={previewData['Verified_NewWard']}
+                  />
+                  <PreviewRow
+                    label="Zone"
+                    value={previewData['Zone (Current)']}
+                  />
+                  <PreviewRow
+                    label="Verified Zone"
+                    value={previewData['Verified_Zone']}
+                  />
+                  <PreviewRow
+                    label="Property Type"
+                    value={previewData['Property Type (Current)']}
+                  />
+                  <PreviewRow
+                    label="Verified Property Type"
+                    value={previewData['Verified_PropertyType']}
+                  />
+                </PreviewCard>
+
+                {data?.propertyType !== 'VACANT LAND' && (
+                  <>
+                    {/* Parking Card */}
+                    <PreviewCard title="Parking Details">
+                      <PreviewRow
+                        label="Usage Type"
+                        value={previewData['Usage Type (Parking Current)']}
+                      />
+                      <PreviewRow
+                        label="Verified Usage"
+                        value={previewData['Verified_UsageParking']}
+                      />
+                      <PreviewRow
+                        label="Occupancy Type"
+                        value={previewData['Occupancy Type (Parking Current)']}
+                      />
+                      <PreviewRow
+                        label="Verified Occupancy"
+                        value={previewData['Verified_OccupancyParking']}
+                      />
+                      <PreviewRow
+                        label="Construction Type"
+                        value={
+                          previewData['Construction Type (Parking Current)']
+                        }
+                      />
+                      <PreviewRow
+                        label="Verified Construction"
+                        value={previewData['Verified_ConstructionParking']}
+                      />
+                      <PreviewRow
+                        label="Built-up Area"
+                        value={previewData['Built-up Area (Parking Current)']}
+                      />
+                      <PreviewRow
+                        label="Verified Built-up Area"
+                        value={previewData['Verified_BuiltUpParking']}
+                      />
+                      <PreviewRow
+                        label="Date From"
+                        value={previewData['Date From (Parking Current)']}
+                      />
+                      <PreviewRow
+                        label="Verified Date From"
+                        value={previewData['Verified_DateFromParking']}
+                      />
+                      <PreviewRow
+                        label="Date To"
+                        value={previewData['Date To (Parking Current)']}
+                      />
+                      <PreviewRow
+                        label="Verified Date To"
+                        value={previewData['Verified_DateToParking']}
+                      />
+                    </PreviewCard>
+
+                    {/* Basement Card */}
+                    <PreviewCard title="Basement Details">
+                      <PreviewRow
+                        label="Usage Type"
+                        value={previewData['Usage Type (Basement Current)']}
+                      />
+                      <PreviewRow
+                        label="Verified Usage"
+                        value={previewData['Verified_UsageBasement']}
+                      />
+                      <PreviewRow
+                        label="Occupancy Type"
+                        value={previewData['Occupancy Type (Basement Current)']}
+                      />
+                      <PreviewRow
+                        label="Verified Occupancy"
+                        value={previewData['Verified_OccupancyBasement']}
+                      />
+                      <PreviewRow
+                        label="Construction Type"
+                        value={
+                          previewData['Construction Type (Basement Current)']
+                        }
+                      />
+                      <PreviewRow
+                        label="Verified Construction"
+                        value={previewData['Verified_ConstructionBasement']}
+                      />
+                      <PreviewRow
+                        label="Built-up Area"
+                        value={previewData['Built-up Area (Basement Current)']}
+                      />
+                      <PreviewRow
+                        label="Verified Built-up Area"
+                        value={previewData['Verified_BuiltUpBasement']}
+                      />
+                      <PreviewRow
+                        label="Date From"
+                        value={previewData['Date From (Basement Current)']}
+                      />
+                      <PreviewRow
+                        label="Verified Date From"
+                        value={previewData['Verified_DateFromBasement']}
+                      />
+                      <PreviewRow
+                        label="Date To"
+                        value={previewData['Date To (Basement Current)']}
+                      />
+                      <PreviewRow
+                        label="Verified Date To"
+                        value={previewData['Verified_DateToBasement']}
+                      />
+                    </PreviewCard>
+
+                    {/* Remarks Card */}
+                    <PreviewCard title="Remarks">
+                      <Text>{previewData['Remarks (Preview)']}</Text>
+                    </PreviewCard>
+
+                    {/* Extra Floor Card */}
+                    {addExtraFloor && floors.length > 0 && (
+                      <PreviewCard title="Extra Floor Details">
+                        {floors.map((floor, index) => (
+                          <View key={index} style={styles.floorCard}>
+                            <Text style={styles.previewLabel}>
+                              Extra Floor {index + 1}
+                            </Text>
+                            <PreviewRow
+                              label="Floor Type"
+                              value={getLabelByValue(
+                                floorNameDropdownOptions,
+                                floor.floorName,
+                              )}
+                            />
+                            <PreviewRow
+                              label="Construction Type"
+                              value={getLabelByValue(
+                                constructionTypeDropdownOptions,
+                                floor.constructionType,
+                              )}
+                            />
+                            <PreviewRow
+                              label="Occupancy Type"
+                              value={getLabelByValue(
+                                occupancyTypeDropdownOptions,
+                                floor.occupancyType,
+                              )}
+                            />
+                            <PreviewRow
+                              label="Usage Type"
+                              value={getLabelByValue(
+                                usageTypeDropdownOptions,
+                                floor.usageType,
+                              )}
+                            />
+                            <PreviewRow
+                              label="From Date"
+                              value={
+                                floor.fromDate
+                                  ? formatDate(floor.fromDate)
+                                  : 'N/A'
+                              }
+                            />
+                            <PreviewRow
+                              label="To Date"
+                              value={
+                                floor.toDate ? formatDate(floor.toDate) : 'N/A'
+                              }
+                            />
+                          </View>
+                        ))}
+                      </PreviewCard>
+                    )}
+
+                    {/* Remarks Card */}
+                    {remarks && (
+                      <PreviewCard title="Remarks">
+                        <Text style={styles.remarksPreviewText}>{remarks}</Text>
+                      </PreviewCard>
+                    )}
+                  </>
+                )}
+              </ScrollView>
+
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setIsPreviewVisible(false)}
+              >
+                <Text style={styles.closeButtonText}>Close</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleSubmitPreview}
+              >
+                <Text style={styles.submitButtonText}>Submit</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
-    </ScrollView>
+        </Modal>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 

@@ -26,6 +26,7 @@ import Header from '../Screen/Header';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import { BASE_URL } from '../config';
+import HeaderNavigation from '../Components/HeaderNavigation';
 const SearchAssesment = ({ navigation }) => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [value, setValue] = useState(); // ward id
@@ -115,9 +116,9 @@ const SearchAssesment = ({ navigation }) => {
         );
 
         const ubid = response.data.data.wardList.ubid || [];
-        console.log(ubid,"my ub")
-        console.log(ubid,"i am passing data to all")
-        console.log(response.data.data,"i am passing data to all")
+        console.log(ubid, 'my ub');
+        console.log(ubid, 'i am passing data to all');
+        console.log(response.data.data, 'i am passing data to all');
         setMasterData(response.data.data);
       } catch (error) {
         console.error('Fetch error:', error);
@@ -165,7 +166,7 @@ const SearchAssesment = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header navigation={navigation} />
+      <HeaderNavigation />
       <ScrollView>
         <View style={styles.seacrhCont}>
           <View style={styles.searchhead}>

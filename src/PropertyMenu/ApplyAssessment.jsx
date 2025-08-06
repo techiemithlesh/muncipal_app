@@ -14,6 +14,8 @@ import { BASE_URL } from '../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import CustomAlert from '../Components/CustomAlert';
+import HeaderNavigation from '../Components/HeaderNavigation';
 // Reusable address section component
 const AddressSection = ({
   address,
@@ -30,6 +32,7 @@ const AddressSection = ({
 }) => (
   <View style={styles.section}>
     {title && <Text style={styles.header}>{title}</Text>}
+    <Text style={styles.label}>Property Address *</Text>
     <TextInput
       style={styles.input}
       placeholder="Property Address *"
@@ -37,6 +40,7 @@ const AddressSection = ({
       value={address}
       onChangeText={setAddress}
     />
+    <Text style={styles.label}>City *</Text>
     <TextInput
       style={styles.input}
       placeholder="City *"
@@ -44,6 +48,7 @@ const AddressSection = ({
       value={city}
       onChangeText={setCity}
     />
+    <Text style={styles.label}>District *</Text>
     <TextInput
       style={styles.input}
       placeholder="District *"
@@ -51,6 +56,7 @@ const AddressSection = ({
       value={district}
       onChangeText={setDistrict}
     />
+    <Text style={styles.label}>State *</Text>
     <TextInput
       style={styles.input}
       placeholder="State *"
@@ -58,6 +64,7 @@ const AddressSection = ({
       value={stateValue}
       onChangeText={setStateValue}
     />
+    <Text style={styles.label}>Pincode *</Text>
     <TextInput
       style={styles.input}
       placeholder="Pincode *"
@@ -160,6 +167,11 @@ const ApplyAssessment = ({ navigation }) => {
   const [ownerName, setOwnerName] = useState('');
   const [guardianName, setGuardianName] = useState('');
 
+  const showAlert = message => {
+    setAlertMessage(message);
+    setAlertVisible(true);
+  };
+
   const validateMobile = mobile => /^[6-9]\d{9}$/.test(mobile);
   const validateAadhaar = aadhaar => /^\d{12}$/.test(aadhaar);
   const validatePAN = pan => /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan);
@@ -231,32 +243,11 @@ const ApplyAssessment = ({ navigation }) => {
   };
 
   const handleSubmit = async () => {
+    if (!oldWard) {
+      showAlert('Please select an oldWard type.');
+      return;
+    }
     // Validations
-    if (!validateMobile(mobile)) {
-      Alert.alert(
-        'Invalid Mobile Number',
-        'Please enter a valid 10-digit mobile number starting with 6-9.',
-      );
-      return;
-    }
-
-    if (!validateAadhaar(aadhaar)) {
-      Alert.alert('Invalid Aadhaar', 'Aadhaar must be 12 digits.');
-      return;
-    }
-
-    if (!validatePAN(pan)) {
-      Alert.alert(
-        'Invalid PAN',
-        'PAN must be in correct format (e.g., ABCDE1234F).',
-      );
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
-      return;
-    }
 
     // Base form data
     const formData = {
@@ -323,14 +314,6 @@ const ApplyAssessment = ({ navigation }) => {
           floor.fromDate &&
           floor.uptoDate,
       );
-
-      if (!isValid) {
-        Alert.alert(
-          'Validation Error',
-          'Please fill all required fields for each floor.',
-        );
-        return;
-      }
 
       formData.floors = floorDetails.map(floor => ({
         floorName: floor.floorName,
@@ -482,12 +465,25 @@ const ApplyAssessment = ({ navigation }) => {
     { label: 'DSII', value: 'DSII' },
   ];
 
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const showFieldAlert = msg => {
+    setAlertMessage(msg);
+    setAlertVisible(true);
+  };
+
   return (
     <View style={{ flex: 1 }}>
-      <Header />
+      <HeaderNavigation />
+      <CustomAlert
+        visible={alertVisible}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.header}>Assessment Type</Text>
         <View style={styles.section}>
+          <Text style={styles.label}>Old Ward *</Text>
           <Dropdown
             style={styles.dropdown}
             data={wardDropdownOptions}
@@ -497,6 +493,7 @@ const ApplyAssessment = ({ navigation }) => {
             value={oldWard}
             onChange={item => setOldWard(item.value)}
           />
+          <Text style={styles.label}>New Ward *</Text>
           <Dropdown
             style={styles.dropdown}
             data={newWardOptions}
@@ -506,6 +503,7 @@ const ApplyAssessment = ({ navigation }) => {
             value={newWard}
             onChange={item => setNewWard(item.value)}
           />
+          <Text style={styles.label}>Ownership Type *</Text>
           <Dropdown
             style={styles.dropdown}
             data={ownershipDropdownOptions}
@@ -515,6 +513,7 @@ const ApplyAssessment = ({ navigation }) => {
             value={ownershipType}
             onChange={item => setOwnershipType(item.label)}
           />
+          <Text style={styles.label}>Property Type *</Text>
           <Dropdown
             style={styles.dropdown}
             data={propertyTypeDropdownOptions}
@@ -527,7 +526,7 @@ const ApplyAssessment = ({ navigation }) => {
               setPropertyTypeLabel(item.label); // store label to compare later
             }}
           />
-
+          <Text style={styles.label}>Zone *</Text>
           <Dropdown
             style={styles.dropdown}
             data={[
@@ -551,13 +550,16 @@ const ApplyAssessment = ({ navigation }) => {
 
         <Text style={styles.header}>Owner Details</Text>
         <View style={styles.section}>
+          <Text style={styles.label}>Owner Name *</Text>
           <TextInput
             style={styles.input}
             placeholder="Owner Name"
             placeholderTextColor="black"
             value={ownerName}
             onChangeText={setOwnerName}
+            onFocus={() => showFieldAlert('Owner Name')}
           />
+          <Text style={styles.label}>Gender *</Text>
           <Dropdown
             style={styles.dropdown}
             data={genderOptions}
@@ -567,12 +569,13 @@ const ApplyAssessment = ({ navigation }) => {
             value={gender}
             onChange={item => setGender(item.value)}
           />
+          <Text style={styles.label}>Date of Birth *</Text>
           {/* DOB Date Picker */}
           <TouchableOpacity
-            style={styles.input}
+            style={styles.dateInput}
             onPress={() => setShowDobPicker(true)}
           >
-            <Text style={{ color: dob ? '#000' : '#999' }}>
+            <Text style={styles.dateText}>
               {dob ? new Date(dob).toLocaleDateString('en-GB') : 'DOB *'}
             </Text>
           </TouchableOpacity>
@@ -589,13 +592,16 @@ const ApplyAssessment = ({ navigation }) => {
               }}
             />
           )}
+          <Text style={styles.label}>Guardian Name *</Text>
           <TextInput
             style={styles.input}
             placeholder="Guardian Name"
             placeholderTextColor="black"
             value={guardianName}
             onChangeText={setGuardianName}
+            onFocus={() => showFieldAlert('Guardian Name')}
           />
+          <Text style={styles.label}>Relation *</Text>
           <Dropdown
             style={styles.dropdown}
             data={selectRelation}
@@ -605,7 +611,7 @@ const ApplyAssessment = ({ navigation }) => {
             value={relation}
             onChange={item => setRelation(item.value)}
           />
-
+          <Text style={styles.label}>Mobile Number *</Text>
           <TextInput
             style={styles.input}
             keyboardType="numeric"
@@ -614,8 +620,9 @@ const ApplyAssessment = ({ navigation }) => {
             value={mobile}
             onChangeText={setMobile}
             placeholderTextColor="black"
+            onFocus={() => showFieldAlert('Mobile Number')}
           />
-
+          <Text style={styles.label}>Aadhaar Number *</Text>
           <TextInput
             style={styles.input}
             keyboardType="numeric"
@@ -624,8 +631,9 @@ const ApplyAssessment = ({ navigation }) => {
             value={aadhaar}
             onChangeText={setAadhaar}
             placeholderTextColor="black"
+            onFocus={() => showFieldAlert('Aadhaar Number')}
           />
-
+          <Text style={styles.label}>PAN Number *</Text>
           <TextInput
             style={styles.input}
             autoCapitalize="characters"
@@ -634,8 +642,9 @@ const ApplyAssessment = ({ navigation }) => {
             value={pan}
             onChangeText={setPan}
             placeholderTextColor="black"
+            onFocus={() => showFieldAlert('PAN Number')}
           />
-
+          <Text style={styles.label}>Email *</Text>
           <TextInput
             style={styles.input}
             keyboardType="email-address"
@@ -643,7 +652,9 @@ const ApplyAssessment = ({ navigation }) => {
             value={email}
             onChangeText={setEmail}
             placeholderTextColor="black"
+            onFocus={() => showFieldAlert('Email')}
           />
+          <Text style={styles.label}>Member of Armed Forces? *</Text>
           <Dropdown
             style={styles.dropdown}
             data={yesNoOptions}
@@ -653,6 +664,7 @@ const ApplyAssessment = ({ navigation }) => {
             value={armedForces}
             onChange={item => setArmedForces(item.value)}
           />
+          <Text style={styles.label}>Specially Abled? *</Text>
           <Dropdown
             style={styles.dropdown}
             data={yesNoOptions}
@@ -666,6 +678,7 @@ const ApplyAssessment = ({ navigation }) => {
 
         <Text style={styles.header}>Electricity Details</Text>
         <View style={styles.section}>
+          <Text style={styles.label}>Electricity K. No *</Text>
           <TextInput
             style={styles.input}
             placeholder="Electricity K. No (e.g. xxxx xxxx xxxx)"
@@ -674,8 +687,9 @@ const ApplyAssessment = ({ navigation }) => {
             maxLength={14}
             value={kno}
             onChangeText={setKno}
+            onFocus={() => showFieldAlert('Electricity K. No')}
           />
-
+          <Text style={styles.label}>ACC No *</Text>
           <TextInput
             style={styles.input}
             placeholder="ACC No"
@@ -683,15 +697,18 @@ const ApplyAssessment = ({ navigation }) => {
             placeholderTextColor="black"
             value={accNo}
             onChangeText={setAccNo}
+            onFocus={() => showFieldAlert('ACC No')}
           />
-
+          <Text style={styles.label}>BIND/BOOK No *</Text>
           <TextInput
             style={styles.input}
             placeholder="BIND/BOOK No"
             placeholderTextColor="black"
             value={bindBookNo}
             onChangeText={setBindBookNo}
+            onFocus={() => showFieldAlert('BIND/BOOK No')}
           />
+          <Text style={styles.label}>Electricity Category *</Text>
           <Dropdown
             style={styles.dropdown}
             data={selectelectcate}
@@ -703,22 +720,92 @@ const ApplyAssessment = ({ navigation }) => {
           />
         </View>
 
+        <Text style={styles.header}>Property Details</Text>
+        <View style={styles.section}>
+          <Text style={styles.label}>Khata No. *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="sfdsfsa"
+            placeholderTextColor="#000"
+            value={khataNo}
+            onChangeText={setKhataNo}
+            onFocus={() => showFieldAlert('Khata No.')}
+          />
+
+          <Text style={styles.label}>Plot No. *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="hbnm,"
+            placeholderTextColor="#000"
+            value={plotNo}
+            onChangeText={setPlotNo}
+            onFocus={() => showFieldAlert('Plot No.')}
+          />
+
+          <Text style={styles.label}>Village/Mauja Name *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="dsafsa"
+            placeholderTextColor="#000"
+            value={villageName}
+            onChangeText={setVillageName}
+            onFocus={() => showFieldAlert('Village/Mauja Name')}
+          />
+
+          <Text style={styles.label}>Area of Plot (in Decimal) *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="100.00"
+            placeholderTextColor="#000"
+            value={plotArea}
+            onChangeText={setPlotArea}
+            keyboardType="numeric"
+            onFocus={() => showFieldAlert('Area of Plot')}
+          />
+
+          <Text style={styles.label}>Road Width (in ft) *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="12.00"
+            placeholderTextColor="#000"
+            value={roadWidth}
+            onChangeText={setRoadWidth}
+            keyboardType="numeric"
+            onFocus={() => showFieldAlert('Road Width')}
+          />
+
+          <Text style={styles.label}>
+            In Case of No Road Enter "0" (For Vacant Land Only)
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="0"
+            placeholderTextColor="#000"
+            value={noRoad}
+            onChangeText={setNoRoad}
+            keyboardType="numeric"
+            onFocus={() => showFieldAlert('In Case of No Road')}
+          />
+        </View>
+
         <Text style={styles.header}>Water Connection Details</Text>
         <View style={styles.section}>
+          <Text style={styles.label}>Water Connection No *</Text>
           <TextInput
             style={styles.input}
             placeholder="Water Connection No"
             placeholderTextColor="#000"
             value={waterConnectionNo}
             onChangeText={setWaterConnectionNo}
+            onFocus={() => showFieldAlert('Water Connection No')}
           />
-
+          <Text style={styles.label}>Water Connection Date *</Text>
           {/* Date Picker for Water Connection Date */}
           <TouchableOpacity
-            style={styles.input}
+            style={styles.dateInput}
             onPress={() => setShowWaterConnectionDatePicker(true)}
           >
-            <Text style={{ color: waterConnectionDate ? '#000' : '#999' }}>
+            <Text style={styles.dateText}>
               {waterConnectionDate
                 ? new Date(waterConnectionDate).toLocaleDateString('en-GB')
                 : 'Water Connection Date (DD/MM/YYYY)'}
@@ -784,6 +871,7 @@ const ApplyAssessment = ({ navigation }) => {
 
         <Text style={styles.header}>Extra Charges</Text>
         <View style={styles.section}>
+          <Text style={styles.label}>Mobile Tower *</Text>
           <Dropdown
             style={styles.dropdown}
             data={yesNoOptions}
@@ -804,17 +892,21 @@ const ApplyAssessment = ({ navigation }) => {
                 placeholder="Eg. 200 SQMTR"
                 value={towerArea}
                 onChangeText={setTowerArea}
+                onFocus={() =>
+                  showFieldAlert(
+                    'Total Area Covered by Mobile Tower & Supporting Equipments',
+                  )
+                }
               />
-
               <Text style={styles.label}>
                 Date of Installation of Mobile Tower *
               </Text>
               {/* Date Picker for Mobile Tower Installation Date */}
               <TouchableOpacity
-                style={styles.input}
+                style={styles.dateInput}
                 onPress={() => setShowInstallationDatePicker(true)}
               >
-                <Text style={{ color: installationDate ? '#000' : '#999' }}>
+                <Text style={styles.dateText}>
                   {installationDate
                     ? new Date(installationDate).toLocaleDateString('en-GB')
                     : 'DD-MM-YYYY'}
@@ -837,6 +929,9 @@ const ApplyAssessment = ({ navigation }) => {
               )}
             </View>
           )}
+          <Text style={styles.label}>
+            Does Property Have Hoarding Board(s)? *
+          </Text>
           <Dropdown
             style={styles.dropdown}
             data={yesNoOptions}
@@ -848,21 +943,28 @@ const ApplyAssessment = ({ navigation }) => {
           />
           {hoarding === 'yes' && (
             <>
+              <Text style={styles.label}>
+                Total Area of Wall / Roof / Land (in Sq. Ft.) *
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholder="Total Area of Wall / Roof / Land (in Sq. Ft.) *"
                 value={hoardingArea}
                 onChangeText={setHoardingArea}
                 placeholderTextColor="#000"
+                onFocus={() =>
+                  showFieldAlert('Total Area of Wall / Roof / Land')
+                }
               />
+              <Text style={styles.label}>
+                Date of Installation of Hoarding Board(s) *
+              </Text>
               {/* Date Picker for Hoarding Installation Date */}
               <TouchableOpacity
-                style={styles.input}
+                style={styles.dateInput}
                 onPress={() => setShowHoardingInstallationDatePicker(true)}
               >
-                <Text
-                  style={{ color: hoardingInstallationDate ? '#000' : '#999' }}
-                >
+                <Text style={styles.dateText}>
                   {hoardingInstallationDate
                     ? new Date(hoardingInstallationDate).toLocaleDateString(
                         'en-GB',
@@ -889,7 +991,7 @@ const ApplyAssessment = ({ navigation }) => {
               )}
             </>
           )}
-
+          <Text style={styles.label}>Is property a Petrol Pump? *</Text>
           <Dropdown
             style={styles.dropdown}
             data={yesNoOptions}
@@ -899,22 +1001,26 @@ const ApplyAssessment = ({ navigation }) => {
             value={petrolPump}
             onChange={item => setPetrolPump(item.value)}
           />
-
           {petrolPump === 'yes' && (
             <>
+              <Text style={styles.label}>
+                Total Area of Petrol Pump (in Sq. Ft.) *
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholder="Total Area of Petrol Pump (in Sq. Ft.) *"
                 value={pumpArea}
                 onChangeText={setPumpArea}
                 placeholderTextColor="#000"
+                onFocus={() => showFieldAlert('Total Area of Petrol Pump')}
               />
+              <Text style={styles.label}>Date of Installation *</Text>
               {/* Date Picker for Petrol Pump Installation Date */}
               <TouchableOpacity
-                style={styles.input}
+                style={styles.dateInput}
                 onPress={() => setShowPumpInstallationDatePicker(true)}
               >
-                <Text style={{ color: pumpInstallationDate ? '#000' : '#999' }}>
+                <Text style={styles.dateText}>
                   {pumpInstallationDate
                     ? new Date(pumpInstallationDate).toLocaleDateString('en-GB')
                     : 'Date of Installation *'}
@@ -939,6 +1045,7 @@ const ApplyAssessment = ({ navigation }) => {
               )}
             </>
           )}
+          <Text style={styles.label}>Rainwater harvesting provision? *</Text>
           <Dropdown
             style={styles.dropdown}
             data={yesNoOptions}
@@ -952,10 +1059,10 @@ const ApplyAssessment = ({ navigation }) => {
         {rainHarvesting === 'yes' && (
           <View style={styles.section}>
             <TouchableOpacity
-              style={styles.input}
+              style={styles.dateInput}
               onPress={() => setShowDatePicker(true)}
             >
-              <Text style={{ color: completionDate ? '#000' : '#999' }}>
+              <Text style={styles.dateText}>
                 {completionDate
                   ? completionDate.toLocaleDateString('en-GB')
                   : 'Completion Date of Petrol Pump *'}
@@ -985,6 +1092,7 @@ const ApplyAssessment = ({ navigation }) => {
             <View key={index} style={styles.floorCard}>
               <Text style={styles.floorTitle}>Floor {index + 1}</Text>
 
+              <Text style={styles.label}>Floor Name *</Text>
               <Dropdown
                 style={styles.dropdown}
                 data={floorNameOptions}
@@ -997,6 +1105,7 @@ const ApplyAssessment = ({ navigation }) => {
                 }
               />
 
+              <Text style={styles.label}>Usage Type *</Text>
               <Dropdown
                 style={styles.dropdown}
                 data={usageTypeOptions}
@@ -1009,6 +1118,7 @@ const ApplyAssessment = ({ navigation }) => {
                 }
               />
 
+              <Text style={styles.label}>Occupancy Type *</Text>
               <Dropdown
                 style={styles.dropdown}
                 data={occupancyTypeOptions}
@@ -1021,6 +1131,7 @@ const ApplyAssessment = ({ navigation }) => {
                 }
               />
 
+              <Text style={styles.label}>Construction Type *</Text>
               <Dropdown
                 style={styles.dropdown}
                 data={constructionTypeOptions}
@@ -1033,6 +1144,7 @@ const ApplyAssessment = ({ navigation }) => {
                 }
               />
 
+              <Text style={styles.label}>Built Up Area (in Sq. Ft) *</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Built Up Area (in Sq. Ft)"
@@ -1042,8 +1154,10 @@ const ApplyAssessment = ({ navigation }) => {
                 onChangeText={text =>
                   updateFloorDetail(index, 'builtUpArea', text)
                 }
+                onFocus={() => showFieldAlert('Built Up Area')}
               />
 
+              <Text style={styles.label}>From Date (MM/YYYY) *</Text>
               {/* From Date */}
               <TouchableOpacity
                 style={styles.dateInput}
@@ -1056,6 +1170,7 @@ const ApplyAssessment = ({ navigation }) => {
                 </Text>
               </TouchableOpacity>
 
+              <Text style={styles.label}>Upto Date (MM/YYYY) *</Text>
               {/* Upto Date */}
               <TouchableOpacity
                 style={styles.dateInput}
@@ -1088,6 +1203,11 @@ const ApplyAssessment = ({ navigation }) => {
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
           <Text style={styles.buttonText}>Submit</Text>
         </TouchableOpacity>
+        <CustomAlert
+          visible={alertVisible}
+          message={alertMessage}
+          onClose={() => setAlertVisible(false)}
+        />
       </ScrollView>
     </View>
   );
@@ -1103,10 +1223,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 20,
     marginBottom: 10,
-    color: '#333',
+    color: 'black',
   },
   section: {
     marginBottom: 20,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   input: {
     borderWidth: 1,
@@ -1120,14 +1251,12 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   dropdown: {
-    height: 50,
+    height: 45,
     borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#fff',
+    paddingHorizontal: 8,
     marginBottom: 12,
-    justifyContent: 'center',
+    borderRadius: 6,
   },
   button: {
     backgroundColor: '#2e86de',
@@ -1159,6 +1288,12 @@ const styles = StyleSheet.create({
   checked: {
     backgroundColor: 'green',
   },
+  label: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+  },
   checkboxLabel: {
     fontSize: 14,
     color: '#000',
@@ -1188,6 +1323,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 6,
     marginBottom: 12,
+    backgroundColor: '#fff',
   },
   dateText: {
     color: '#333',

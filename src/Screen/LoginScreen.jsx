@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  ImageBackground,
 } from 'react-native';
 import React, { useState } from 'react';
 import axios from 'axios';
@@ -15,6 +16,7 @@ import {
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
 import { BASE_URL } from '../config';
+import Colors from '../Constants/Colors';
 
 const LoginScreen = ({ navigation }) => {
   const [checked, setChecked] = useState(false);
@@ -72,7 +74,11 @@ const LoginScreen = ({ navigation }) => {
   };
 
   return (
-    <View>
+    <ImageBackground
+      source={require('../../android/assets/images/background6.webp')}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
       <View style={styles.loginContainer}>
         <Text style={styles.login}>Login</Text>
 
@@ -150,15 +156,20 @@ const LoginScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 };
 
 export default LoginScreen;
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
   login: {
-    color: 'black',
+    color: Colors.primary,
     justifyContent: 'center',
     textAlign: 'center',
     fontWeight: '800',
@@ -169,12 +180,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 22,
     borderRadius: 10,
-    backgroundColor: '#f2f2f2',
+    backgroundColor: Colors.background,
     marginTop: responsiveHeight(25),
     marginLeft: responsiveWidth(5),
     marginRight: responsiveWidth(5),
     borderWidth: 2,
-    borderColor: 'blue',
+    borderColor: 'red',
 
     // iOS Shadow
     shadowColor: '#000',
@@ -197,14 +208,14 @@ const styles = StyleSheet.create({
   },
   input: {
     height: responsiveHeight(5),
-    borderColor: '#999',
+    borderColor: Colors.primary,
     borderWidth: 1,
     paddingHorizontal: 10,
     borderRadius: 8,
     marginTop: 5,
   },
   button: {
-    backgroundColor: '#007bff',
+    backgroundColor: Colors.primary,
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
@@ -235,7 +246,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   checked: {
-    backgroundColor: '#007bff',
+    backgroundColor: Colors.primary,
   },
   checkmark: {
     color: '#fff',
@@ -258,8 +269,8 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   selected: {
-    backgroundColor: '#007bff',
-    borderColor: '#007bff',
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   emailContainer: {
     marginTop: 10,
