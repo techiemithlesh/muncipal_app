@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ScrollView,
   View,
@@ -29,11 +29,17 @@ const AddressSection = ({
   pincode,
   setPincode,
   title,
+  addressRef,
+  cityRef,
+  districtRef,
+  stateRef,
+  pincodeRef,
 }) => (
   <View style={styles.section}>
     {title && <Text style={styles.header}>{title}</Text>}
     <Text style={styles.label}>Property Address *</Text>
     <TextInput
+      ref={addressRef}
       style={styles.input}
       placeholder="Property Address *"
       placeholderTextColor="#000"
@@ -42,6 +48,7 @@ const AddressSection = ({
     />
     <Text style={styles.label}>City *</Text>
     <TextInput
+      ref={cityRef}
       style={styles.input}
       placeholder="City *"
       placeholderTextColor="#000"
@@ -50,6 +57,7 @@ const AddressSection = ({
     />
     <Text style={styles.label}>District *</Text>
     <TextInput
+      ref={districtRef}
       style={styles.input}
       placeholder="District *"
       placeholderTextColor="#000"
@@ -58,6 +66,7 @@ const AddressSection = ({
     />
     <Text style={styles.label}>State *</Text>
     <TextInput
+      ref={stateRef}
       style={styles.input}
       placeholder="State *"
       placeholderTextColor="#000"
@@ -66,6 +75,7 @@ const AddressSection = ({
     />
     <Text style={styles.label}>Pincode *</Text>
     <TextInput
+      ref={pincodeRef}
       style={styles.input}
       placeholder="Pincode *"
       placeholderTextColor="#000"
@@ -77,6 +87,52 @@ const AddressSection = ({
 );
 
 const ApplyAssessment = ({ navigation }) => {
+  // Create refs for all input fields for validation and focus
+  const scrollViewRef = useRef(null);
+  const ownerNameRef = useRef(null);
+  const guardianNameRef = useRef(null);
+  const mobileRef = useRef(null);
+  const aadhaarRef = useRef(null);
+  const panRef = useRef(null);
+  const emailRef = useRef(null);
+  const knoRef = useRef(null);
+  const accNoRef = useRef(null);
+  const bindBookNoRef = useRef(null);
+  const khataNoRef = useRef(null);
+  const plotNoRef = useRef(null);
+  const villageNameRef = useRef(null);
+  const plotAreaRef = useRef(null);
+  const roadWidthRef = useRef(null);
+  const noRoadRef = useRef(null);
+  const propertyAddressRef = useRef(null);
+  const cityRef = useRef(null);
+  const districtRef = useRef(null);
+  const stateRef = useRef(null);
+  const pincodeRef = useRef(null);
+  const correspondingAddressRef = useRef(null);
+  const correspondingCityRef = useRef(null);
+  const correspondingDistrictRef = useRef(null);
+  const correspondingStateRef = useRef(null);
+  const correspondingPincodeRef = useRef(null);
+  const towerAreaRef = useRef(null);
+  const hoardingAreaRef = useRef(null);
+  const pumpAreaRef = useRef(null);
+  const floorRefs = useRef([]);
+  const wardNoRef = useRef(null);
+  const oldWardRef = useRef(null);
+  const newWardRef = useRef(null);
+  const ownershipTypeRef = useRef(null);
+  const propertyTypeRef = useRef(null);
+  const zoneRef = useRef(null);
+  const genderRef = useRef(null);
+  const relationRef = useRef(null);
+  const armedForcesRef = useRef(null);
+  const speciallyAbledRef = useRef(null);
+  const electricityCategoryRef = useRef(null);
+  const mobileTowerRef = useRef(null);
+  const hoardingRef = useRef(null);
+  const petrolPumpRef = useRef(null);
+  const rainHarvestingRef = useRef(null);
   // water conection deatilas related useState varible
   const [waterConnectionNo, setWaterConnectionNo] = useState('');
   const [waterConnectionDate, setWaterConnectionDate] = useState('');
@@ -242,12 +298,309 @@ const ApplyAssessment = ({ navigation }) => {
     }
   };
 
-  const handleSubmit = async () => {
+  // Validation helper function to focus on invalid field
+  const focusOnField = (ref, message) => {
+    showAlert(message);
+    if (ref && ref.current) {
+      ref.current.focus();
+    }
+  };
+
+  // Comprehensive validation function
+  const validateAllFields = () => {
+    // Assessment Type validations
     if (!oldWard) {
-      showAlert('Please select an oldWard type.');
+      showAlert('Please select Old Ward');
+      return false;
+    }
+    if (!newWard) {
+      showAlert('Please select New Ward');
+      return false;
+    }
+    if (!ownershipType) {
+      showAlert('Please select Ownership Type');
+      return false;
+    }
+    if (!propertyType) {
+      showAlert('Please select Property Type');
+      return false;
+    }
+    if (!zone) {
+      showAlert('Please select Zone');
+      return false;
+    }
+
+    // Owner Details validations
+    if (!ownerName || ownerName.trim().length < 2) {
+      focusOnField(
+        ownerNameRef,
+        'Please enter a valid Owner Name (minimum 2 characters)',
+      );
+      return false;
+    }
+    if (!gender) {
+      showAlert('Please select Gender');
+      return false;
+    }
+    if (!dob) {
+      showAlert('Please select Date of Birth');
+      return false;
+    }
+    if (!guardianName || guardianName.trim().length < 2) {
+      focusOnField(
+        guardianNameRef,
+        'Please enter a valid Guardian Name (minimum 2 characters)',
+      );
+      return false;
+    }
+    if (!relation) {
+      showAlert('Please select Relation');
+      return false;
+    }
+    if (!mobile || !validateMobile(mobile)) {
+      focusOnField(
+        mobileRef,
+        'Please enter a valid 10-digit Mobile Number starting with 6-9',
+      );
+      return false;
+    }
+    if (!aadhaar || !validateAadhaar(aadhaar)) {
+      focusOnField(aadhaarRef, 'Please enter a valid 12-digit Aadhaar Number');
+      return false;
+    }
+    if (!pan || !validatePAN(pan)) {
+      focusOnField(
+        panRef,
+        'Please enter a valid PAN Number (e.g., ABCDE1234F)',
+      );
+      return false;
+    }
+    if (!email || !validateEmail(email)) {
+      focusOnField(emailRef, 'Please enter a valid Email Address');
+      return false;
+    }
+    if (!armedForces) {
+      showAlert('Please select Armed Forces status');
+      return false;
+    }
+    if (!speciallyAbled) {
+      showAlert('Please select Specially Abled status');
+      return false;
+    }
+
+    // Electricity Details validations
+    if (!kno || kno.trim().length < 4) {
+      focusOnField(knoRef, 'Please enter a valid Electricity K. No');
+      return false;
+    }
+    if (!accNo || accNo.trim().length < 2) {
+      focusOnField(accNoRef, 'Please enter a valid ACC No');
+      return false;
+    }
+    if (!bindBookNo || bindBookNo.trim().length < 2) {
+      focusOnField(bindBookNoRef, 'Please enter a valid BIND/BOOK No');
+      return false;
+    }
+    if (!electricityCategory) {
+      showAlert('Please select Electricity Category');
+      return false;
+    }
+
+    // Property Details validations
+    if (!khataNo || khataNo.trim().length < 1) {
+      focusOnField(khataNoRef, 'Please enter Khata No');
+      return false;
+    }
+    if (!plotNo || plotNo.trim().length < 1) {
+      focusOnField(plotNoRef, 'Please enter Plot No');
+      return false;
+    }
+    if (!villageName || villageName.trim().length < 2) {
+      focusOnField(villageNameRef, 'Please enter Village Name');
+      return false;
+    }
+    if (!plotArea || isNaN(plotArea) || parseFloat(plotArea) <= 0) {
+      focusOnField(plotAreaRef, 'Please enter a valid Plot Area');
+      return false;
+    }
+    if (!roadWidth || isNaN(roadWidth) || parseFloat(roadWidth) <= 0) {
+      focusOnField(roadWidthRef, 'Please enter a valid Road Width');
+      return false;
+    }
+    if (!noRoad || noRoad.trim().length < 1) {
+      focusOnField(noRoadRef, 'Please enter No. of Road');
+      return false;
+    }
+
+    // Property Address validations
+    if (!propertyAddress || propertyAddress.trim().length < 5) {
+      focusOnField(
+        propertyAddressRef,
+        'Please enter a valid Property Address (minimum 5 characters)',
+      );
+      return false;
+    }
+    if (!city || city.trim().length < 2) {
+      focusOnField(cityRef, 'Please enter a valid City name');
+      return false;
+    }
+    if (!district || district.trim().length < 2) {
+      focusOnField(districtRef, 'Please enter a valid District name');
+      return false;
+    }
+    if (!state || state.trim().length < 2) {
+      focusOnField(stateRef, 'Please enter a valid State name');
+      return false;
+    }
+    if (!pincode || !/^\d{6}$/.test(pincode)) {
+      focusOnField(pincodeRef, 'Please enter a valid 6-digit Pincode');
+      return false;
+    }
+
+    // Corresponding Address validations (if checkbox is checked)
+    if (isChecked) {
+      if (!correspondingAddress || correspondingAddress.trim().length < 5) {
+        focusOnField(
+          correspondingAddressRef,
+          'Please enter a valid Corresponding Address',
+        );
+        return false;
+      }
+      if (!correspondingCity || correspondingCity.trim().length < 2) {
+        focusOnField(
+          correspondingCityRef,
+          'Please enter a valid Corresponding City',
+        );
+        return false;
+      }
+      if (!correspondingDistrict || correspondingDistrict.trim().length < 2) {
+        focusOnField(
+          correspondingDistrictRef,
+          'Please enter a valid Corresponding District',
+        );
+        return false;
+      }
+      if (!correspondingState || correspondingState.trim().length < 2) {
+        focusOnField(
+          correspondingStateRef,
+          'Please enter a valid Corresponding State',
+        );
+        return false;
+      }
+      if (!correspondingPincode || !/^\d{6}$/.test(correspondingPincode)) {
+        focusOnField(
+          correspondingPincodeRef,
+          'Please enter a valid 6-digit Corresponding Pincode',
+        );
+        return false;
+      }
+    }
+
+    // Extra Charges validations
+    if (!mobileTower) {
+      showAlert('Please select Mobile Tower status');
+      return false;
+    }
+    if (mobileTower === 'yes') {
+      if (!towerArea || towerArea.trim().length < 1) {
+        focusOnField(towerAreaRef, 'Please enter Tower Area');
+        return false;
+      }
+      if (!installationDate) {
+        showAlert('Please select Mobile Tower Installation Date');
+        return false;
+      }
+    }
+
+    if (!hoarding) {
+      showAlert('Please select Hoarding Board status');
+      return false;
+    }
+    if (hoarding === 'yes') {
+      if (!hoardingArea || hoardingArea.trim().length < 1) {
+        focusOnField(hoardingAreaRef, 'Please enter Hoarding Area');
+        return false;
+      }
+      if (!hoardingInstallationDate) {
+        showAlert('Please select Hoarding Installation Date');
+        return false;
+      }
+    }
+
+    if (!petrolPump) {
+      showAlert('Please select Petrol Pump status');
+      return false;
+    }
+    if (petrolPump === 'yes') {
+      if (!pumpArea || pumpArea.trim().length < 1) {
+        focusOnField(pumpAreaRef, 'Please enter Pump Area');
+        return false;
+      }
+      if (!pumpInstallationDate) {
+        showAlert('Please select Pump Installation Date');
+        return false;
+      }
+    }
+
+    if (!rainHarvesting) {
+      showAlert('Please select Rainwater Harvesting status');
+      return false;
+    }
+    if (rainHarvesting === 'yes' && !completionDate) {
+      showAlert('Please select Rainwater Harvesting Completion Date');
+      return false;
+    }
+
+    // Floor Details validations (if not VACANT LAND)
+    if (propertyTypeLabel !== 'VACANT LAND') {
+      for (let i = 0; i < floorDetails.length; i++) {
+        const floor = floorDetails[i];
+        if (!floor.floorName) {
+          showAlert(`Please select Floor Name for Floor ${i + 1}`);
+          return false;
+        }
+        if (!floor.usageType) {
+          showAlert(`Please select Usage Type for Floor ${i + 1}`);
+          return false;
+        }
+        if (!floor.occupancyType) {
+          showAlert(`Please select Occupancy Type for Floor ${i + 1}`);
+          return false;
+        }
+        if (!floor.constructionType) {
+          showAlert(`Please select Construction Type for Floor ${i + 1}`);
+          return false;
+        }
+        if (
+          !floor.builtUpArea ||
+          isNaN(floor.builtUpArea) ||
+          parseFloat(floor.builtUpArea) <= 0
+        ) {
+          showAlert(`Please enter a valid Built Up Area for Floor ${i + 1}`);
+          if (floorRefs.current[i]) {
+            floorRefs.current[i].focus();
+          }
+          return false;
+        }
+        if (!floor.fromDate) {
+          showAlert(`Please select From Date for Floor ${i + 1}`);
+          return false;
+        }
+        if (!floor.uptoDate) {
+          showAlert(`Please select Upto Date for Floor ${i + 1}`);
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    // Perform comprehensive validation
+    if (!validateAllFields()) {
       return;
     }
-    // Validations
 
     // Base form data
     const formData = {
@@ -480,11 +833,12 @@ const ApplyAssessment = ({ navigation }) => {
         message={alertMessage}
         onClose={() => setAlertVisible(false)}
       />
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.container}>
         <Text style={styles.header}>Assessment Type</Text>
         <View style={styles.section}>
           <Text style={styles.label}>Old Ward *</Text>
           <Dropdown
+            useRef={wardNoRef}
             style={styles.dropdown}
             data={wardDropdownOptions}
             labelField="label"
@@ -552,12 +906,12 @@ const ApplyAssessment = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.label}>Owner Name *</Text>
           <TextInput
+            ref={ownerNameRef}
             style={styles.input}
             placeholder="Owner Name"
             placeholderTextColor="black"
             value={ownerName}
             onChangeText={setOwnerName}
-            onFocus={() => showFieldAlert('Owner Name')}
           />
           <Text style={styles.label}>Gender *</Text>
           <Dropdown
@@ -594,12 +948,12 @@ const ApplyAssessment = ({ navigation }) => {
           )}
           <Text style={styles.label}>Guardian Name *</Text>
           <TextInput
+            ref={guardianNameRef}
             style={styles.input}
             placeholder="Guardian Name"
             placeholderTextColor="black"
             value={guardianName}
             onChangeText={setGuardianName}
-            onFocus={() => showFieldAlert('Guardian Name')}
           />
           <Text style={styles.label}>Relation *</Text>
           <Dropdown
@@ -613,6 +967,7 @@ const ApplyAssessment = ({ navigation }) => {
           />
           <Text style={styles.label}>Mobile Number *</Text>
           <TextInput
+            ref={mobileRef}
             style={styles.input}
             keyboardType="numeric"
             maxLength={10}
@@ -620,10 +975,10 @@ const ApplyAssessment = ({ navigation }) => {
             value={mobile}
             onChangeText={setMobile}
             placeholderTextColor="black"
-            onFocus={() => showFieldAlert('Mobile Number')}
           />
           <Text style={styles.label}>Aadhaar Number *</Text>
           <TextInput
+            ref={aadhaarRef}
             style={styles.input}
             keyboardType="numeric"
             maxLength={12}
@@ -631,10 +986,10 @@ const ApplyAssessment = ({ navigation }) => {
             value={aadhaar}
             onChangeText={setAadhaar}
             placeholderTextColor="black"
-            onFocus={() => showFieldAlert('Aadhaar Number')}
           />
           <Text style={styles.label}>PAN Number *</Text>
           <TextInput
+            ref={panRef}
             style={styles.input}
             autoCapitalize="characters"
             maxLength={10}
@@ -642,17 +997,16 @@ const ApplyAssessment = ({ navigation }) => {
             value={pan}
             onChangeText={setPan}
             placeholderTextColor="black"
-            onFocus={() => showFieldAlert('PAN Number')}
           />
           <Text style={styles.label}>Email *</Text>
           <TextInput
+            ref={emailRef}
             style={styles.input}
             keyboardType="email-address"
             placeholder="Enter Email"
             value={email}
             onChangeText={setEmail}
             placeholderTextColor="black"
-            onFocus={() => showFieldAlert('Email')}
           />
           <Text style={styles.label}>Member of Armed Forces? *</Text>
           <Dropdown
@@ -680,6 +1034,7 @@ const ApplyAssessment = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.label}>Electricity K. No *</Text>
           <TextInput
+            ref={knoRef}
             style={styles.input}
             placeholder="Electricity K. No (e.g. xxxx xxxx xxxx)"
             keyboardType="numeric"
@@ -687,26 +1042,25 @@ const ApplyAssessment = ({ navigation }) => {
             maxLength={14}
             value={kno}
             onChangeText={setKno}
-            onFocus={() => showFieldAlert('Electricity K. No')}
           />
           <Text style={styles.label}>ACC No *</Text>
           <TextInput
+            ref={accNoRef}
             style={styles.input}
             placeholder="ACC No"
             keyboardType="numeric"
             placeholderTextColor="black"
             value={accNo}
             onChangeText={setAccNo}
-            onFocus={() => showFieldAlert('ACC No')}
           />
           <Text style={styles.label}>BIND/BOOK No *</Text>
           <TextInput
+            ref={bindBookNoRef}
             style={styles.input}
             placeholder="BIND/BOOK No"
             placeholderTextColor="black"
             value={bindBookNo}
             onChangeText={setBindBookNo}
-            onFocus={() => showFieldAlert('BIND/BOOK No')}
           />
           <Text style={styles.label}>Electricity Category *</Text>
           <Dropdown
@@ -736,6 +1090,12 @@ const ApplyAssessment = ({ navigation }) => {
           setNoRoad={setNoRoad}
           showFieldAlert={showFieldAlert}
           styles={styles}
+          khataNoRef={khataNoRef}
+          plotNoRef={plotNoRef}
+          villageNameRef={villageNameRef}
+          plotAreaRef={plotAreaRef}
+          roadWidthRef={roadWidthRef}
+          noRoadRef={noRoadRef}
         />
         <TouchableOpacity
           style={styles.checkboxContainer}
@@ -761,6 +1121,11 @@ const ApplyAssessment = ({ navigation }) => {
               pincode={correspondingPincode}
               setPincode={setCorrespondingPincode}
               title="Corresponding Address"
+              addressRef={correspondingAddressRef}
+              cityRef={correspondingCityRef}
+              districtRef={correspondingDistrictRef}
+              stateRef={correspondingStateRef}
+              pincodeRef={correspondingPincodeRef}
             />
           </View>
         )}
@@ -784,15 +1149,11 @@ const ApplyAssessment = ({ navigation }) => {
                 Sq. Ft.)
               </Text>
               <TextInput
+                ref={towerAreaRef}
                 style={styles.input}
                 placeholder="Eg. 200 SQMTR"
                 value={towerArea}
                 onChangeText={setTowerArea}
-                onFocus={() =>
-                  showFieldAlert(
-                    'Total Area Covered by Mobile Tower & Supporting Equipments',
-                  )
-                }
               />
               <Text style={styles.label}>
                 Date of Installation of Mobile Tower *
@@ -843,14 +1204,12 @@ const ApplyAssessment = ({ navigation }) => {
                 Total Area of Wall / Roof / Land (in Sq. Ft.) *
               </Text>
               <TextInput
+                ref={hoardingAreaRef}
                 style={styles.input}
                 placeholder="Total Area of Wall / Roof / Land (in Sq. Ft.) *"
                 value={hoardingArea}
                 onChangeText={setHoardingArea}
                 placeholderTextColor="#000"
-                onFocus={() =>
-                  showFieldAlert('Total Area of Wall / Roof / Land')
-                }
               />
               <Text style={styles.label}>
                 Date of Installation of Hoarding Board(s) *
@@ -903,12 +1262,12 @@ const ApplyAssessment = ({ navigation }) => {
                 Total Area of Petrol Pump (in Sq. Ft.) *
               </Text>
               <TextInput
+                ref={pumpAreaRef}
                 style={styles.input}
                 placeholder="Total Area of Petrol Pump (in Sq. Ft.) *"
                 value={pumpArea}
                 onChangeText={setPumpArea}
                 placeholderTextColor="#000"
-                onFocus={() => showFieldAlert('Total Area of Petrol Pump')}
               />
               <Text style={styles.label}>Date of Installation *</Text>
               {/* Date Picker for Petrol Pump Installation Date */}
@@ -1042,6 +1401,7 @@ const ApplyAssessment = ({ navigation }) => {
 
               <Text style={styles.label}>Built Up Area (in Sq. Ft) *</Text>
               <TextInput
+                ref={el => (floorRefs.current[index] = el)}
                 style={styles.input}
                 placeholder="Built Up Area (in Sq. Ft)"
                 keyboardType="numeric"
@@ -1050,7 +1410,6 @@ const ApplyAssessment = ({ navigation }) => {
                 onChangeText={text =>
                   updateFloorDetail(index, 'builtUpArea', text)
                 }
-                onFocus={() => showFieldAlert('Built Up Area')}
               />
 
               <Text style={styles.label}>From Date (MM/YYYY) *</Text>

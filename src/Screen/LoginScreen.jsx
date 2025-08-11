@@ -8,6 +8,7 @@ import {
   ImageBackground,
   ScrollView,
   KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 
 import React, { useState } from 'react';
@@ -26,7 +27,8 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [userName, setUserName] = useState('');
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState('email'); // Default to 'email'
+  const [showPassword, setShowPassword] = useState(false); // Show/hide password
 
   const handleLogin = async () => {
     if (selected === null) {
@@ -87,11 +89,10 @@ const LoginScreen = ({ navigation }) => {
         style={{ flex: 1 }}
       >
         <ScrollView>
-          {' '}
           <View style={styles.loginContainer}>
             <Text style={styles.login}>Login</Text>
 
-            {/* Selection Options */}
+            {/* Email / Username Selection */}
             <View style={styles.emailuser}>
               <TouchableOpacity
                 style={styles.optionRow}
@@ -120,12 +121,13 @@ const LoginScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            {/* Conditional Input */}
+            {/* Email or Username Input */}
             <View style={styles.emailContainer}>
               <Text>{selected === 'email' ? 'Email' : 'Username'}</Text>
               <TextInput
                 style={styles.input}
                 placeholder={`Enter your ${selected}`}
+                placeholderTextColor="#000"
                 value={selected === 'email' ? email : userName}
                 onChangeText={text =>
                   selected === 'email' ? setEmail(text) : setUserName(text)
@@ -136,18 +138,30 @@ const LoginScreen = ({ navigation }) => {
               />
             </View>
 
-            {/* Password Field */}
+            {/* Password Field with Eye */}
             <View style={styles.emailContainer}>
               <Text>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your password"
-                value={password}
-                onChangeText={setPassword}
-              />
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Enter your password"
+                  placeholderTextColor="#000"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Text style={{ fontSize: 18 }}>
+                    {showPassword ? '🙈' : '👁️'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
-            {/* Remember Me & Forgot Password */}
+            {/* Remember Me and Forgot Password */}
             <View style={styles.remfogpass}>
               <TouchableOpacity
                 style={[styles.checkbox, checked && styles.checked]}
@@ -203,7 +217,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'red',
 
-    // iOS Shadow
     shadowColor: '#000',
     shadowOffset: {
       width: 4,
@@ -211,11 +224,8 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.2,
     shadowRadius: 6.65,
-
-    // Android Shadow
     elevation: 10,
   },
-
   emailuser: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -229,6 +239,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 8,
     marginTop: 5,
+    color: '#000',
   },
   button: {
     backgroundColor: Colors.primary,
@@ -290,5 +301,22 @@ const styles = StyleSheet.create({
   },
   emailContainer: {
     marginTop: 10,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    borderRadius: 8,
+    marginTop: 5,
+    paddingHorizontal: 10,
+    height: responsiveHeight(5),
+  },
+  passwordInput: {
+    flex: 1,
+    color: '#000',
+  },
+  eyeIcon: {
+    marginLeft: 10,
   },
 });

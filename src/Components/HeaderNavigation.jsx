@@ -3,7 +3,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Colors from '../Constants/Colors';
-
+import LogoutButton from './LogoutButton';
+import LeftSidebar from '../Screen/LeftSidebar';
 const HeaderNavigation = ({ title, showBack = true, customBackAction }) => {
   const navigation = useNavigation();
 
@@ -21,6 +22,7 @@ const HeaderNavigation = ({ title, showBack = true, customBackAction }) => {
 
   return (
     <View style={styles.container}>
+      {/* Conditional rendering for back button */}
       {showBack ? (
         <TouchableOpacity onPress={handleBack} style={styles.navButton}>
           <Text style={styles.navText}>Back</Text>
@@ -34,6 +36,8 @@ const HeaderNavigation = ({ title, showBack = true, customBackAction }) => {
       <TouchableOpacity onPress={handleHome} style={styles.navButton}>
         <Text style={styles.navText}>🏠</Text>
       </TouchableOpacity>
+      {/* Logout button */}
+      <LogoutButton />
     </View>
   );
 };
@@ -44,7 +48,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+
     height: 100,
     paddingHorizontal: 15,
     paddingTop: 30,

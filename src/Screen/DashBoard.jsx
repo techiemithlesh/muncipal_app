@@ -11,6 +11,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from './Header';
 import HeaderNavigation from '../Components/HeaderNavigation';
+import LogoutButton from '../Components/LogoutButton';
 
 const DashBoard = ({ navigation }) => {
   const [menuItems, setMenuItems] = useState([]);
@@ -149,6 +150,7 @@ const DashBoard = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.gridContainer}>{renderMenuItems()}</View>
       </ScrollView>
+      <LogoutButton />
       <View style={styles.footer}>
         <Text style={styles.footerText}>End of Dashboard</Text>
       </View>

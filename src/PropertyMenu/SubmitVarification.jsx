@@ -39,7 +39,7 @@ const SubmitVarification = ({ route }) => {
           {submissionData?.['Ward No']}
         </Text>
         <Text>
-          <Text style={{ fontWeight: 'bold' }}>Ward No:</Text>{' '}
+          <Text style={{ fontWeight: 'bold' }}>Verified:</Text>{' '}
           {submissionData?.['Verified_Ward']}
         </Text>
         <Text>
@@ -47,7 +47,7 @@ const SubmitVarification = ({ route }) => {
           {submissionData?.['New Ward No (Current)']}
         </Text>
         <Text>
-          <Text style={{ fontWeight: 'bold' }}>New Ward No:</Text>{' '}
+          <Text style={{ fontWeight: 'bold' }}>Verified:</Text>{' '}
           {submissionData?.['Verified_NewWard']}
         </Text>
 
@@ -56,8 +56,18 @@ const SubmitVarification = ({ route }) => {
           {submissionData?.['Zone (Current)']}
         </Text>
         <Text>
+          <Text style={{ fontWeight: 'bold' }}>Verified:</Text>{' '}
+          {submissionData?.['Verified_Zone']}
+        </Text>
+
+        <Text>
           <Text style={{ fontWeight: 'bold' }}>Property Type:</Text>{' '}
           {submissionData?.['Property Type (Current)']}
+        </Text>
+
+        <Text>
+          <Text style={{ fontWeight: 'bold' }}>Verified</Text>{' '}
+          {submissionData?.['Verified_PropertyType']}
         </Text>
       </Card>
 

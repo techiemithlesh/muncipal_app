@@ -1,7 +1,6 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import LoginScreen from './src/Screen/LoginScreen';
 import DashBoard from './src/Screen/DashBoard';
 import StaffCard from './src/Screen/StaffCard';
 import Property from './src/Screen/Property';
@@ -31,7 +30,7 @@ import SurrenderLicense from './src/Trade/SurrenderLicense';
 import SubmitVarification from './src/PropertyMenu/SubmitVarification';
 import DocUpload from './src/Trade/DocUpload';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
+import LoginScreen from './src/Screen/LoginScreen';
 const Stack = createNativeStackNavigator();
 
 const App = ({ navigation }) => {
@@ -167,6 +166,11 @@ const App = ({ navigation }) => {
               <Stack.Screen
                 name="DocUpload"
                 component={DocUpload}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="LoginScreen"
+                component={LoginScreen}
                 options={{ headerShown: false }}
               />
             </Stack.Navigator>

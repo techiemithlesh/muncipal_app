@@ -8,6 +8,9 @@ import {
   Linking,
   Alert,
   TextInput,
+  ActivityIndicator,
+  Image,
+  Dimensions,
 } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -19,6 +22,7 @@ import { BASE_URL } from '../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import HeaderNavigation from '../Components/HeaderNavigation';
 const SafDueDetails = ({ route, navigation }) => {
   const { id } = route.params;
   const [safData, setSafData] = useState(null);
@@ -41,6 +45,10 @@ const SafDueDetails = ({ route, navigation }) => {
   const [showPayNow, setShowPayNow] = useState(false);
 
   const [docModalVisible, setDocModalVisible] = useState(false);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [selectedImageUri, setSelectedImageUri] = useState('');
+  const [imageLoading, setImageLoading] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState(null);
   const [payNowModalVisible, setPayNowModalVisible] = useState(false);
   const [paymentType, setPaymentType] = useState(null);
   const [paymentMode, setPaymentMode] = useState(null);
@@ -177,12 +185,16 @@ const SafDueDetails = ({ route, navigation }) => {
 
   useEffect(() => {
     const fetchSafDetails = async () => {
+      console.log('Starting to fetch SAF details...');
+      setLoading(true);
       try {
         const storedToken = await AsyncStorage.getItem('token');
         const token = storedToken ? JSON.parse(storedToken) : null;
 
         if (!token) {
           console.warn('Token not found. Aborting request.');
+          Alert.alert('Error', 'Authentication token not found.');
+          setLoading(false);
           return;
         }
 
@@ -191,7 +203,7 @@ const SafDueDetails = ({ route, navigation }) => {
           'Content-Type': 'application/json',
         };
 
-        // Step 1: Fetch SAF Detail
+        console.log('Fetching SAF details for ID:', id);
         const response = await axios.post(
           `${BASE_URL}/api/property/get-saf-dtl`,
           { id },
@@ -199,36 +211,48 @@ const SafDueDetails = ({ route, navigation }) => {
         );
 
         const safData = response.data?.data;
-        const tranDtlId = safData?.tranDtls?.[0]?.id; // ✅ Extract tranDtlId safely
+        console.log('SAF details received:', safData ? 'Success' : 'No data');
 
-        // ✅ Logging
-        console.log('SAF Detail:', safData);
-        // console.log('Owner Detail:', safData?.owners?.[0]);
-        // console.log('Floor Detail:', safData?.floors?.[0]);
-        // console.log('Tax Detail:', safData?.tranDtls?.[0]);
-        console.log('Tax tax:', safData?.taxDtl?.[0]);
-        console.log('Tax memoDtls:', safData?.memoDtls?.[0]);
-
-        console.log('Tax tcVerifications:', safData?.tcVerifications?.[0]);
-
-        // ✅ Set state
         setOwnerList(safData?.owners || []);
         setFloorData(safData?.floors || []);
         setTaxDetails(safData?.tranDtls || []);
         setTranDtls(safData?.tranDtls || []);
         setMemoDtls(safData?.memoDtls || []);
         setTcVerfivication(safData?.tcVerifications || []);
-
         setSafData(safData);
+        console.log('safData:', safData);
+        console.log('Owners:', safData?.owners || []);
+        console.log('Floors:', safData?.floors || []);
+        console.log('Transaction Details:', safData?.tranDtls || []);
+        console.log('Memo Details:', safData?.memoDtls || []);
+        console.log('TC Verifications:', safData?.tcVerifications || []);
+        console.log('TC levelRemarks:', safData?.levelRemarks || []);
       } catch (error) {
         console.error('Error fetching SAF details:', error?.response || error);
+        Alert.alert(
+          'Error',
+          'Failed to load property details. Please try again.',
+        );
       } finally {
+        console.log('Setting loading to false');
         setLoading(false);
       }
     };
 
-    if (id) fetchSafDetails(); // ✅ Safe check
+    if (id) {
+      fetchSafDetails();
+    } else {
+      console.warn('No ID provided to SafDueDetails');
+      setLoading(false);
+    }
   }, [id]);
+
+  // Update amount when maindata changes - MUST be before any conditional returns
+  useEffect(() => {
+    if (maindata?.payableAmount) {
+      setAmount(maindata.payableAmount.toString());
+    }
+  }, [maindata]);
 
   const handlePaymentTypeChange = item => {
     console.log('Payment Type selected:', item.value);
@@ -240,16 +264,29 @@ const SafDueDetails = ({ route, navigation }) => {
     setPaymentMode(item.value);
   };
 
-  // Update amount when maindata changes
-  useEffect(() => {
-    if (maindata?.payableAmount) {
-      setAmount(maindata.payableAmount.toString());
-    }
-  }, [maindata]);
+  if (loading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: Colors.background,
+        }}
+      >
+        <ActivityIndicator size="large" color={Colors.headignColor} />
+        <Text
+          style={{ marginTop: 10, fontSize: 16, color: Colors.headignColor }}
+        >
+          Loading...
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.scroll}>
-      <Header navigation={navigation} />
+      <HeaderNavigation />
       <View style={styles.container}>
         {/* Basic Details Card */}
         <View style={styles.card}>
@@ -858,9 +895,10 @@ const SafDueDetails = ({ route, navigation }) => {
       <View
         style={{
           flexDirection: 'row',
-          justifyContent: 'space-around',
-          padding: 16,
           flexWrap: 'wrap',
+          backgroundColor: Colors.background,
+          marginBottom: 20,
+          marginVertical: 10,
         }}
       >
         <TouchableOpacity
@@ -1698,7 +1736,38 @@ const SafDueDetails = ({ route, navigation }) => {
                   <Text style={styles.docCell}>{index + 1}</Text>
                   <Text style={styles.docCell}>{doc.docName}</Text>
                   <TouchableOpacity
-                    onPress={() => Linking.openURL(doc.docPath)}
+                    onPress={() => {
+                      console.log('Document clicked:', doc);
+                      console.log('Document path:', doc.docPath);
+
+                      // Check if it's a PDF or image
+                      const fileExtension = doc.docPath
+                        .split('.')
+                        .pop()
+                        .toLowerCase();
+                      console.log('File extension:', fileExtension);
+
+                      if (fileExtension === 'pdf') {
+                        // For PDF files, fall back to Linking
+                        Alert.alert(
+                          'PDF Document',
+                          'PDF files will open in external viewer',
+                          [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                              text: 'Open',
+                              onPress: () => Linking.openURL(doc.docPath),
+                            },
+                          ],
+                        );
+                      } else {
+                        // For image files, open in modal
+                        setSelectedDoc(doc);
+                        setSelectedImageUri(doc.docPath);
+                        setImageLoading(true);
+                        setImageModalVisible(true);
+                      }
+                    }}
                   >
                     <Text style={[styles.docCell, styles.docFileLink]}>
                       View File
@@ -1718,6 +1787,70 @@ const SafDueDetails = ({ route, navigation }) => {
               <Text style={styles.docCloseButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
+        </View>
+      </Modal>
+
+      {/* Full-screen Image/PDF Modal */}
+      <Modal
+        visible={imageModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View style={styles.fullScreenModalContainer}>
+          <TouchableOpacity
+            style={styles.closeFullScreenButton}
+            onPress={() => setImageModalVisible(false)}
+          >
+            <Text style={styles.closeFullScreenButtonText}>✕ Close</Text>
+          </TouchableOpacity>
+
+          {imageLoading && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#fff" />
+              <Text style={styles.loadingText}>Loading document...</Text>
+            </View>
+          )}
+
+          <ScrollView
+            style={styles.fullScreenScrollView}
+            contentContainerStyle={styles.fullScreenScrollContent}
+            maximumZoomScale={3}
+            minimumZoomScale={1}
+            showsVerticalScrollIndicator={true}
+            showsHorizontalScrollIndicator={true}
+          >
+            {selectedImageUri ? (
+              <Image
+                source={{ uri: selectedImageUri }}
+                style={styles.fullScreenImage}
+                resizeMode="contain"
+                onLoad={() => {
+                  console.log('Image loaded successfully');
+                  setImageLoading(false);
+                }}
+                onError={error => {
+                  console.log('Image load error:', error);
+                  console.log('Failed URI:', selectedImageUri);
+                  setImageLoading(false);
+                  Alert.alert(
+                    'Load Error',
+                    `Failed to load document. Path: ${selectedImageUri}\n\nWould you like to try opening it externally?`,
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Open Externally',
+                        onPress: () => {
+                          Linking.openURL(selectedImageUri);
+                          setImageModalVisible(false);
+                        },
+                      },
+                    ],
+                  );
+                }}
+              />
+            ) : null}
+          </ScrollView>
         </View>
       </Modal>
     </ScrollView>
@@ -1988,10 +2121,11 @@ const styles = StyleSheet.create({
   },
   viewButtonText: {
     color: Colors.background,
-    backgroundColor: Colors.borderColor,
+    backgroundColor: Colors.primary,
     fontSize: 11,
-    textDecorationLine: 'underline',
     padding: 8,
+    borderRadius: 8,
+    fontWeight: 'bold',
   },
   disabledButton: {
     opacity: 0.5,
@@ -2164,5 +2298,40 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,
+  },
+  fullScreenModalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeFullScreenButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 1000,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  closeFullScreenButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  fullScreenScrollView: {
+    flex: 1,
+    width: '100%',
+  },
+  fullScreenScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  fullScreenImage: {
+    width: Dimensions.get('window').width - 40,
+    height: Dimensions.get('window').height - 100,
   },
 });
