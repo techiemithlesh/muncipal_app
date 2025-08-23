@@ -73,8 +73,6 @@ export const MasterDataProvider = ({ children }) => {
           });
 
           console.log('✅ Master data loaded successfully');
-        } else {
-          console.error('❌ Unexpected API response format:', res.data);
         }
       } catch (error) {
         console.error(

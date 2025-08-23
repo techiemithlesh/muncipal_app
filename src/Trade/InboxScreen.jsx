@@ -15,56 +15,57 @@ import {
 import Colors from '../Constants/Colors';
 import Card from '../Components/Card';
 import { useNavigation } from '@react-navigation/native';
+import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import HeaderNavigation from '../Components/HeaderNavigation';
+import { BASE_URL } from '../config';
 const InboxScreen = () => {
   const navigation = useNavigation();
-  const data = [
-    {
-      id: 1,
-      wardNo: '10',
-      licenseNo: 'LIC12345',
-      ownerName: 'Rahul Sharma',
-      guardianName: 'Mr. Sharma',
-      address: '123 Main Street, City',
-    },
-    {
-      id: 2,
-      wardNo: '11',
-      licenseNo: 'LIC67890',
-      ownerName: 'Amit Kumar',
-      guardianName: 'Mr. Kumar',
-      address: '456 Another Street, City',
-    },
 
-    {
-      id: 3,
-      wardNo: '11',
-      licenseNo: 'LIC67890',
-      ownerName: 'Amit Kumar',
-      guardianName: 'Mr. Kumar',
-      address: '456 Another Street, City',
-    },
-    {
-      id: 4,
-      wardNo: '11',
-      licenseNo: 'LIC67890',
-      ownerName: 'Amit Kumar',
-      guardianName: 'Mr. Kumar',
-      address: '456 Another Street, City',
-    },
-    // More data...
-  ];
+  const [data, setData] = useState([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem('token');
+        const token = storedToken ? JSON.parse(storedToken) : null;
+        console.log(token, 'our token');
 
-  const renderHeader = () => (
-    <View style={styles.tableRow}>
-      <Text style={styles.headerCell}>#</Text>
-      <Text style={styles.headerCell}>Ward No.</Text>
-      <Text style={styles.headerCell}>License No.</Text>
-      <Text style={styles.headerCell}>Owner Name</Text>
-      <Text style={styles.headerCell}>Guardian Name</Text>
-      <Text style={styles.headerCell}>Address</Text>
-      <Text style={styles.headerCell}>Action</Text>
-    </View>
-  );
+        const body = {
+          perPage: 20,
+          page: 1,
+          keyWord: 'a',
+          wardId: [1, 2, 3],
+        };
+
+        if (!token) {
+          console.warn('No token found');
+          return;
+        }
+
+        const response = await axios.post(
+          `${BASE_URL}/api/trade/inbox`,
+          body, // <-- passing body here
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+        const list = response.data?.data?.data || [];
+        console.log('List:', list);
+
+        console.log('Fetched Data:', response.data?.data);
+        setData(response.data?.data?.data || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  console.log(data, 'data');
 
   const renderEmpty = () => (
     <View style={styles.emptyRow}>
@@ -73,45 +74,54 @@ const InboxScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Inbox</Text>
+    <View style={{ flex: 1 }}>
+      <HeaderNavigation />
+      <View style={styles.container}>
+        <Text style={styles.title}>Inbox</Text>
 
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.excelButton}>
-          <Text style={styles.buttonText}>Excel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.pdfButton}>
-          <Text style={styles.buttonText}>PDF</Text>
-        </TouchableOpacity>
-
-        <View style={styles.searchContainer}>
-          <TextInput placeholder="Search..." style={styles.searchInput} />
-          <TouchableOpacity style={styles.searchButton}>
-            <Text style={styles.buttonText}>Search</Text>
+        <View style={styles.topBar}>
+          <TouchableOpacity style={styles.excelButton}>
+            <Text style={styles.buttonText}>Excel</Text>
           </TouchableOpacity>
-        </View>
-      </View>
+          <TouchableOpacity style={styles.pdfButton}>
+            <Text style={styles.buttonText}>PDF</Text>
+          </TouchableOpacity>
 
-      {/* 💠 Card Container */}
-      <FlatList
-        data={data}
-        keyExtractor={item => item.id.toString()}
-        contentContainerStyle={{ padding: 10 }}
-        ListEmptyComponent={renderEmpty}
-        renderItem={({ item, index }) => (
-          <Card
-            index={index + 1}
-            wardNo={item.wardNo}
-            licenseNo={item.licenseNo}
-            ownerName={item.ownerName}
-            guardianName={item.guardianName}
-            address={item.address}
-            onPress={() =>
-              navigation.navigate('LicenseVerificationScreen', { id: item.id })
-            }
-          />
-        )}
-      />
+          <View style={styles.searchContainer}>
+            <TextInput placeholder="Search..." style={styles.searchInput} />
+            <TouchableOpacity style={styles.searchButton}>
+              <Text style={styles.buttonText}>Search</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* 💠 Card Container */}
+        <FlatList
+          data={data}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={{ padding: 10 }}
+          ListEmptyComponent={renderEmpty}
+          renderItem={({ item, index }) => (
+            <Card
+              index={index + 1}
+              applicationNo={item.applicationNo}
+              wardNo={item.wardNo}
+              firmType={item.firmType}
+              ownerName={item.ownerName}
+              applyDate={item.applyDate}
+              address={item.address}
+              natureOfBusiness={item.natureOfBusiness}
+              onPress={() =>
+                navigation.navigate(
+                  'LicenseVerificationScreen',
+                  { id: item.id },
+                  console.log(item.id, 'my id'),
+                )
+              }
+            />
+          )}
+        />
+      </View>
     </View>
   );
 };

@@ -1,227 +1,334 @@
-import React, { useState } from 'react';
+// Search.jsx
+import React, { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  View,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  StyleSheet,
+  View,
+  FlatList,
+  Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { Color } from 'react-native-alert-notification/lib/typescript/service';
+import {
+  responsiveHeight,
+  responsiveWidth,
+  responsiveFontSize,
+} from 'react-native-responsive-dimensions';
 import Colors from '../Constants/Colors';
+import HeaderNavigation from '../Components/HeaderNavigation';
+import { Dropdown } from 'react-native-element-dropdown';
+import axios from 'axios';
+import { BASE_URL } from '../config';
+import { API_ROUTES } from '../api/apiRoutes';
 
-const SurrenderLicense = () => {
-  const navigation = useNavigation();
+const SurrenderLicense = ({ navigation }) => {
+  const [value, setValue] = useState(null); // selected ward id
+  const [keyword, setKeyword] = useState('');
+  const [masterData, setMasterData] = useState(null);
+  const [wardDropdownOptions, setWardDropdownOptions] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [loadingMaster, setLoadingMaster] = useState(false);
+  const [loadingSearch, setLoadingSearch] = useState(false);
 
-  const [landmark, setLandmark] = useState('');
-  const [newWardNo, setNewWardNo] = useState('');
+  useEffect(() => {
+    const fetchMaster = async () => {
+      try {
+        setLoadingMaster(true);
+        const storedToken = await AsyncStorage.getItem('token');
+        const token = storedToken ? JSON.parse(storedToken) : null;
 
-  return (
-    <ScrollView style={styles.container}>
-      {/* APPLY LICENSE */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>APPLY LICENSE</Text>
-        <View style={styles.row}>
-          <View style={styles.column}>
-            <Text style={styles.label}>Application Type *</Text>
-            <Text style={styles.value}>RENEWAL</Text>
-          </View>
-          <View style={styles.column}>
-            <Text style={styles.label}>Firm Type *</Text>
-            <Text style={styles.value}>PROPRIETORSHIP</Text>
-          </View>
-        </View>
-        <View style={styles.row}>
-          <View style={styles.column}>
-            <Text style={styles.label}>Type of Ownership *</Text>
-            <Text style={styles.value}>OWN PROPERTY</Text>
-          </View>
-          <View style={styles.column}>
-            <Text style={styles.label}>License No.</Text>
-            <Text style={styles.value}>8583</Text>
-          </View>
-        </View>
-        <View style={styles.row}>
-          <View style={styles.column}>
-            <Text style={styles.label}>Category *</Text>
-            <Text style={styles.value}>Others</Text>
-          </View>
-        </View>
-      </View>
-      {/* FIRM DETAILS */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>FIRM DETAILS</Text>
-        <View style={styles.row}>
-          <View style={styles.column}>
-            <Text style={styles.label}>Holding No.</Text>
-            <Text style={styles.value}>0010000771000X1</Text>
-          </View>
-          <View style={styles.column}>
-            <Text style={styles.label}>Ward No.</Text>
-            <Text style={styles.value}>1</Text>
-          </View>
-          <View style={styles.column}>
-            <Text style={styles.label}>Firm Name *</Text>
-            <Text style={styles.value}>SHANTI NIKETAN</Text>
-          </View>
-        </View>
-        <View style={styles.row}>
-          <View style={styles.column}>
-            <Text style={styles.label}>Total Area (Sq. Ft)</Text>
-            <Text style={styles.value}>180.00</Text>
-          </View>
-          <View style={styles.column}>
-            <Text style={styles.label}>Firm Establishment Date</Text>
-            <Text style={styles.value}>2017-10-09</Text>
-          </View>
-          <View style={styles.column}>
-            <Text style={styles.label}>Pin Code</Text>
-            <Text style={styles.value}>0</Text>
-          </View>
-        </View>
-        <View>
-          <Text style={styles.label}>Business Address</Text>
-          <Text style={styles.value}>OPP S.S MEMORIAL COLLEGE RANCHI</Text>
-        </View>
-        <View>
-          <Text style={styles.label}>Owner of Business Premises</Text>
-          <Text style={styles.value}>SMT. URMILA DEVI</Text>
-        </View>
-        <View>
-          <Text style={styles.label}>Landmark</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Landmark"
-            value={landmark}
-            onChangeText={setLandmark}
-          />
-        </View>
-        <View>
-          <Text style={styles.label}>Business Description *</Text>
-          <Text style={styles.value}>XEROX SHOP STUDIO</Text>
-        </View>
-        <View>
-          <Text style={styles.label}>New Ward No.</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter New Ward No."
-            value={newWardNo}
-            onChangeText={setNewWardNo}
-          />
-        </View>
-      </View>
-      {/* OWNER DETAILS */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>OWNER DETAILS</Text>
-        {/* Owner 1 */}
-        <View style={styles.ownerRow}>
-          <View style={styles.ownerColumn}>
-            <Text style={styles.label}>Owner Name *</Text>
-            <Text style={styles.value}>PRAKASH RAJAN SRIVASTAVA</Text>
-          </View>
-          <View style={styles.ownerColumn}>
-            <Text style={styles.label}>Guardian Name</Text>
-            <Text style={styles.value}>LATE MADAN MEHAN SRIVASTAV</Text>
-          </View>
-          <View style={styles.ownerColumn}>
-            <Text style={styles.label}>Mobile No.</Text>
-            <Text style={styles.value}>9876543210</Text>
-          </View>
-          <View style={styles.ownerColumn}>
-            <TouchableOpacity style={styles.uploadButton}>
-              <Text style={styles.uploadText}>Upload Document</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        {/* Owner 2 */}
-        <View style={styles.ownerRow}>
-          <View style={styles.ownerColumn}>
-            <Text style={styles.value}>RAHUL SHARMA</Text>
-          </View>
-          <View style={styles.ownerColumn}>
-            <Text style={styles.value}>LATE RAMESH SHARMA</Text>
-          </View>
-          <View style={styles.ownerColumn}>
-            <Text style={styles.value}>rahul@example.com</Text>
-          </View>
-          <View style={styles.ownerColumn}>
-            <TouchableOpacity style={styles.uploadButton}>
-              <Text style={styles.uploadText}>Upload Document</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-      {/* NATURE OF BUSINESS */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>NATURE OF BUSINESS</Text>
-        <Text style={styles.value}>
-          MATCH MATCHES FOR LIGHTING INCLUDING BENGAL MATCHES MANUFACTURING
-          PARCHING PACKING PRESSING CLEANING CLEANSING BOILING MELTING GRINDING
-          OR PREPARING BY ANY PROCESS GRINDING WHATSOEVER EXCEPT FOR DOMESTIC
-          PURPOSES
+        if (!token) {
+          Alert.alert('Auth error', 'No token found. Please login.');
+          setLoadingMaster(false);
+          return;
+        }
+
+        const response = await axios.post(
+          API_ROUTES.TRADE_MASTER_DETAILS,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+
+        if (response.data?.status && response.data.data) {
+          const data = response.data.data;
+          setMasterData(data);
+
+          const wards = Array.isArray(data.wardList) ? data.wardList : [];
+          const wardOptions = wards.map(w => ({
+            label: w.wardNo?.toString() ?? 'N/A',
+            value: w.id,
+          }));
+          setWardDropdownOptions(wardOptions);
+        } else {
+          setMasterData(null);
+          setWardDropdownOptions([]);
+        }
+      } catch (error) {
+        console.error('Fetch master data error:', error);
+        Alert.alert('Error', 'Failed to fetch master data.');
+      } finally {
+        setLoadingMaster(false);
+      }
+    };
+
+    fetchMaster();
+  }, []);
+
+  const search = async () => {
+    try {
+      setLoadingSearch(true);
+      const storedToken = await AsyncStorage.getItem('token');
+      const token = storedToken ? JSON.parse(storedToken) : null;
+
+      if (!token) {
+        Alert.alert('Auth error', 'No token found. Please login.');
+        setLoadingSearch(false);
+        return;
+      }
+
+      const body = {
+        perPage: 20,
+        page: 1,
+        keyWord: keyword?.trim() || '',
+        wardId: value ? [value] : [],
+      };
+
+      const response = await axios.post(API_ROUTES.TRADE_SEARCH, body, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.data?.status) {
+        const results = response.data.data?.data ?? [];
+        setSearchResults(results);
+      } else {
+        setSearchResults([]);
+        Alert.alert('Search', response.data?.message || 'No results found');
+      }
+    } catch (error) {
+      console.error('Search API error:', error);
+      Alert.alert('Error', 'Failed to perform search.');
+    } finally {
+      setLoadingSearch(false);
+    }
+  };
+
+  const handleViewPress = item => {
+    navigation.navigate('SurrenderLicensePage', { id: item.id });
+  };
+
+  const renderItem = ({ item, index }) => (
+    <View style={styles.resultCard}>
+      <View style={styles.rowBetween}>
+        <Text style={[styles.label, { flex: 1 }]}>
+          Apply Date: <Text style={styles.value}>{item.applyDate}</Text>
+        </Text>
+        <Text style={[styles.label, { flex: 1, textAlign: 'right' }]}>
+          Status: <Text style={styles.value}>{item.appStatus}</Text>
         </Text>
       </View>
-      {/* Submit Button */}
+
+      <Text style={styles.label}>
+        🏷️ SL No: <Text style={styles.value}>{index + 1}</Text>
+      </Text>
+      <Text style={styles.label}>
+        🏠 Ward No: <Text style={styles.value}>{item.wardNo}</Text>
+      </Text>
+      <Text style={styles.label}>
+        🆕 New Ward No: <Text style={styles.value}>{item.newWardNo}</Text>
+      </Text>
+      <Text style={styles.label}>
+        📄 Application No:{' '}
+        <Text style={styles.value}>{item.applicationNo}</Text>
+      </Text>
+      <Text style={styles.label}>
+        🏢 firmName Type: <Text style={styles.value}>{item.firmName}</Text>
+      </Text>
+      <Text style={styles.label}>
+        👤 Owner: <Text style={styles.value}>{item.ownerName}</Text>
+      </Text>
+      <Text style={styles.label}>
+        👨‍👩‍👧 Guardian Name: <Text style={styles.value}>{item.guardianName}</Text>
+      </Text>
+      <Text style={styles.label}>
+        🏡 Property Type: <Text style={styles.value}>{item.propertyType}</Text>
+      </Text>
+      <Text style={styles.label}>
+        📍 Address: <Text style={styles.value}>{item.propAddress}</Text>
+      </Text>
+      <Text style={styles.label}>
+        📞 Mobile: <Text style={styles.value}>{item.mobileNo}</Text>
+      </Text>
+
       <TouchableOpacity
-        style={styles.submitButton}
-        onPress={() => navigation.navigate('DocUpload')}
+        style={styles.viewButton}
+        onPress={() => handleViewPress(item)}
       >
-        <Text style={styles.submitText}>Submit Application</Text>
+        <Text style={styles.viewButtonText}>View</Text>
       </TouchableOpacity>
-    </ScrollView>
+    </View>
+  );
+
+  const renderHeader = () => (
+    <View style={styles.seacrhCont}>
+      <View style={styles.searchhead}>
+        <Text style={styles.text}>Search Application</Text>
+      </View>
+
+      <View style={styles.selectWardKey}>
+        <Dropdown
+          style={styles.dropdown}
+          data={wardDropdownOptions}
+          labelField="label"
+          valueField="value"
+          placeholder={loadingMaster ? 'Loading wards...' : 'Select Ward'}
+          value={value}
+          onChange={item => setValue(item.value)}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Search Keyword"
+          placeholderTextColor="black"
+          value={keyword}
+          onChangeText={setKeyword}
+        />
+      </View>
+
+      <TouchableOpacity style={styles.button} onPress={search}>
+        <Text style={styles.buttonText}>
+          {loadingSearch ? 'Searching...' : 'Search'}
+        </Text>
+      </TouchableOpacity>
+
+      {searchResults.length === 0 && !loadingSearch && (
+        <Text style={{ textAlign: 'center', color: '#666', marginTop: 10 }}>
+          No results to show
+        </Text>
+      )}
+    </View>
+  );
+
+  return (
+    <View style={{ flex: 1 }}>
+      <HeaderNavigation />
+      <View style={styles.container}>
+        <FlatList
+          data={searchResults}
+          keyExtractor={(item, index) =>
+            item.id ? item.id.toString() : index.toString()
+          }
+          renderItem={renderItem}
+          ListHeaderComponent={renderHeader}
+          contentContainerStyle={{ paddingBottom: responsiveHeight(5) }}
+        />
+      </View>
+    </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10, backgroundColor: '#f9f9f9' },
-  section: {
-    backgroundColor: '#fff',
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 4,
-  },
-  sectionTitle: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 8,
-    backgroundColor: Colors.primary,
-    color: '#fff',
-    padding: 4,
-  },
-  row: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 },
-  column: { flex: 1, minWidth: '45%', marginRight: 10, marginBottom: 8 },
-  label: { fontSize: 12, color: '#555' },
-  value: { fontSize: 14, color: '#000' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 4,
-    padding: 6,
-    marginTop: 4,
-  },
-  ownerRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    borderTopWidth: 1,
-    borderColor: '#eee',
-  },
-  ownerColumn: { flex: 1, minWidth: '15%', marginBottom: 4 },
-  uploadButton: {
-    backgroundColor: Colors.primary,
-    padding: 6,
-    borderRadius: 4,
-    marginTop: 4,
-  },
-  uploadText: { color: '#fff', fontSize: 12 },
-  submitButton: {
-    backgroundColor: Colors.primary,
-    padding: 12,
-    alignItems: 'center',
-    marginTop: 10,
-    borderRadius: 4,
-  },
-  submitText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-});
-
 export default SurrenderLicense;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  seacrhCont: {
+    paddingVertical: responsiveHeight(2),
+    paddingHorizontal: responsiveWidth(4),
+    marginVertical: responsiveHeight(3),
+    marginHorizontal: responsiveWidth(3),
+    borderWidth: 1,
+    borderLeftWidth: 0,
+    borderColor: Colors.borderColor,
+    backgroundColor: '#fff',
+  },
+  searchhead: {
+    backgroundColor: Colors.headignColor,
+    paddingVertical: responsiveHeight(2),
+    paddingHorizontal: responsiveWidth(2),
+    marginBottom: responsiveHeight(2),
+    elevation: 3,
+  },
+  text: {
+    color: Colors.background,
+    fontSize: responsiveFontSize(2),
+    fontWeight: 'bold',
+  },
+  dropdown: {
+    height: responsiveHeight(5),
+    width: responsiveWidth(40),
+    borderColor: 'gray',
+    borderWidth: 0.5,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    marginRight: responsiveWidth(2),
+  },
+  input: {
+    width: responsiveWidth(40),
+    height: responsiveHeight(5),
+    borderColor: '#999',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+  },
+  selectWardKey: {
+    flexDirection: 'row',
+    marginTop: responsiveHeight(1.5),
+  },
+  button: {
+    backgroundColor: Colors.borderColor,
+    paddingVertical: responsiveHeight(1.8),
+    paddingHorizontal: responsiveWidth(10),
+    borderRadius: responsiveWidth(2),
+    alignItems: 'center',
+    marginTop: responsiveHeight(2),
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: responsiveFontSize(2),
+    fontWeight: 'bold',
+  },
+  resultCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: responsiveHeight(2),
+    marginBottom: responsiveHeight(2),
+    marginLeft: responsiveHeight(2),
+    marginRight: responsiveHeight(2),
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  label: {
+    fontSize: responsiveFontSize(1.9),
+    color: '#333',
+    marginBottom: responsiveHeight(0.5),
+  },
+  value: {
+    fontWeight: '600',
+    color: '#000',
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  viewButton: {
+    marginTop: responsiveHeight(1),
+    backgroundColor: Colors.primary,
+    paddingVertical: responsiveHeight(1),
+    paddingHorizontal: responsiveWidth(5),
+    borderRadius: 5,
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+  },
+  viewButtonText: {
+    color: '#fff',
+    fontSize: responsiveFontSize(1.8),
+    fontWeight: 'bold',
+  },
+});

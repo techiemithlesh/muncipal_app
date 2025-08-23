@@ -1,12 +1,12 @@
-// All necessary imports
 import {
   StyleSheet,
   Text,
   View,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import FormField from '../Components/FormField';
 import Colors from '../Constants/Colors';
 import {
@@ -21,12 +21,11 @@ import { BASE_URL } from '../config';
 import HeaderNavigation from '../Components/HeaderNavigation';
 import { API_ROUTES } from '../api/apiRoutes';
 
-// Dropdown options will be loaded from API
-
-const ApplyLicense = ({ navigation }) => {
+const RenewLicensePage = ({ navigation, route }) => {
+  const { id } = route.params;
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-  const [applicationType, setApplicationType] = useState('NEW APPLICATION');
+  const [applicationType] = useState('RENEW LICENSE');
   const [firmType, setFirmType] = useState('');
   const [ownershipType, setOwnershipType] = useState('');
   const [category, setCategory] = useState('');
@@ -59,17 +58,10 @@ const ApplyLicense = ({ navigation }) => {
     },
   ]);
 
-  const [paymentMode, setPaymentMode] = useState('');
-
   const [wardList, setWardList] = useState([]);
   const [wardDropdownOptions, setWardDropdownOptions] = useState([]);
   const [newWardOptions, setNewWardOptions] = useState([]);
   const [firmTypeOptions, setFirmTypeOptions] = useState([]);
-  const paymentModeOptions = [
-    { label: 'Cash', value: 'cash' },
-    { label: 'Demand Draft', value: 'demand_draft' },
-    { label: 'Cheque', value: 'cheque' },
-  ];
   const [isLoading, setIsLoading] = useState(true);
   const licenseForOptions = [
     { label: '1year', value: '1' },
@@ -81,28 +73,16 @@ const ApplyLicense = ({ navigation }) => {
     { label: '7year', value: '7' },
     { label: '8year', value: '8' },
   ];
-  const [chequeDate, setChequeDate] = useState('');
-  const [chequeNumber, setChequeNumber] = useState('');
-  const [bankName, setBankName] = useState('');
-  const [branchName, setBranchName] = useState('');
   const [taxData, setTaxData] = useState(null);
-  const payload = {
-    paymentMode,
-    ...(paymentMode === 'cheque' && {
-      chequeDate,
-      chequeNumber,
-      bankName,
-      branchName,
-    }),
-  };
+  const [fetchedBusinessNames, setFetchedBusinessNames] = useState([]);
 
   const showAlert = message => {
     setAlertMessage(message);
     setAlertVisible(true);
   };
+
   const handleSubmit = async () => {
-    // Format establishment date to YYYY-MM-DD
-    const formatDate = (date) => {
+    const formatDate = date => {
       if (!date) return '';
       const d = new Date(date);
       const year = d.getFullYear();
@@ -111,81 +91,166 @@ const ApplyLicense = ({ navigation }) => {
       return `${year}-${month}-${day}`;
     };
 
-    // Build the API payload according to the required format
     const payload = {
-      applicationType: "NEW LICENSE",
+      applicationType: 'RENEW LICENSE',
+
       firmTypeId: firmType || 1,
       ownershipTypeId: ownershipType || 1,
       wardMstrId: wardNo || 1,
       newWardMstrId: newWardNo || 1,
-      firmName: firmName || "",
-      firmDescription: businessDescription || "",
-      firmEstablishmentDate: formatDate(establishmentDate) || "2020-02-20",
-      premisesOwnerName: ownerOfPremises || "",
-      areaInSqft: totalArea || "100",
-      address: businessAddress || "",
-      pinCode: pinCode || "",
-      licenseForYears: licenseFor || "1",
+      firmName: firmName || '',
+      firmDescription: businessDescription || '',
+      firmEstablishmentDate: formatDate(establishmentDate) || '2020-02-20',
+      premisesOwnerName: ownerOfPremises || '',
+      areaInSqft: totalArea || '100',
+      address: businessAddress || '',
+      pinCode: pinCode || '',
+      licenseForYears: licenseFor || '1',
       isTobaccoLicense: 0,
-      holdingNo: holdingNo || "",
+      holdingNo: holdingNo || '',
       natureOfBusiness: natureOfBusiness.map(id => ({
-        tradeItemTypeId: String(id)
+        tradeItemTypeId: String(id),
       })),
       ownerDtl: owners.map(owner => ({
-        ownerName: owner.ownerName || "",
-        guardianName: owner.guardianName || "",
-        mobileNo: owner.mobileNo || ""
-      }))
+        ownerName: owner.ownerName || '',
+        guardianName: owner.guardianName || '',
+        mobileNo: owner.mobileNo || '',
+      })),
     };
 
     console.log('✅ API Payload:', JSON.stringify(payload, null, 2));
 
-    // Pass both the API payload and display data to summary
     const summaryData = {
       apiPayload: payload,
       displayData: {
         applicationType,
-        firmType: firmTypeOptions.find(opt => opt.value === firmType)?.label || '',
-        ownershipType: ownershipTypeOptions.find(opt => opt.value === ownershipType)?.label || '',
-        wardNo: wardDropdownOptions.find(opt => opt.value === wardNo)?.label || '',
-        newWardNo: newWardOptions.find(opt => opt.value === newWardNo)?.label || '',
+        firmType:
+          firmTypeOptions.find(opt => opt.value === firmType)?.label || '',
+        ownershipType:
+          ownershipTypeOptions.find(opt => opt.value === ownershipType)
+            ?.label || '',
+        wardNo:
+          wardDropdownOptions.find(opt => opt.value === wardNo)?.label || '',
+        newWardNo:
+          newWardOptions.find(opt => opt.value === newWardNo)?.label || '',
         firmName,
         businessDescription,
         establishmentDate,
         businessAddress,
         pinCode,
         totalArea,
-        licenseFor: licenseForOptions.find(opt => opt.value === licenseFor)?.label || '',
+        licenseFor:
+          licenseForOptions.find(opt => opt.value === licenseFor)?.label || '',
         holdingNo,
         ownerOfPremises,
-        natureOfBusiness: natureOfBusiness.map(id => {
-          const found = categoryOptions.find(opt => opt.value === id);
-          return found ? found.label : '';
-        }).filter(label => label !== ''),
+        natureOfBusiness: natureOfBusiness
+          .map(id => {
+            const found = categoryOptions.find(opt => opt.value === id);
+            return found ? found.label : '';
+          })
+          .filter(label => label !== ''),
         owners,
         chargeApplied: taxData?.licenseCharge?.toString() || '',
         penalty: taxData?.latePenalty?.toString() || '',
         denialAmount: taxData?.arrearCharge?.toString() || '',
         totalCharge: taxData?.totalCharge?.toString() || '',
-      }
+      },
     };
 
     navigation.navigate('ApplyLicenseSummary', { submittedData: summaryData });
   };
 
   useEffect(() => {
+    fetchApplicationData();
     fetchMasterData();
     fetchTradeMaster();
   }, []);
 
   useEffect(() => {
+    if (fetchedBusinessNames.length > 0 && categoryOptions.length > 0) {
+      const businessIds = fetchedBusinessNames
+        .map(businessName => {
+          const found = categoryOptions.find(opt => opt.label === businessName);
+          return found ? found.value : null;
+        })
+        .filter(id => id !== null);
+
+      if (businessIds.length > 0) {
+        setNatureOfBusiness(businessIds);
+        console.log('Mapped business IDs:', businessIds);
+      }
+    }
+  }, [fetchedBusinessNames, categoryOptions]);
+
+  const fetchApplicationData = async () => {
+    try {
+      const storedToken = await AsyncStorage.getItem('token');
+      const token = storedToken ? JSON.parse(storedToken) : null;
+
+      if (!token) {
+        Alert.alert('Auth error', 'No token found. Please login.');
+        return;
+      }
+      const response = await axios.post(
+        `${BASE_URL}/api/trade/get-dtl`,
+        { id }, // 👈 pass ID in body
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (response.data?.status && response.data.data) {
+        const data = response.data.data;
+        console.log(data, 'all data is fulfilled');
+
+        setFirmType(data.firmTypeId || '');
+        setOwnershipType(data.ownershipTypeId || '');
+        setWardNo(data.wardMstrId || '');
+        setNewWardNo(data.newWardMstrId || '');
+        setFirmName(data.firmName || '');
+        setBusinessDescription(data.firmDescription || '');
+        setEstablishmentDate(
+          data.firmEstablishmentDate
+            ? new Date(data.firmEstablishmentDate)
+            : null,
+        );
+        setOwnerOfPremises(data.premisesOwnerName || '');
+        setTotalArea(data.areaInSqft || '');
+        setBusinessAddress(data.address || '');
+        setPinCode(data.pinCode || '');
+        setHoldingNo(data.holdingNo || '');
+        setLicenseFor(data.licenseForYears || '');
+
+        if (data.natureOfBusiness) {
+          const businessArray = data.natureOfBusiness
+            .split(',')
+            .map(item => item.trim());
+          console.log(businessArray, 'nature of business array');
+          setFetchedBusinessNames(businessArray);
+        }
+        if (data.owners && Array.isArray(data.owners)) {
+          setOwners(
+            data.owners.map(owner => ({
+              ownerName: owner.ownerName || '',
+              guardianName: owner.guardianName || '',
+              mobileNo: owner.mobileNo?.toString() || '', // ensure string for input
+              email: owner.email || '',
+            })),
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching application data:', error);
+      showAlert('Failed to load application data');
+    }
+  };
+
+  useEffect(() => {
     const fetchTaxData = async () => {
       try {
-        // get token if required
         const storedToken = await AsyncStorage.getItem('token');
         const token = storedToken ? JSON.parse(storedToken) : null;
 
-        // request body
         const body = {
           applicationType: 'NEW LICENSE',
           firmEstablishmentDate: '2020-02-20',
@@ -194,7 +259,6 @@ const ApplyLicense = ({ navigation }) => {
           isTobaccoLicense: 0,
         };
 
-        // API call
         const response = await axios.post(API_ROUTES.TRADE_REVIEW_TAX, body, {
           headers: {
             Authorization: token ? `Bearer ${token}` : undefined,
@@ -203,20 +267,19 @@ const ApplyLicense = ({ navigation }) => {
         });
 
         console.log('✅ Tax Review Response:', response.data?.data);
-
+        console.log('Response.data:', response.data?.status);
         setTaxData(response.data.data);
       } catch (error) {
         console.error(
           '❌ Error fetching Tax Review:',
           error.response?.data || error,
         );
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchTaxData();
-  }, []); //
+  }, []);
+
   const fetchTradeMaster = async () => {
     try {
       const storedToken = await AsyncStorage.getItem('token');
@@ -242,21 +305,12 @@ const ApplyLicense = ({ navigation }) => {
         setWardOptions(
           data.wardList.map(w => ({ label: w.wardNo, value: w.id })),
         );
-        // 👇 This is for Nature of Business
         setCategoryOptions(
           data.itemType.map(c => ({
-            label: `(${c.tradeCode}) ${c.tradeItem}`, // show code + name
+            label: c.tradeItem,
             value: c.id,
           })),
         );
-        const mappedOptions = data.itemType.map(c => ({
-          label: c.tradeItem,
-          value: c.id,
-        }));
-
-        console.log('Mapped Category Options:', mappedOptions);
-
-        setCategoryOptions(mappedOptions);
       } else {
         showAlert('Failed to load data');
       }
@@ -358,11 +412,8 @@ const ApplyLicense = ({ navigation }) => {
     <View style={{ flex: 1 }}>
       <HeaderNavigation />
       <ScrollView style={styles.container}>
-        {/* Page Title */}
+        <Text style={styles.pageTitle}>Renew License</Text>
 
-        <Text style={styles.pageTitle}>Apply License</Text>
-
-        {/* License Info */}
         <View style={styles.sectionCard}>
           <FormField
             label="Application Type"
@@ -387,7 +438,6 @@ const ApplyLicense = ({ navigation }) => {
           />
         </View>
 
-        {/* Firm Details */}
         <View style={styles.sectionCard}>
           <View style={styles.headingBox}>
             <Text style={styles.headingText}>FIRM DETAILS</Text>
@@ -447,7 +497,6 @@ const ApplyLicense = ({ navigation }) => {
           />
         </View>
 
-        {/* Owner Details (Dynamic) */}
         <View style={styles.sectionCard}>
           <View style={styles.headingBox}>
             <Text style={styles.headingText}>OWNER DETAILS</Text>
@@ -526,15 +575,13 @@ const ApplyLicense = ({ navigation }) => {
           <FormField
             label="Nature of Business"
             type="multiselect"
-            value={natureOfBusiness} // selected IDs array
-            onChange={setNatureOfBusiness} // update selected IDs
-            options={categoryOptions} // dropdown options from API
-            placeholder={
-              isLoading ? 'Loading...' : 'Select Nature of Business'
-            }
+            value={natureOfBusiness}
+            onChange={setNatureOfBusiness}
+            options={categoryOptions}
+            placeholder={isLoading ? 'Loading...' : 'Select Nature of Business'}
           />
         </View>
-        {/* Charges */}
+
         <View style={styles.sectionCard}>
           <View style={styles.headingBox}>
             <Text style={styles.headingText}>CHARGES</Text>
@@ -564,7 +611,7 @@ const ApplyLicense = ({ navigation }) => {
 
           <FormField
             label="Denial Amount"
-            value={taxData?.arrearCharge?.toString() || ''} // was licenseCharge earlier
+            value={taxData?.arrearCharge?.toString() || ''}
             onChange={setDenialAmount}
             editable={false}
           />
@@ -575,42 +622,8 @@ const ApplyLicense = ({ navigation }) => {
             onChange={setTotalCharge}
             editable={false}
           />
-          {/* <FormField
-            label="Payment Mode"
-            type="dropdown"
-            value={paymentMode}
-            onChange={setPaymentMode}
-            options={paymentModeOptions}
-            placeholder="Select Payment Mode"
-          />
-          {paymentMode === 'cheque' && (
-            <>
-              <FormField
-                label="Cheque Date"
-                type="date"
-                value={chequeDate}
-                onChange={setChequeDate}
-              />
-              <FormField
-                label="Cheque No"
-                value={chequeNumber}
-                onChange={setChequeNumber}
-              />
-              <FormField
-                label="Bank Name"
-                value={bankName}
-                onChange={setBankName}
-              />
-              <FormField
-                label="Branch Name"
-                value={branchName}
-                onChange={setBranchName}
-              />
-            </>
-          )} */}
         </View>
 
-        {/* Submit Button */}
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>Submit</Text>
         </TouchableOpacity>
@@ -625,7 +638,7 @@ const ApplyLicense = ({ navigation }) => {
   );
 };
 
-export default ApplyLicense;
+export default RenewLicensePage;
 
 const styles = StyleSheet.create({
   container: {

@@ -77,24 +77,23 @@ const Property = ({ navigation }) => {
   return (
     <View style={styles.maindashbaord}>
       <HeaderNavigation />
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <FlatList
-          data={propertyChildren}
-          keyExtractor={(item, index) => index.toString()}
-          numColumns={2}
-          contentContainerStyle={styles.scrollContainer}
-          columnWrapperStyle={{ justifyContent: 'space-between' }}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.box}
-              onPress={() => handleMenuPress(item)}
-            >
-              <Icon name={getIconName(item.icon)} size={40} color="#4A90E2" />
-              <Text style={styles.boxText}>{item.name}</Text>
-            </TouchableOpacity>
-          )}
-        />
-      </ScrollView>
+
+      <FlatList
+        data={propertyChildren}
+        keyExtractor={(item, index) => index.toString()}
+        numColumns={2}
+        contentContainerStyle={styles.scrollContainer}
+        columnWrapperStyle={{ justifyContent: 'space-between' }}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.box}
+            onPress={() => handleMenuPress(item)}
+          >
+            <Icon name={getIconName(item.icon)} size={40} color="#4A90E2" />
+            <Text style={styles.boxText}>{item.name}</Text>
+          </TouchableOpacity>
+        )}
+      />
       <TouchableOpacity onPress={() => navigation.navigate('ApplyAssessment')}>
         <Text>AssesmetApply</Text>
       </TouchableOpacity>

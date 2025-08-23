@@ -138,8 +138,8 @@ const SearchAssesment = ({ navigation }) => {
       const token = storedToken ? JSON.parse(storedToken) : null;
 
       const body = {
-        perPage: 5,
-        page: 1,
+        perPage: 100,
+        page: '',
         keyWord: keyword?.trim() || '', // send blank if empty
         wardId: value ? [value] : [], // send empty array if not selected
       };
@@ -195,21 +195,21 @@ const SearchAssesment = ({ navigation }) => {
           <TouchableOpacity style={styles.button} onPress={onPress}>
             <Text style={styles.buttonText}>Search</Text>
           </TouchableOpacity>
-          {searchResults.length > 0 && (
-            <FlatList
-              data={searchResults}
-              keyExtractor={(item, index) =>
-                item.id?.toString() || index.toString()
-              }
-              renderItem={renderItem}
-              contentContainerStyle={{
-                marginTop: responsiveHeight(2),
-                paddingBottom: responsiveHeight(5),
-              }}
-            />
-          )}
         </View>
       </ScrollView>
+      {searchResults.length > 0 && (
+        <FlatList
+          data={searchResults}
+          keyExtractor={(item, index) =>
+            item.id?.toString() || index.toString()
+          }
+          renderItem={renderItem}
+          contentContainerStyle={{
+            marginTop: responsiveHeight(2),
+            paddingBottom: responsiveHeight(5),
+          }}
+        />
+      )}
     </View>
   );
 };

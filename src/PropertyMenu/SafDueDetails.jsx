@@ -11,10 +11,14 @@ import {
   ActivityIndicator,
   Image,
   Dimensions,
+  Button,
 } from 'react-native';
+import { WORK_FLOW_PERMISSION } from '../api/apiRoutes';
+import { TCVerificationModal } from './Models/TCVerificationModal';
 import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
+import PropertyTaxNoticeModal from './Models/PropertyTaxNoticeModal';
+import PaymentReceiptModal from './PaymentReceiptModal';
 import React from 'react';
 import Header from '../Screen/Header';
 import Colors from '../Constants/Colors';
@@ -58,6 +62,9 @@ const SafDueDetails = ({ route, navigation }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [bankName, setBankName] = useState('');
   const [branchName, setBranchName] = useState('');
+  const [paymentReceiptVisible, setPaymentReceiptVisible] = useState(false);
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
+  const [transactionId, setTransactionId] = useState(null);
 
   const paymentTypeData = [{ label: 'Full', value: 'Full' }];
 
@@ -66,6 +73,19 @@ const SafDueDetails = ({ route, navigation }) => {
     { label: 'Cash', value: 'Cash' },
     { label: 'UPI', value: 'UPI' },
   ];
+  const [isVisible, setIsVisible] = useState(false);
+  const [selectedData, setSelectedData] = useState(null);
+  const [visible, setVisible] = useState(false);
+  const [permissionData, setPermissionData] = useState('');
+  const [workflowId, setWorkflowId] = useState('');
+  console.log(workflowId, 'my work flow id');
+
+  const handleView = id => {
+    console.log('Selected ID:', id);
+    // You can pass this ID to a modal or navigation
+    setIsVisible(true); // if you are opening a modal
+    setSelectedData(id); // store it in state to use in modal
+  };
 
   const viewdemand = async id => {
     console.log('Calling viewdemand with ID:', id);
@@ -202,6 +222,7 @@ const SafDueDetails = ({ route, navigation }) => {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         };
+        console.log('saf tokem', token);
 
         console.log('Fetching SAF details for ID:', id);
         const response = await axios.post(
@@ -211,6 +232,8 @@ const SafDueDetails = ({ route, navigation }) => {
         );
 
         const safData = response.data?.data;
+        setWorkflowId(safData?.workflowId);
+        console.log(safData?.workflowId, 'my work flow id');
         console.log('SAF details received:', safData ? 'Success' : 'No data');
 
         setOwnerList(safData?.owners || []);
@@ -218,8 +241,10 @@ const SafDueDetails = ({ route, navigation }) => {
         setTaxDetails(safData?.tranDtls || []);
         setTranDtls(safData?.tranDtls || []);
         setMemoDtls(safData?.memoDtls || []);
+
         setTcVerfivication(safData?.tcVerifications || []);
         setSafData(safData);
+
         console.log('safData:', safData);
         console.log('Owners:', safData?.owners || []);
         console.log('Floors:', safData?.floors || []);
@@ -262,6 +287,115 @@ const SafDueDetails = ({ route, navigation }) => {
   const handlePaymentModeChange = item => {
     console.log('Payment Mode selected:', item.value);
     setPaymentMode(item.value);
+  };
+
+  useEffect(() => {
+    const fetchPermission = async () => {
+      console.log(workflowId, 'my work flow id');
+      try {
+        const token = await AsyncStorage.getItem('token');
+        console.log(token, 'work flow id');
+        if (!token) {
+          console.warn('No token found');
+          return;
+        }
+
+        const body = { wfId: workflowId };
+        console.log('API URL:', WORK_FLOW_PERMISSION);
+        const response = await axios.post(WORK_FLOW_PERMISSION, body, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        console.log('Token from storage:', token);
+        console.log(
+          'Header sent:',
+          token.startsWith('Bearer') ? token : `Bearer ${token}`,
+        );
+        console.log('Body sent:', body);
+
+        console.log('Full API Response:', response.data);
+
+        const permission = response.data?.data;
+        if (permission) {
+          setPermissionData(permission);
+          console.log('Saved Permission Data:', permission);
+        } else {
+          console.warn('No permission data found in response');
+        }
+      } catch (error) {
+        console.error('Error fetching workflow permission:', error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPermission();
+  }, [workflowId]);
+
+  const processPayment = async () => {
+    try {
+      const token = JSON.parse(await AsyncStorage.getItem('token'));
+      if (!token) {
+        Alert.alert('Error', 'Token not found');
+        return false;
+      }
+
+      const paymentData = {
+        id: id,
+        paymentType: paymentType?.toUpperCase() || 'FULL',
+        paymentMode: paymentMode?.toUpperCase() || 'CASH',
+        chequeNo: paymentMode === 'Cash' ? '' : refNo || '',
+        chequeDate:
+          paymentMode === 'Cash'
+            ? ''
+            : chequeDate
+            ? chequeDate.toISOString().split('T')[0]
+            : '',
+        bankName: paymentMode === 'Cash' ? '' : bankName || '',
+        branchName: paymentMode === 'Cash' ? '' : branchName || '',
+      };
+
+      console.log('Processing payment:', paymentData);
+
+      // Make payment API call
+      const response = await axios.post(
+        `${BASE_URL}/api/property/pay-saf-demand`,
+        paymentData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      console.log('Payment API response:', response.data);
+
+      if (response.data.status === true) {
+        console.log(
+          'Payment processed successfully, Transaction ID:',
+          response.data.data?.tranId,
+        );
+        Alert.alert(
+          'Success',
+          response.data.message || 'Payment Successfully Done',
+        );
+        return { success: true, tranId: response.data.data?.tranId };
+      } else {
+        Alert.alert('Payment Error', response.data.message || 'Payment failed');
+        return { success: false };
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      Alert.alert(
+        'Payment Error',
+        error.response?.data?.message ||
+          'Failed to process payment. Please try again.',
+      );
+      return { success: false };
+    }
   };
 
   if (loading) {
@@ -742,15 +876,29 @@ const SafDueDetails = ({ route, navigation }) => {
               <View>
                 {/* Table Header */}
                 <View style={[styles.tableRow, styles.tableHeader]}>
-                  <Text style={styles.tableCell}>SL</Text>
-                  <Text style={styles.tableCell}>ARV</Text>
-                  <Text style={styles.tableCell}>Effect From</Text>
-                  <Text style={styles.tableCell}>Holding Tax</Text>
-                  <Text style={styles.tableCell}>Water Tax</Text>
-                  <Text style={styles.tableCell}>Conservancy</Text>
-                  <Text style={styles.tableCell}>Edu. Cess</Text>
-                  <Text style={styles.tableCell}>RWH Penalty</Text>
-                  <Text style={styles.tableCell}>Quarterly Tax</Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>SL</Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>ARV</Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Effect From
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Holding Tax
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Water Tax
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Conservancy
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Edu. Cess
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    RWH Penalty
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Quarterly Tax
+                  </Text>
                 </View>
 
                 {/* Table Body */}
@@ -794,14 +942,28 @@ const SafDueDetails = ({ route, navigation }) => {
               <View>
                 {/* Table Header */}
                 <View style={[styles.tableRow, styles.tableHeader]}>
-                  <Text style={styles.tableCell}>SL</Text>
-                  <Text style={styles.tableCell}>Transaction No</Text>
-                  <Text style={styles.tableCell}>Payment Mode</Text>
-                  <Text style={styles.tableCell}>Date</Text>
-                  <Text style={styles.tableCell}>From Qtr / Year</Text>
-                  <Text style={styles.tableCell}>Upto Qtr / Year</Text>
-                  <Text style={styles.tableCell}>Amount</Text>
-                  <Text style={styles.tableCell}>View</Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>SL</Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Transaction No
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Payment Mode
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Date
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    From Qtr / Year
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Upto Qtr / Year
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Amount
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    View
+                  </Text>
                 </View>
 
                 {/* Table Body */}
@@ -826,7 +988,6 @@ const SafDueDetails = ({ route, navigation }) => {
                     <Text style={styles.tableCell}>
                       {item?.payableAmt ?? 'NA'}
                     </Text>
-                    {/* View Button (can be TouchableOpacity if needed) */}
 
                     <TouchableOpacity
                       onPress={() => handleViewReceipt(item.id)}
@@ -850,15 +1011,34 @@ const SafDueDetails = ({ route, navigation }) => {
               <View>
                 {/* Table Header */}
                 <View style={[styles.tableRow, styles.tableHeader]}>
-                  <Text style={styles.tableCell}>SL</Text>
-                  <Text style={styles.tableCell}>Memo No</Text>
-                  <Text style={styles.tableCell}>Memo Type</Text>
-                  <Text style={styles.tableCell}>Holding No</Text>
-                  <Text style={styles.tableCell}>Quarter</Text>
-                  <Text style={styles.tableCell}>Financial Year</Text>
-                  <Text style={styles.tableCell}>Quarterly Tax</Text>
-                  <Text style={styles.tableCell}>Created At</Text>
-                  <Text style={styles.tableCell}>User Name</Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>SL</Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Memo No
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Memo Type
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Holding No
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Quarter
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Financial Year
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Quarterly Tax
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Created At
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    User Name
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    User Name
+                  </Text>
                 </View>
 
                 {/* Table Rows */}
@@ -885,6 +1065,66 @@ const SafDueDetails = ({ route, navigation }) => {
                     <Text style={styles.tableCell}>
                       {item.userName ?? 'NA'}
                     </Text>
+                    <TouchableOpacity
+                      style={styles.button}
+                      onPress={() => setVisible(true)}
+                    >
+                      <Text style={styles.buttonText}>View</Text>
+                    </TouchableOpacity>
+
+                    <PropertyTaxNoticeModal
+                      visible={visible}
+                      onClose={() => setVisible(false)}
+                    />
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+        )}
+
+        {tcVerfivication.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.heading}>Tc Varification</Text>
+
+            <ScrollView horizontal>
+              <View>
+                {/* Table Header */}
+                <View style={[styles.tableRow, styles.tableHeader]}>
+                  <Text style={[styles.tableCell, styles.headerText]}>SL</Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Transaction No
+                  </Text>
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    Payment Mode
+                  </Text>
+
+                  <Text style={[styles.tableCell, styles.headerText]}>
+                    View
+                  </Text>
+                </View>
+
+                {/* Table Body */}
+                {tcVerfivication.map((item, index) => (
+                  <View style={styles.tableRow} key={index}>
+                    <Text style={styles.tableCell}>{index + 1}</Text>
+                    <Text style={styles.tableCell}>
+                      {item?.verifiedBy ?? 'NA'}
+                    </Text>
+                    <Text style={styles.tableCell}>
+                      {item?.towerInstallationDate ?? 'NA'}
+                    </Text>
+
+                    <TouchableOpacity onPress={() => handleView(item.id)}>
+                      <Text style={{ color: 'blue' }}>View</Text>
+                    </TouchableOpacity>
+
+                    {/* TC Verification Modal */}
+                    <TCVerificationModal
+                      visible={isVisible}
+                      onClose={() => setIsVisible(false)}
+                      id={selectedData}
+                    />
                   </View>
                 ))}
               </View>
@@ -958,29 +1198,34 @@ const SafDueDetails = ({ route, navigation }) => {
         >
           <Text style={styles.viewButtonText}>🔄 Mutation</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => {
-            setShowPayNow(false); // 🚫 Don't show Pay Now for this button
-            setViewDemandVisible(true);
-            console.log('View only with ID:', id);
-            viewdemand(id);
-          }}
-          style={styles.viewButton}
-        >
-          <Text style={styles.viewButtonText}>👁️ View Demand</Text>
-        </TouchableOpacity>
+        {safData?.paymentStatus == 0 && (
+          <TouchableOpacity
+            onPress={() => {
+              setShowPayNow(false);
+              setViewDemandVisible(true);
+              console.log('View only with ID:', id);
+              viewdemand(id);
+            }}
+            style={styles.viewButton}
+          >
+            <Text style={styles.viewButtonText}>👁️ View Demand</Text>
+          </TouchableOpacity>
+        )}
 
-        <TouchableOpacity
-          onPress={() => {
-            setShowPayNow(true); // ✅ Show Pay Now for this button
-            setViewDemandVisible(true);
-            console.log('Calling viewdemand with ID:', id);
-            viewdemand(id);
-          }}
-          style={styles.viewButton}
-        >
-          <Text style={styles.viewButtonText}>🔄 Proceed Payment</Text>
-        </TouchableOpacity>
+        {safData?.paymentStatus == 0 && (
+          <TouchableOpacity
+            onPress={() => {
+              setShowPayNow(true); // ✅ Show Pay Now
+              setViewDemandVisible(true);
+              console.log('Calling viewdemand with ID:', id);
+              viewdemand(id);
+            }}
+            style={styles.viewButton}
+          >
+            <Text style={styles.viewButtonText}>🔄 Proceed Payment</Text>
+          </TouchableOpacity>
+        )}
+        <Text>Status: {safData?.appStatus}</Text>
       </View>
       <Modal
         visible={payNowModalVisible}
@@ -1100,13 +1345,75 @@ const SafDueDetails = ({ route, navigation }) => {
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => {
+                onPress={async () => {
                   console.log('Submitting:', {
                     paymentType,
                     paymentMode,
                     amount,
                   });
+
+                  // Validate required fields
+                  if (!paymentType || !paymentMode) {
+                    Alert.alert(
+                      'Validation Error',
+                      'Please fill all required fields',
+                    );
+                    return;
+                  }
+
+                  if (
+                    paymentMode !== 'Cash' &&
+                    (!refNo || !bankName || !branchName)
+                  ) {
+                    Alert.alert(
+                      'Validation Error',
+                      'Please fill all payment details',
+                    );
+                    return;
+                  }
+
+                  // Close payment modal first
                   setPayNowModalVisible(false);
+
+                  // Process the payment
+                  const paymentResult = await processPayment();
+
+                  if (paymentResult.success) {
+                    // Store transaction ID for receipt
+                    setTransactionId(paymentResult.tranId);
+
+                    // Refresh demand data after payment
+                    await viewdemand(id);
+
+                    // Check if all demand values are now 0 (payment completed)
+                    setTimeout(() => {
+                      const allValuesZero = demandlist?.every(item => {
+                        const totalDue =
+                          parseFloat(item.dueHoldingTax || 0) +
+                          parseFloat(item.dueLatrineTax || 0) +
+                          parseFloat(item.dueWaterTax || 0) +
+                          parseFloat(item.dueHealthCessTax || 0) +
+                          parseFloat(item.dueEducationCessTax || 0) +
+                          parseFloat(item.dueRwhTax || 0) +
+                          parseFloat(item.monthlyPenalty || 0);
+                        return totalDue === 0;
+                      });
+
+                      // Always show receipt after successful payment, regardless of demand data
+                      setPaymentCompleted(true);
+                      setViewDemandVisible(false); // Close demand modal
+                      setPaymentReceiptVisible(true); // Show receipt
+
+                      if (
+                        allValuesZero ||
+                        parseFloat(maindata?.payableAmount || 0) === 0
+                      ) {
+                        console.log(
+                          'Payment completed - all demand values are now zero',
+                        );
+                      }
+                    }, 500); // Small delay to ensure data is updated
+                  }
                 }}
                 style={styles.confirmButton}
               >
@@ -1853,6 +2160,29 @@ const SafDueDetails = ({ route, navigation }) => {
           </ScrollView>
         </View>
       </Modal>
+
+      {/* Payment Receipt Modal */}
+      <PaymentReceiptModal
+        visible={paymentReceiptVisible}
+        onClose={() => {
+          setPaymentReceiptVisible(false);
+          setPaymentCompleted(false);
+          setTransactionId(null);
+          // Reset payment form
+          setPaymentType(null);
+          setPaymentMode(null);
+          setRefNo('');
+          setBankName('');
+          setBranchName('');
+          setChequeDate(null);
+        }}
+        paymentDtls={{
+          tranNo: transactionId ? `TXN-${transactionId}` : 'PMT-' + Date.now(),
+          tranDate: new Date().toLocaleDateString('en-GB'),
+          paymentMode: paymentMode || 'Online',
+          payableAmt: amount,
+        }}
+      />
     </ScrollView>
   );
 };

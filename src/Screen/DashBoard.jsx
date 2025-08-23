@@ -124,7 +124,6 @@ const DashBoard = ({ navigation }) => {
         title="Go to ApplyLicense ApplyLicense (ApplyLicense)"
         onPress={() => navigation.navigate('ApplyLicense')}
       />
-
       <Button
         title="Go to Search Trade (Search)"
         onPress={() => navigation.navigate('Search')}
@@ -137,14 +136,21 @@ const DashBoard = ({ navigation }) => {
         title="RenewLicense (RenewLicense)"
         onPress={() => navigation.navigate('RenewLicense')}
       />
-      {/* <Button
+      <Button
+        title="ApplyWaterConnection (ApplyWaterConnection)"
+        onPress={() => navigation.navigate('ApplyWaterConnection')}
+      />
+      <Button
         title="Apply Water Connection"
         onPress={() => navigation.navigate('ApplyWaterConnection')}
-      /> */}
-
+      />
       <Button
         title="Sulinder (License)"
         onPress={() => navigation.navigate('SurrenderLicense')}
+      />
+      <Button
+        title="WaterBillScreen (WaterBillScreen)"
+        onPress={() => navigation.navigate('WaterBillScreen')}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>

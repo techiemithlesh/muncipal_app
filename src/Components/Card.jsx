@@ -8,20 +8,32 @@ import {
 import Colors from '../Constants/Colors'; // or replace with your Colors config
 
 const Card = ({
+  applicationNo,
   wardNo,
-  licenseNo,
+  firmType,
   ownerName,
-  guardianName,
+  applyDate,
   address,
+  natureOfBusiness,
   onPress,
 }) => {
+  // Handle both array and string formats for Nature of Business
+  let natureOfBusinessDisplay = natureOfBusiness;
+  if (Array.isArray(natureOfBusinessDisplay)) {
+    natureOfBusinessDisplay = natureOfBusinessDisplay.join(', ');
+  }
+
   return (
     <View style={styles.card}>
+      <Row label="Application No.:" value={applicationNo} />
       <Row label="Ward No.:" value={wardNo} />
-      <Row label="License No.:" value={licenseNo} />
+      <Row label="Firm Type:" value={firmType} />
       <Row label="Owner Name:" value={ownerName} />
-      <Row label="Guardian Name:" value={guardianName} />
+      <Row label="Guardian Name:" value={applyDate} />
       <Row label="Address:" value={address} />
+      {natureOfBusinessDisplay && (
+        <Row label="Nature of Business:" value={natureOfBusinessDisplay} />
+      )}
 
       <TouchableOpacity onPress={onPress} style={styles.button}>
         <Text style={styles.buttonText}>View</Text>

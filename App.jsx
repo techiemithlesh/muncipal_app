@@ -30,7 +30,13 @@ import SurrenderLicense from './src/Trade/SurrenderLicense';
 import SubmitVarification from './src/PropertyMenu/SubmitVarification';
 import DocUpload from './src/Trade/DocUpload';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import ApplyWaterConnectionForm from './src/Water/ApplyWaterConnectionForm';
 import LoginScreen from './src/Screen/LoginScreen';
+import LicenseVerificationScreen from './src/Trade/LicenseVerificationScreen';
+import SearchWater from './src/Water/SearchWater';
+import WaterBillScreen from './src/Water/WaterBillScreen';
+import RenewLicensePage from './src/Trade/RenewLicensePage';
+import SurrenderLicensePage from './src/Trade/SurrenderLicensePage';
 const Stack = createNativeStackNavigator();
 
 const App = ({ navigation }) => {
@@ -148,11 +154,11 @@ const App = ({ navigation }) => {
                 component={RenewLicense}
                 options={{ headerShown: false }}
               />
-              {/* <Stack.Screen
-              name="ApplyWaterConnection"
-              component={ApplyWaterConnectionForm}
-              options={{ headerShown: false }}
-            /> */}
+              <Stack.Screen
+                name="ApplyWaterConnection"
+                component={ApplyWaterConnectionForm}
+                options={{ headerShown: false }}
+              />
               <Stack.Screen
                 name="SurrenderLicense"
                 component={SurrenderLicense}
@@ -171,6 +177,32 @@ const App = ({ navigation }) => {
               <Stack.Screen
                 name="LoginScreen"
                 component={LoginScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="LicenseVerificationScreen"
+                component={LicenseVerificationScreen}
+                options={{ headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="SearchWater"
+                component={SearchWater}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="WaterBillScreen"
+                component={WaterBillScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="SurrenderLicensePage"
+                component={SurrenderLicensePage}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="RenewLicensePage"
+                component={RenewLicensePage}
                 options={{ headerShown: false }}
               />
             </Stack.Navigator>
