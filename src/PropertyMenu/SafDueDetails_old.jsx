@@ -27,7 +27,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import HeaderNavigation from '../Components/HeaderNavigation';
-import { getToken } from '../utils/auth';
 const SafDueDetails = ({ route, navigation }) => {
   const { id } = route.params;
   const [safData, setSafData] = useState(null);
@@ -79,36 +78,24 @@ const SafDueDetails = ({ route, navigation }) => {
   const [visible, setVisible] = useState(false);
   const [permissionData, setPermissionData] = useState('');
   const [workflowId, setWorkflowId] = useState('');
-  const [token, setToken] = useState(null);
+  console.log(workflowId, 'my work flow id');
 
-  useEffect(() => {
-    const loadToken = async () => {
-      try {
-        const fetchedToken = await getToken();
-        if (fetchedToken) {
-          setToken(fetchedToken);
-        }
-      } catch (error) {
-        console.error("Failed to load token:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadToken();
-  }, []);
-
-
-  const handleView = (id) => {
+  const handleView = id => {
+    console.log('Selected ID:', id);
+    // You can pass this ID to a modal or navigation
     setIsVisible(true); // if you are opening a modal
     setSelectedData(id); // store it in state to use in modal
   };
 
-  const viewdemand = async (id) => {
+  const viewdemand = async id => {
+    console.log('Calling viewdemand with ID:', id);
     try {
-
+      const token = JSON.parse(await AsyncStorage.getItem('token'));
       if (!token) {
         return Alert.alert('Error', 'Token not found');
       }
+
+      console.log('Making API call to get-saf-demand...');
       const response = await axios.post(
         `${BASE_URL}/api/property/get-saf-demand`,
         { id },
@@ -120,18 +107,27 @@ const SafDueDetails = ({ route, navigation }) => {
         },
       );
 
+      console.log(
+        'Response data structure:',
+        JSON.stringify(response.data, null, 2),
+      );
+
       const demandList = response.data?.data?.demandList || [];
       const currentDeman = response.data?.data?.currentDemand;
+      console.log('Demand currentDeman:', currentDeman);
       setMaindata(response.data?.data);
       setCurrentDemand(currentDeman);
       setDemandList(demandList);
-      setViewDemandVisible(true);
+      setViewDemandVisible(true); // Show modal
+      console.log('Modal should be visible now');
     } catch (error) {
+      console.error('Fetch error:', error);
+      console.error('Error response:', error.response?.data);
       Alert.alert('Error', 'Unable to fetch demand');
     }
   };
 
-  const documentview = async (id) => {
+  const documentview = async id => {
     try {
       const storedToken = await AsyncStorage.getItem('token');
       const token = storedToken ? JSON.parse(storedToken) : null;
@@ -141,45 +137,63 @@ const SafDueDetails = ({ route, navigation }) => {
         return;
       }
 
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+
       const response = await axios.post(
         `${BASE_URL}/api/property/get-uploaded-doc-list`,
         { id }, // Send the document/property ID in body
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        },
+        { headers },
       );
 
       const uploadedDocs = response.data?.data;
+
+      console.log('Uploaded Document List:', uploadedDocs);
+
+      // Do something with the data
+      // For example: open a modal, navigate to another screen, or set state
       setUploadedDocs(uploadedDocs); // <-- if using useState
       setDocModalVisible(true);
     } catch (error) {
+      console.error(
+        'Error fetching uploaded documents:',
+        error?.response || error,
+      );
       Alert.alert('Error', 'Failed to fetch document list.');
     }
   };
 
-  const handleViewReceipt = async (tranDtlId) => {
+  const handleViewReceipt = async tranDtlId => {
     try {
+      const storedToken = await AsyncStorage.getItem('token');
+      const token = storedToken ? JSON.parse(storedToken) : null;
+
       if (!token) {
         console.warn('Token not found');
         return;
       }
+
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+
       const response = await axios.post(
         `${BASE_URL}/api/property/payment-receipt`,
         { id: tranDtlId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        },
+        { headers },
       );
 
       setPaynemtDtls(response.data?.data);
       setPaynemtDtls(response.data?.data);
       setModalVisible(true);
+
+      // ✅ Print the data
+      console.log('Payment Receipt Response:', response.data?.data);
+
+      // Optional: set in state if you want to display it in modal/screen
       // setReceiptData(response.data?.data);
     } catch (error) {
       console.error(
@@ -189,93 +203,136 @@ const SafDueDetails = ({ route, navigation }) => {
     }
   };
 
-  const fetchSafDetails = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        `${BASE_URL}/api/property/get-saf-dtl`,
-        { id },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
+  useEffect(() => {
+    const fetchSafDetails = async () => {
+      console.log('Starting to fetch SAF details...');
+      setLoading(true);
+      try {
+        const storedToken = await AsyncStorage.getItem('token');
+        const token = storedToken ? JSON.parse(storedToken) : null;
 
-      const safData = response.data?.data;
-      setWorkflowId(safData?.workflowId);
-      setOwnerList(safData?.owners || []);
-      setFloorData(safData?.floors || []);
-      setTaxDetails(safData?.tranDtls || []);
-      setTranDtls(safData?.tranDtls || []);
-      setMemoDtls(safData?.memoDtls || []);
+        if (!token) {
+          console.warn('Token not found. Aborting request.');
+          Alert.alert('Error', 'Authentication token not found.');
+          setLoading(false);
+          return;
+        }
 
-      setTcVerfivication(safData?.tcVerifications || []);
-      setSafData(safData);
-    } catch (error) {
-      Alert.alert(
-        'Error',
-        'Failed to load property details. Please try again.',
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  const fetchPermission = async () => {
-    try {
-      const response = await axios.post(WORK_FLOW_PERMISSION, { wfId: workflowId }, {
-        headers: {
+        const headers = {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
-        },
-      });
+        };
+        console.log('saf tokem', token);
 
-      const permission = response.data?.data;
-      if (permission) {
-        setPermissionData(permission);
-      } else {
+        console.log('Fetching SAF details for ID:', id);
+        const response = await axios.post(
+          `${BASE_URL}/api/property/get-saf-dtl`,
+          { id },
+          { headers },
+        );
+
+        const safData = response.data?.data;
+        setWorkflowId(safData?.workflowId);
+        console.log(safData?.workflowId, 'my work flow id');
+        console.log('SAF details received:', safData ? 'Success' : 'No data');
+
+        setOwnerList(safData?.owners || []);
+        setFloorData(safData?.floors || []);
+        setTaxDetails(safData?.tranDtls || []);
+        setTranDtls(safData?.tranDtls || []);
+        setMemoDtls(safData?.memoDtls || []);
+
+        setTcVerfivication(safData?.tcVerifications || []);
+        setSafData(safData);
+
+        console.log('safData:', safData);
+        console.log('Owners:', safData?.owners || []);
+        console.log('Floors:', safData?.floors || []);
+        console.log('Transaction Details:', safData?.tranDtls || []);
+        console.log('Memo Details:', safData?.memoDtls || []);
+        console.log('TC Verifications:', safData?.tcVerifications || []);
+        console.log('TC levelRemarks:', safData?.levelRemarks || []);
+      } catch (error) {
+        console.error('Error fetching SAF details:', error?.response || error);
+        Alert.alert(
+          'Error',
+          'Failed to load property details. Please try again.',
+        );
+      } finally {
+        console.log('Setting loading to false');
+        setLoading(false);
       }
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-
-
-  const handlePaymentTypeChange = (item) => {
-    console.log('Payment Type selected:', item.value);
-    setPaymentType(item.value);
-  };
-
-  const handlePaymentModeChange = (item) => {
-    console.log('Payment Mode selected:', item.value);
-    setPaymentMode(item.value);
-  };
-
-  // Update amount when maindata changes - MUST be before any conditional returns
-  
-  useEffect(() => {
-    if (id && token) {
+    if (id) {
       fetchSafDetails();
     } else {
+      console.warn('No ID provided to SafDueDetails');
       setLoading(false);
     }
-  }, [id, token]);
+  }, [id]);
 
+  // Update amount when maindata changes - MUST be before any conditional returns
   useEffect(() => {
     if (maindata?.payableAmount) {
       setAmount(maindata.payableAmount.toString());
     }
   }, [maindata]);
 
+  const handlePaymentTypeChange = item => {
+    console.log('Payment Type selected:', item.value);
+    setPaymentType(item.value);
+  };
+
+  const handlePaymentModeChange = item => {
+    console.log('Payment Mode selected:', item.value);
+    setPaymentMode(item.value);
+  };
+
   useEffect(() => {
-    if (workflowId && token)
-      fetchPermission();
-  }, [workflowId, token]);
+    const fetchPermission = async () => {
+      console.log(workflowId, 'my work flow id');
+      try {
+        const token = await AsyncStorage.getItem('token');
+        console.log(token, 'work flow id');
+        if (!token) {
+          console.warn('No token found');
+          return;
+        }
+
+        const body = { wfId: workflowId };
+        console.log('API URL:', WORK_FLOW_PERMISSION);
+        const response = await axios.post(WORK_FLOW_PERMISSION, body, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        console.log('Token from storage:', token);
+        console.log(
+          'Header sent:',
+          token.startsWith('Bearer') ? token : `Bearer ${token}`,
+        );
+        console.log('Body sent:', body);
+
+        console.log('Full API Response:', response.data);
+
+        const permission = response.data?.data;
+        if (permission) {
+          setPermissionData(permission);
+          console.log('Saved Permission Data:', permission);
+        } else {
+          console.warn('No permission data found in response');
+        }
+      } catch (error) {
+        console.error('Error fetching workflow permission:', error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPermission();
+  }, [workflowId]);
 
   const processPayment = async () => {
     try {
@@ -294,8 +351,8 @@ const SafDueDetails = ({ route, navigation }) => {
           paymentMode === 'Cash'
             ? ''
             : chequeDate
-              ? chequeDate.toISOString().split('T')[0]
-              : '',
+            ? chequeDate.toISOString().split('T')[0]
+            : '',
         bankName: paymentMode === 'Cash' ? '' : bankName || '',
         branchName: paymentMode === 'Cash' ? '' : branchName || '',
       };
@@ -335,7 +392,7 @@ const SafDueDetails = ({ route, navigation }) => {
       Alert.alert(
         'Payment Error',
         error.response?.data?.message ||
-        'Failed to process payment. Please try again.',
+          'Failed to process payment. Please try again.',
       );
       return { success: false };
     }
@@ -369,11 +426,11 @@ const SafDueDetails = ({ route, navigation }) => {
         <View style={styles.card}>
           <Text style={styles.heading}>Basic Details</Text>
           <View style={styles.row}>
-            <Text style={styles.labelFixed}>Status:</Text>
+            <Text style={styles.labelFixed}>appStatus:</Text>
             <Text style={styles.value}>{safData?.appStatus ?? 'N/A'}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.labelFixed}>Saf No :</Text>
+            <Text style={styles.labelFixed}>safNo :</Text>
             <Text style={styles.value}>{safData?.safNo ?? 'N/A'}</Text>
           </View>
           <View style={styles.row}>
@@ -1114,7 +1171,7 @@ const SafDueDetails = ({ route, navigation }) => {
             style={[
               styles.viewButtonText,
               safData?.propertyType === 'VACANT LAND' &&
-              styles.disabledButtonText,
+                styles.disabledButtonText,
             ]}
           >
             📋 Ressessment{' '}
@@ -1146,6 +1203,7 @@ const SafDueDetails = ({ route, navigation }) => {
             onPress={() => {
               setShowPayNow(false);
               setViewDemandVisible(true);
+              console.log('View only with ID:', id);
               viewdemand(id);
             }}
             style={styles.viewButton}
@@ -1159,6 +1217,7 @@ const SafDueDetails = ({ route, navigation }) => {
             onPress={() => {
               setShowPayNow(true); // ✅ Show Pay Now
               setViewDemandVisible(true);
+              console.log('Calling viewdemand with ID:', id);
               viewdemand(id);
             }}
             style={styles.viewButton}
@@ -1166,6 +1225,7 @@ const SafDueDetails = ({ route, navigation }) => {
             <Text style={styles.viewButtonText}>🔄 Proceed Payment</Text>
           </TouchableOpacity>
         )}
+        <Text>Status: {safData?.appStatus}</Text>
       </View>
       <Modal
         visible={payNowModalVisible}
@@ -1223,10 +1283,10 @@ const SafDueDetails = ({ route, navigation }) => {
                   <Text>
                     {chequeDate
                       ? `${chequeDate.getDate().toString().padStart(2, '0')}/${(
-                        chequeDate.getMonth() + 1
-                      )
-                        .toString()
-                        .padStart(2, '0')}/${chequeDate
+                          chequeDate.getMonth() + 1
+                        )
+                          .toString()
+                          .padStart(2, '0')}/${chequeDate
                           .getFullYear()
                           .toString()
                           .slice(-2)}`
