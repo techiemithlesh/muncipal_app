@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import React, { useState } from 'react';
+import { showToast } from '../utils/toast';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -57,7 +58,9 @@ const LoginScreen = ({ navigation }) => {
         const { token, userDetails } = response.data.data;
         await AsyncStorage.setItem('token', JSON.stringify(token));
         await AsyncStorage.setItem('userDetails', JSON.stringify(userDetails));
-        Alert.alert('Success', 'Logged in successfully');
+        // Alert.alert('Success', 'Logged in successfully');
+        showToast('success', 'Login Successfully!');
+
         navigation.navigate('DashBoard');
         console.log('Login successful, userDetails:', userDetails);
         console.log('MenuTree data:', userDetails.menuTree);

@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AlertNotificationRoot } from 'react-native-alert-notification';
 import { MasterDataProvider } from './src/Context/MasterDataContext';
+import Toast from 'react-native-toast-message';
 
 // Screens
 import DashBoard from './src/Screen/DashBoard';
@@ -12,7 +13,6 @@ import Property from './src/Screen/Property';
 import Assessment from './src/Screen/Assessment';
 import Inbox from './src/Screen/Inbox';
 import FieldVarification from './src/PropertyMenu/FieldVarification';
-import PropertyAssessmentForm from './src/PropertyMenu/WardCard';
 import SurveyPage from './src/PropertyMenu/SurveyPage';
 import ForgotPassword from './src/Screen/ForgetPassword';
 import VerifiedStatus from './src/PropertyMenu/VerifiedStatus';
@@ -20,7 +20,6 @@ import SearchAssesment from './src/PropertyMenu/SearchAssesment';
 import SafDueDetails from './src/PropertyMenu/SafDueDetails';
 import ApplyAssessment from './src/PropertyMenu/ApplyAssessment';
 import AssessmentSummary from './src/PropertyMenu/AssessmentSummary';
-import PreviewScreen from './src/Screen/PreviewScreen';
 import ApplyAssessmentComponentized from './src/PropertyMenu/ApplyAssessmentComponentized';
 import ApplyLicense from './src/Trade/ApplyLicense';
 import Search from './src/Trade/Details/Search';
@@ -41,7 +40,6 @@ import EditTrade from './src/Trade/Details/EditTrade';
 import InboxDtls from './src/Trade/Inbox/InboxDtls';
 import SearchHolding from './src/PropertyMenu/Holding/Search';
 import HoldingDetails from './src/PropertyMenu/Holding/HoldingDetails';
-import Toast from 'react-native-toast-message';
 
 const Stack = createNativeStackNavigator();
 
@@ -207,7 +205,6 @@ const App = () => {
                 component={InboxDtls}
                 options={{ headerShown: false }}
               />
-
               {/* Holding Navigators */}
               <Stack.Screen
                 name="SearchHolding"
@@ -219,11 +216,18 @@ const App = () => {
                 component={HoldingDetails}
                 options={{ headerShown: false }}
               />
+              <Stack.Screen
+                name="LoginScreen"
+                component={LoginScreen}
+                options={{ headerShown: false }}
+              />
             </Stack.Navigator>
           </NavigationContainer>
-          <Toast />
         </AlertNotificationRoot>
       </MasterDataProvider>
+
+      {/* 👇 Toast outside everything, stays above Modals */}
+      <Toast topOffset={60} />
     </GestureHandlerRootView>
   );
 };

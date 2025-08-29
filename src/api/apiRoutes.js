@@ -36,8 +36,6 @@ export const HOLDIGN_API_ROUTES ={
   SEARCH_API:`${BASE_URL}/api/property/search-prop`,
   DETAILS_API:`${BASE_URL}/api/property/get-prop-dtl`,
   MASTER_DATA_API:`${BASE_URL}/api/property/get-saf-master-data`,
-  DEMAND_API:`${BASE_URL}/api/property/get-prop-demand`
-
-
-
+  DEMAND_API:`${BASE_URL}/api/property/get-prop-demand`,
+  PAY_DEMAND_API:`${BASE_URL}/api/property/pay-saf-demand`
 };

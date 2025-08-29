@@ -318,6 +318,29 @@ export const PaymentModal = ({ visible, onClose, tradeDetails }) => {
 };
 
 const { width, height } = Dimensions.get('window');
+const downloadPDF = async url => {
+  try {
+    const { fs } = RNBlobUtil;
+    const dir = fs.dirs.DownloadDir; // Downloads folder
+    const path = `${dir}/document_${Date.now()}.pdf`;
+
+    const res = await RNBlobUtil.config({
+      fileCache: true,
+      addAndroidDownloads: {
+        useDownloadManager: true,
+        notification: true,
+        path: path,
+        description: 'Downloading PDF...',
+      },
+    }).fetch('GET', url);
+
+    showToast('success', '📄 Success', 'PDF Downloaded Successfully!');
+    console.log('PDF saved to:', res.path());
+  } catch (err) {
+    console.error('Download error:', err);
+    Alert.alert('Error', 'Download failed!');
+  }
+};
 
 export const DocumentModal = ({ visible, onClose, documents }) => {
   const [previewVisible, setPreviewVisible] = useState(false);
@@ -328,29 +351,7 @@ export const DocumentModal = ({ visible, onClose, documents }) => {
     setCurrentIndex(index);
     setPreviewVisible(true);
   };
-  const downloadPDF = async url => {
-    try {
-      const { fs } = RNBlobUtil;
-      const dir = fs.dirs.DownloadDir; // Downloads folder
-      const path = `${dir}/document_${Date.now()}.pdf`;
 
-      const res = await RNBlobUtil.config({
-        fileCache: true,
-        addAndroidDownloads: {
-          useDownloadManager: true,
-          notification: true,
-          path: path,
-          description: 'Downloading PDF...',
-        },
-      }).fetch('GET', url);
-
-      showToast('success', '📄 Success', 'PDF Downloaded Successfully!');
-      console.log('PDF saved to:', res.path());
-    } catch (err) {
-      console.error('Download error:', err);
-      Alert.alert('Error', 'Download failed!');
-    }
-  };
   const renderPreviewItem = ({ item }) => {
     const isPDF = item.docPath?.toLowerCase().endsWith('.pdf');
 
@@ -403,7 +404,12 @@ export const DocumentModal = ({ visible, onClose, documents }) => {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      presentationStyle="overFullScreen"
+    >
       <View style={styles.overlay}>
         {/* Document List Modal */}
         <View style={styles.modalContent}>
@@ -479,7 +485,12 @@ export const DocumentModal = ({ visible, onClose, documents }) => {
         </View>
 
         {/* Preview Modal */}
-        <Modal visible={previewVisible} transparent animationType="fade">
+        <Modal
+          visible={previewVisible}
+          transparent
+          animationType="fade"
+          presentationStyle="overFullScreen"
+        >
           <View style={styles.previewOverlay}>
             <TouchableOpacity
               style={styles.previewCloseBtn}

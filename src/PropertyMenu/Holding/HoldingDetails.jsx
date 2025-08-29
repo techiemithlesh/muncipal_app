@@ -277,29 +277,46 @@ const HoldingDetails = ({ route, navigation }) => {
   }, [workflowId, token]);
 
   const processPayment = async () => {
+    const token = await getToken();
     try {
       const paymentData = {
-        id: id,
+        id: id, // e.g. 143
         paymentType: paymentType?.toUpperCase() || 'FULL',
         paymentMode: paymentMode?.toUpperCase() || 'CASH',
-        chequeNo: paymentMode === 'Cash' ? '' : refNo || '',
+        amount: amount || '0.00', // make sure you pass this too
+        chequeNo: paymentMode === 'CASH' ? '' : refNo || '',
         chequeDate:
-          paymentMode === 'Cash'
+          paymentMode === 'CASH'
             ? ''
             : chequeDate
             ? chequeDate.toISOString().split('T')[0]
             : '',
-        bankName: paymentMode === 'Cash' ? '' : bankName || '',
-        branchName: paymentMode === 'Cash' ? '' : branchName || '',
+        bankName: paymentMode === 'CASH' ? '' : bankName || '',
+        branchName: paymentMode === 'CASH' ? '' : branchName || '',
       };
 
-      const response = await api.processPayment(id, paymentData);
-
-      if (response.status === true) {
-        Alert.alert('Success', response.message || 'Payment Successfully Done');
-        return { success: true, tranId: response.data?.tranId };
+      const response = await axios.post(
+        HOLDIGN_API_ROUTES.PAY_DEMAND_API,
+        paymentData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      console.log('my data resposne of apyment', response.data.status);
+      if (response.data?.status === true) {
+        Alert.alert(
+          'Success',
+          response.data.message || 'Payment Successfully Done',
+        );
+        return { success: true, tranId: response.data?.data?.tranId };
       } else {
-        Alert.alert('Payment Error', response.message || 'Payment failed');
+        Alert.alert(
+          'Payment Error',
+          response.data?.message || 'Payment failed',
+        );
         return { success: false };
       }
     } catch (error) {

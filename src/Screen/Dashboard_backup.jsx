@@ -42,6 +42,57 @@ const DashBoard = ({ navigation }) => {
     fetchMenuTree();
   }, []);
 
+  const handleMenuPress = menuItem => {
+    switch (menuItem.name) {
+      case 'Dashboard':
+        // Already on dashboard
+        break;
+      case 'Property':
+        navigation.navigate('Property');
+        break;
+      case 'Assessment':
+      case 'Assesment':
+        navigation.navigate('Assessment');
+        break;
+      case 'Inbox':
+        navigation.navigate('Inbox');
+        break;
+      default:
+        console.log('Menu item pressed:', menuItem.name);
+    }
+  };
+
+  const getIconName = iconName => {
+    const iconMap = {
+      FaHome: 'home',
+      FaInbox: 'inbox',
+      FaUser: 'person',
+      FaCog: 'settings',
+      FaChartBar: 'bar-chart',
+      FaFileAlt: 'description',
+      FaBuilding: 'business',
+      FaCalculator: 'calculate',
+      FaClipboardList: 'list',
+      FaEnvelope: 'mail',
+    };
+    return iconMap[iconName] || 'dashboard';
+  };
+
+  const renderMenuItems = () => {
+    return menuItems.map((item, index) => (
+      <TouchableOpacity
+        key={index}
+        style={styles.box}
+        onPress={() => handleMenuPress(item)}
+      >
+        <View style={styles.iconContainer}>
+          <Icon name={getIconName(item.icon)} size={40} color="#4A90E2" />
+        </View>
+        <Text style={styles.boxText}>{item.name}</Text>
+      </TouchableOpacity>
+    ));
+  };
+
   if (loading) {
     return (
       <View style={styles.mainDashboard}>
@@ -66,7 +117,45 @@ const DashBoard = ({ navigation }) => {
   return (
     <View style={styles.mainDashboard}>
       <HeaderNavigation />
+      <Button
+        title="Go to Apply Assessment (Componentized)"
+        onPress={() => navigation.navigate('ApplyAssessmentComponentized')}
+      />
+      <Button
+        title="Go to ApplyLicense ApplyLicense (ApplyLicense)"
+        onPress={() => navigation.navigate('ApplyLicense')}
+      />
+      <Button
+        title="Go to Search Trade (Search)"
+        onPress={() => navigation.navigate('Search')}
+      />
+      <Button
+        title="InboxScreen (InboxScreen)"
+        onPress={() => navigation.navigate('InboxScreen')}
+      />
+      <Button
+        title="RenewLicense (RenewLicense)"
+        onPress={() => navigation.navigate('RenewLicense')}
+      />
+      <Button
+        title="ApplyWaterConnection (ApplyWaterConnection)"
+        onPress={() => navigation.navigate('ApplyWaterConnection')}
+      />
+      <Button
+        title="Apply Water Connection"
+        onPress={() => navigation.navigate('ApplyWaterConnection')}
+      />
+      <Button
+        title="Sulinder (License)"
+        onPress={() => navigation.navigate('SurrenderLicense')}
+      />
+      <Button
+        title="WaterBillScreen (WaterBillScreen)"
+        onPress={() => navigation.navigate('WaterBillScreen')}
+      />
+
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* <View style={styles.gridContainer}>{renderMenuItems()}</View> */}
         <MenuTree />
       </ScrollView>
       <LogoutButton />

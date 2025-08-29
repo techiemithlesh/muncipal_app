@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,14 @@ import {
   SafeAreaView,
   Dimensions,
   FlatList,
-} from "react-native";
-import { getUserDetails } from "../utils/auth";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import { useNavigation } from "@react-navigation/native";
+} from 'react-native';
+import { getUserDetails } from '../utils/auth';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useNavigation } from '@react-navigation/native';
+import Colors from '../Constants/Colors';
+import { ImageBackground } from 'react-native';
 
-const { width } = Dimensions.get("window");
+const { width } = Dimensions.get('window');
 
 // function to calculate number of columns dynamically
 const getNumColumns = () => {
@@ -23,7 +25,6 @@ const getNumColumns = () => {
 
 const MenuTreeScreen = () => {
   const [menuStack, setMenuStack] = useState([]);
-  const [menuItems, setMenuItems] = useState([]);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -31,28 +32,27 @@ const MenuTreeScreen = () => {
       try {
         const userDetails = await getUserDetails();
         if (userDetails && userDetails?.menuTree) {
-          setMenuItems(userDetails?.menuTree);
           setMenuStack([userDetails?.menuTree]);
         }
       } catch (err) {
-        console.log("Error fetching menu:", err);
+        console.log('Error fetching menu:', err);
       }
     };
     fetchMenuTree();
   }, []);
 
-  const getIconName = (iconName) => {
+  const getIconName = iconName => {
     const glyphs = Icon.getRawGlyphMap?.() || Icon.glyphMap;
-    return glyphs && glyphs[iconName] ? iconName : "dashboard";
+    return glyphs && glyphs[iconName] ? iconName : 'dashboard';
   };
 
   const currentMenu = menuStack[menuStack.length - 1] || [];
 
-  const handlePress = (item) => {
+  const handlePress = item => {
     if (item.children?.length) {
       setMenuStack([...menuStack, item.children]);
     } else {
-      console.log("item:", item.name);
+      console.log('item:', item.name);
       navigation.navigate(item.url); // use screen name
     }
   };
@@ -68,7 +68,7 @@ const MenuTreeScreen = () => {
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.box} onPress={() => handlePress(item)}>
       <View style={styles.iconContainer}>
-        <Icon name={getIconName(item.icon)} size={40} color="#4A90E2" />
+        <Icon name={getIconName(item.icon)} size={40} style={styles.icon} />
       </View>
       <Text style={styles.boxText}>{item.name}</Text>
 
@@ -89,7 +89,7 @@ const MenuTreeScreen = () => {
       <View style={styles.header}>
         {menuStack.length > 1 ? (
           <TouchableOpacity style={styles.backButton} onPress={goBack}>
-            <Icon name="arrow-back" size={24} color="#fff" />
+            <Icon name="arrow-back" size={24} color="#090748ff" />
             <Text style={styles.headerText}>Back</Text>
           </TouchableOpacity>
         ) : (
@@ -97,14 +97,23 @@ const MenuTreeScreen = () => {
         )}
       </View>
 
-      {/* Responsive Grid Menu */}
+      {/* FlatList with no ScrollView wrapping */}
       <FlatList
         data={currentMenu}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) =>
+          item?.id ? `${item.id}-${index}` : `${item.name}-${index}`
+        }
         renderItem={renderItem}
         numColumns={getNumColumns()}
         contentContainerStyle={styles.scrollContainer}
-        columnWrapperStyle={{ justifyContent: "space-between" }}
+        columnWrapperStyle={{ justifyContent: 'space-between' }}
+        // if needed for nested navigation screens
+        nestedScrollEnabled={false}
+        ListEmptyComponent={
+          <Text style={{ textAlign: 'center', marginTop: 20, color: '#888' }}>
+            No menu items found
+          </Text>
+        }
       />
     </SafeAreaView>
   );
@@ -115,51 +124,57 @@ export default MenuTreeScreen;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#4A90E2",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
     paddingVertical: 12,
     paddingHorizontal: 16,
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 2, // 👈 border thickness
+    borderColor: Colors.primary, // 👈 border color (light gray)
   },
   headerText: {
-    color: "#fff",
+    color: Colors.primary,
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   backButton: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  scrollContainer: {
-    padding: 16,
-  },
+  scrollContainer: {},
   box: {
     flex: 1,
-    backgroundColor: "#f0f4ff",
+    backgroundColor: '#edf2feff',
     borderRadius: 16,
-    padding: 16,
-    margin: 8,
-    alignItems: "center",
-    shadowColor: "#4a90e2",
-    shadowOffset: { width: 0, height: 4 },
+    padding: 10,
+    margin: 5,
+    marginTop: 10,
+    alignItems: 'center',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 6,
     borderLeftWidth: 6,
-    borderLeftColor: "#4a90e2",
-    minHeight: 120,
-    maxWidth: (width - 64) / getNumColumns(), // adjust based on screen width
+    borderLeftColor: Colors.primary,
+    minHeight: 50,
+    maxWidth: (width - 64) / getNumColumns(),
   },
   iconContainer: {
-    marginBottom: 8,
+    marginBottom: 2,
   },
   boxText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    textAlign: "center",
+    fontWeight: '600',
+    color: '#a11414ff',
+    textAlign: 'center',
+  },
+  icon: {
+    color: Colors.primary,
   },
 });
