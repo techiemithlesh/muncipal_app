@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from './Header';
 import HeaderNavigation from '../Components/HeaderNavigation';
 import LogoutButton from '../Components/LogoutButton';
+import MenuTree from '../Components/MenuTree';
 
 const DashBoard = ({ navigation }) => {
   const [menuItems, setMenuItems] = useState([]);
@@ -154,7 +155,8 @@ const DashBoard = ({ navigation }) => {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.gridContainer}>{renderMenuItems()}</View>
+        {/* <View style={styles.gridContainer}>{renderMenuItems()}</View> */}
+        <MenuTree />
       </ScrollView>
       <LogoutButton />
       <View style={styles.footer}>
