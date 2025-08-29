@@ -14,22 +14,27 @@ import {
   Button,
 } from 'react-native';
 import { WORK_FLOW_PERMISSION } from '../api/apiRoutes';
-import { TCVerificationModal } from './Models/TCVerificationModal';
-import { Dropdown } from 'react-native-element-dropdown';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import PropertyTaxNoticeModal from './Models/PropertyTaxNoticeModal';
-import PaymentReceiptModal from './PaymentReceiptModal';
+import { TCVerificationModal } from '../Models/TCVerificationModal';
+import PropertyTaxNoticeModal from '../Models/PropertyTaxNoticeModal';
 import React from 'react';
-import Header from '../Screen/Header';
-import Colors from '../Constants/Colors';
-import { BASE_URL } from '../config';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Colors from '../../Constants/Colors';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import HeaderNavigation from '../Components/HeaderNavigation';
-import { getToken } from '../utils/auth';
-const SafDueDetails = ({ route, navigation }) => {
+import HeaderNavigation from '../../Components/HeaderNavigation';
+import {
+  PayNowModal,
+  ViewDemandModal,
+  PaymentReceiptModal,
+  DocumentViewModal,
+  ImageViewModal,
+  api,
+} from './Model/Model';
+import { getToken } from '../../utils/auth';
+import { HOLDIGN_API_ROUTES } from '../../api/apiRoutes';
+const HoldingDetails = ({ route, navigation }) => {
   const { id } = route.params;
+  // console.log(id, 'holdign id');
+  const [holdingData, setHoldingData] = useState('');
   const [safData, setSafData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [ownerList, setOwnerList] = useState([]); // 👈 owners arrayconst
@@ -82,9 +87,66 @@ const SafDueDetails = ({ route, navigation }) => {
   const [token, setToken] = useState(null);
 
   useEffect(() => {
+    const fetchSafDetails = async () => {
+      setLoading(true);
+      try {
+        const token = await getToken();
+
+        const response = await axios.post(
+          HOLDIGN_API_ROUTES.DETAILS_API,
+          { id },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        const responseData = response?.data?.data;
+
+        // console.log('API Response Data:', responseData);
+
+        // Set both state variables with the same data
+        setHoldingData(responseData);
+        setSafData(responseData);
+
+        // ✅ If you want to see updated safData, log responseData instead
+        // console.log(safData, 'my holding data');
+
+        setWorkflowId(responseData?.workflowId);
+        setOwnerList(responseData?.owners || []);
+        setFloorData(responseData?.floors || []);
+        setTaxDetails(responseData?.tranDtls || []);
+        setTranDtls(responseData?.tranDtls || []);
+        setMemoDtls(responseData?.memoDtls || []);
+        setTcVerfivication(responseData?.tcVerifications || []);
+
+        // console.log('Data successfully loaded:', {
+        //   workflowId: responseData?.workflowId,
+        //   ownersCount: responseData?.owners?.length || 0,
+        //   floorsCount: responseData?.floors?.length || 0,
+        // });
+      } catch (error) {
+        console.error('fetchSafDetails error:', error);
+        Alert.alert(
+          'Error',
+          'Failed to load property details. Please try again.',
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchSafDetails();
+    }
+  }, [id, token]); // ✅ depend on id only
+
+  useEffect(() => {
     const loadToken = async () => {
       try {
         const fetchedToken = await getToken();
+        console.log(fetchedToken, 'get token');
         if (fetchedToken) {
           setToken(fetchedToken);
         }
@@ -104,54 +166,43 @@ const SafDueDetails = ({ route, navigation }) => {
 
   const viewdemand = async id => {
     try {
-      if (!token) {
-        return Alert.alert('Error', 'Token not found');
-      }
+      const token = await getToken(); // ✅ get auth token first
+
       const response = await axios.post(
-        `${BASE_URL}/api/property/get-saf-demand`,
-        { id },
+        HOLDIGN_API_ROUTES.DEMAND_API,
+        { id }, // ✅ send id in body
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
           },
         },
       );
 
-      const demandList = response.data?.data?.demandList || [];
-      const currentDeman = response.data?.data?.currentDemand;
-      setMaindata(response.data?.data);
-      setCurrentDemand(currentDeman);
+      // ✅ API structure: { status, message, data }
+      const responseData = response?.data?.data;
+      console.log('Demand API Response:', responseData);
+
+      const demandList = responseData?.demandList || [];
+      const currentDemand = responseData?.currentDemand || null;
+
+      setMaindata(responseData);
+      setCurrentDemand(currentDemand);
       setDemandList(demandList);
       setViewDemandVisible(true);
     } catch (error) {
+      console.error(
+        'viewdemand error:',
+        error?.response?.data || error.message,
+      );
       Alert.alert('Error', 'Unable to fetch demand');
     }
   };
 
   const documentview = async id => {
     try {
-      const storedToken = await AsyncStorage.getItem('token');
-      const token = storedToken ? JSON.parse(storedToken) : null;
-
-      if (!token) {
-        Alert.alert('Error', 'Authentication token not found.');
-        return;
-      }
-
-      const response = await axios.post(
-        `${BASE_URL}/api/property/get-uploaded-doc-list`,
-        { id }, // Send the document/property ID in body
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-
-      const uploadedDocs = response.data?.data;
-      setUploadedDocs(uploadedDocs); // <-- if using useState
+      const response = await api.getUploadedDocs(id);
+      const uploadedDocs = response?.data;
+      setUploadedDocs(uploadedDocs);
       setDocModalVisible(true);
     } catch (error) {
       Alert.alert('Error', 'Failed to fetch document list.');
@@ -160,65 +211,14 @@ const SafDueDetails = ({ route, navigation }) => {
 
   const handleViewReceipt = async tranDtlId => {
     try {
-      if (!token) {
-        console.warn('Token not found');
-        return;
-      }
-      const response = await axios.post(
-        `${BASE_URL}/api/property/payment-receipt`,
-        { id: tranDtlId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-
-      setPaynemtDtls(response.data?.data);
-      setPaynemtDtls(response.data?.data);
+      const response = await api.getPaymentReceipt(tranDtlId);
+      setPaynemtDtls(response?.data);
       setModalVisible(true);
-      // setReceiptData(response.data?.data);
     } catch (error) {
       console.error(
         'Error fetching payment receipt:',
         error?.response || error,
       );
-    }
-  };
-
-  const fetchSafDetails = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        `${BASE_URL}/api/property/get-saf-dtl`,
-        { id },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-
-      const safData = response.data?.data;
-      setWorkflowId(safData?.workflowId);
-      setOwnerList(safData?.owners || []);
-      setFloorData(safData?.floors || []);
-      setTaxDetails(safData?.tranDtls || []);
-      setTranDtls(safData?.tranDtls || []);
-      setMemoDtls(safData?.memoDtls || []);
-
-      setTcVerfivication(safData?.tcVerifications || []);
-      setSafData(safData);
-      console.log(safData, 'asbdsjaj');
-    } catch (error) {
-      Alert.alert(
-        'Error',
-        'Failed to load property details. Please try again.',
-      );
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -258,13 +258,13 @@ const SafDueDetails = ({ route, navigation }) => {
 
   // Update amount when maindata changes - MUST be before any conditional returns
 
-  useEffect(() => {
-    if (id && token) {
-      fetchSafDetails();
-    } else {
-      setLoading(false);
-    }
-  }, [id, token]);
+  // useEffect(() => {
+  //   if (id && token) {
+  //     fetchSafDetails();
+  //   } else {
+  //     setLoading(false);
+  //   }
+  // }, [id, token]);
 
   useEffect(() => {
     if (maindata?.payableAmount) {
@@ -278,12 +278,6 @@ const SafDueDetails = ({ route, navigation }) => {
 
   const processPayment = async () => {
     try {
-      const token = JSON.parse(await AsyncStorage.getItem('token'));
-      if (!token) {
-        Alert.alert('Error', 'Token not found');
-        return false;
-      }
-
       const paymentData = {
         id: id,
         paymentType: paymentType?.toUpperCase() || 'FULL',
@@ -299,34 +293,13 @@ const SafDueDetails = ({ route, navigation }) => {
         branchName: paymentMode === 'Cash' ? '' : branchName || '',
       };
 
-      console.log('Processing payment:', paymentData);
+      const response = await api.processPayment(id, paymentData);
 
-      // Make payment API call
-      const response = await axios.post(
-        `${BASE_URL}/api/property/pay-saf-demand`,
-        paymentData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-
-      console.log('Payment API response:', response.data);
-
-      if (response.data.status === true) {
-        console.log(
-          'Payment processed successfully, Transaction ID:',
-          response.data.data?.tranId,
-        );
-        Alert.alert(
-          'Success',
-          response.data.message || 'Payment Successfully Done',
-        );
-        return { success: true, tranId: response.data.data?.tranId };
+      if (response.status === true) {
+        Alert.alert('Success', response.message || 'Payment Successfully Done');
+        return { success: true, tranId: response.data?.tranId };
       } else {
-        Alert.alert('Payment Error', response.data.message || 'Payment failed');
+        Alert.alert('Payment Error', response.message || 'Payment failed');
         return { success: false };
       }
     } catch (error) {
@@ -364,59 +337,62 @@ const SafDueDetails = ({ route, navigation }) => {
     <ScrollView style={styles.scroll}>
       <HeaderNavigation />
       <View style={styles.container}>
-        {/* Basic Details Card */}
         <View style={styles.card}>
           <Text style={styles.heading}>Basic Details</Text>
+
           <View style={styles.row}>
-            <Text style={styles.labelFixed}>Status:</Text>
-            <Text style={styles.value}>{safData?.appStatus ?? 'N/A'}</Text>
+            <Text style={styles.labelFixed}>Holding No:</Text>
+            <Text style={styles.value}>{safData?.assessmentType}</Text>
           </View>
+
           <View style={styles.row}>
-            <Text style={styles.labelFixed}>Saf No :</Text>
-            <Text style={styles.value}>{safData?.safNo ?? 'N/A'}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.labelFixed}>Apply Date:</Text>
-            <Text style={styles.value}>{safData?.applyDate ?? 'N/A'}</Text>
+            <Text style={styles.labelFixed}>New Holding No:</Text>
+            <Text style={styles.value}>{safData?.newHoldingNo || 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
             <Text style={styles.labelFixed}>Ward No:</Text>
-            <Text style={styles.value}>{safData?.wardNo ?? 'N/A'}</Text>
+            <Text style={styles.value}>{safData?.wardNo || 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
             <Text style={styles.labelFixed}>New Ward No:</Text>
-            <Text style={styles.value}>{safData?.newWardNo ?? 'N/A'}</Text>
+            <Text style={styles.value}>{safData?.newWardNo || 'N/A'}</Text>
           </View>
+
           <View style={styles.row}>
             <Text style={styles.labelFixed}>Assessment Type:</Text>
-            <Text style={styles.value}>{safData?.assessmentType ?? 'N/A'}</Text>
+            <Text style={styles.value}>{safData?.assessmentType || 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
             <Text style={styles.labelFixed}>Property Type:</Text>
-            <Text style={styles.value}>{safData?.propertyType ?? 'N/A'}</Text>
+            <Text style={styles.value}>{safData?.propertyType || 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
             <Text style={styles.labelFixed}>Ownership Type:</Text>
-            <Text style={styles.value}>{safData?.ownershipType ?? 'N/A'}</Text>
+            <Text style={styles.value}>{safData?.ownershipType || 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.labelFixed}>Road Width (ft):</Text>
-            <Text style={styles.value}>{safData?.roadWidth ?? 'N/A'}</Text>
+            <Text style={styles.labelFixed}>Khata No:</Text>
+            <Text style={styles.value}>{safData?.khataNo || 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
             <Text style={styles.labelFixed}>Plot No:</Text>
-            <Text style={styles.value}>{safData?.plotNo ?? 'N/A'}</Text>
+            <Text style={styles.value}>{safData?.plotNo || 'N/A'}</Text>
+          </View>
+
+          <View style={styles.row}>
+            <Text style={styles.labelFixed}>Road Width (ft):</Text>
+            <Text style={styles.value}>{safData?.roadWidth || 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
             <Text style={styles.labelFixed}>Area of Plot (sq. ft):</Text>
-            <Text style={styles.value}>{safData?.areaOfPlot ?? 'N/A'}</Text>
+            <Text style={styles.value}>{safData?.areaOfPlot || 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
@@ -428,14 +404,35 @@ const SafDueDetails = ({ route, navigation }) => {
 
           <View style={styles.row}>
             <Text style={styles.labelFixed}>Address:</Text>
-            <Text style={styles.value}>{safData?.propAddress ?? 'N/A'}</Text>
+            <Text style={styles.value}>{safData?.propAddress || 'N/A'}</Text>
+          </View>
+
+          <View style={styles.row}>
+            <Text style={styles.labelFixed}>City:</Text>
+            <Text style={styles.value}>{safData?.propCity || 'N/A'}</Text>
+          </View>
+
+          <View style={styles.row}>
+            <Text style={styles.labelFixed}>District:</Text>
+            <Text style={styles.value}>{safData?.propDist || 'N/A'}</Text>
+          </View>
+
+          <View style={styles.row}>
+            <Text style={styles.labelFixed}>State:</Text>
+            <Text style={styles.value}>{safData?.propState || 'N/A'}</Text>
+          </View>
+
+          <View style={styles.row}>
+            <Text style={styles.labelFixed}>Pin Code:</Text>
+            <Text style={styles.value}>{safData?.propPinCode || 'N/A'}</Text>
           </View>
 
           <View style={styles.row}>
             <Text style={styles.labelFixed}>Zone:</Text>
-            <Text style={styles.value}>{safData?.zone ?? 'N/A'}</Text>
+            <Text style={styles.value}>{safData?.zone || 'N/A'}</Text>
           </View>
         </View>
+
         <View style={styles.card}>
           <Text style={styles.heading}>Owner Details</Text>
 
@@ -1140,7 +1137,7 @@ const SafDueDetails = ({ route, navigation }) => {
         >
           <Text style={styles.viewButtonText}>🔄 Mutation</Text>
         </TouchableOpacity>
-        {safData?.paymentStatus == 0 && (
+        {/* {safData?.paymentStatus == 0 && (
           <TouchableOpacity
             onPress={() => {
               setShowPayNow(false);
@@ -1151,8 +1148,18 @@ const SafDueDetails = ({ route, navigation }) => {
           >
             <Text style={styles.viewButtonText}>👁️ View Demand</Text>
           </TouchableOpacity>
-        )}
-
+        )} */}
+        <TouchableOpacity
+          onPress={() => {
+            setShowPayNow(false);
+            setViewDemandVisible(true);
+            viewdemand(id);
+          }}
+          style={styles.viewButton}
+        >
+          <Text style={styles.viewButtonText}>👁️ View Demand</Text>
+        </TouchableOpacity>
+        {/* 
         {safData?.paymentStatus == 0 && (
           <TouchableOpacity
             onPress={() => {
@@ -1164,941 +1171,107 @@ const SafDueDetails = ({ route, navigation }) => {
           >
             <Text style={styles.viewButtonText}>🔄 Proceed Payment</Text>
           </TouchableOpacity>
-        )}
+        )} */}
+        <TouchableOpacity
+          onPress={() => {
+            setShowPayNow(true); // ✅ Show Pay Now
+            setViewDemandVisible(true);
+            viewdemand(id);
+          }}
+          style={styles.viewButton}
+        >
+          <Text style={styles.viewButtonText}>🔄 Proceed Payment</Text>
+        </TouchableOpacity>
       </View>
-      <Modal
+      <PayNowModal
         visible={payNowModalVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setPayNowModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>💳 Make Payment</Text>
+        onClose={() => setPayNowModalVisible(false)}
+        paymentTypeData={paymentTypeData}
+        paymentModeData={paymentModeData}
+        paymentType={paymentType}
+        setPaymentType={setPaymentType}
+        paymentMode={paymentMode}
+        setPaymentMode={setPaymentMode}
+        refNo={refNo}
+        setRefNo={setRefNo}
+        chequeDate={chequeDate}
+        setChequeDate={setChequeDate}
+        showDatePicker={showDatePicker}
+        setShowDatePicker={setShowDatePicker}
+        bankName={bankName}
+        setBankName={setBankName}
+        branchName={branchName}
+        setBranchName={setBranchName}
+        amount={amount}
+        setAmount={setAmount}
+        onProceed={async () => {
+          if (!paymentType || !paymentMode) {
+            Alert.alert('Validation Error', 'Please fill all required fields');
+            return;
+          }
+          if (paymentMode !== 'Cash' && (!refNo || !bankName || !branchName)) {
+            Alert.alert('Validation Error', 'Please fill all payment details');
+            return;
+          }
+          setPayNowModalVisible(false);
+          const paymentResult = await processPayment();
+          if (paymentResult.success) {
+            setTransactionId(paymentResult.tranId);
+            await viewdemand(id);
+            setTimeout(() => {
+              setPaymentCompleted(true);
+              setViewDemandVisible(false);
+              setPaymentReceiptVisible(true);
+            }, 500);
+          }
+        }}
+      />
 
-            {/* Payment Type Dropdown */}
-            <Text style={styles.label}>Payment Type *</Text>
-            <Dropdown
-              style={styles.dropdown}
-              data={paymentTypeData}
-              labelField="label"
-              valueField="value"
-              placeholder="Select Payment Type"
-              value={paymentType}
-              onChange={item => setPaymentType(item.value)} // optional
-            />
-
-            {/* Payment Mode Dropdown */}
-            <Text style={styles.label}>Payment Mode *</Text>
-            <Dropdown
-              style={styles.dropdown}
-              data={paymentModeData}
-              labelField="label"
-              valueField="value"
-              placeholder="Select Payment Mode"
-              value={paymentMode}
-              onChange={item => {
-                setPaymentMode(item.value); // you can skip this if you set manually
-              }}
-            />
-
-            {paymentMode && paymentMode !== 'Cash' && (
-              <>
-                {/* Cheque/DD/Ref No */}
-                <Text style={styles.label}>Cheque/DD/Ref No *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter Cheque/DD/Ref No"
-                  value={refNo}
-                  onChangeText={setRefNo}
-                />
-
-                {/* Cheque/DD Date */}
-                <Text style={styles.label}>Cheque/DD Date *</Text>
-                <TouchableOpacity
-                  onPress={() => setShowDatePicker(true)}
-                  style={styles.input}
-                >
-                  <Text>
-                    {chequeDate
-                      ? `${chequeDate.getDate().toString().padStart(2, '0')}/${(
-                          chequeDate.getMonth() + 1
-                        )
-                          .toString()
-                          .padStart(2, '0')}/${chequeDate
-                          .getFullYear()
-                          .toString()
-                          .slice(-2)}`
-                      : 'Select Cheque/DD Date'}
-                  </Text>
-                </TouchableOpacity>
-
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={chequeDate || new Date()}
-                    mode="date"
-                    display="default"
-                    onChange={(event, selectedDate) => {
-                      setShowDatePicker(false);
-                      if (selectedDate) setChequeDate(selectedDate);
-                    }}
-                  />
-                )}
-
-                {/* Bank Name */}
-                <Text style={styles.label}>Bank Name *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter Bank Name"
-                  value={bankName}
-                  onChangeText={setBankName}
-                />
-
-                {/* Branch Name */}
-                <Text style={styles.label}>Branch Name *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter Branch Name"
-                  value={branchName}
-                  onChangeText={setBranchName}
-                />
-              </>
-            )}
-            {/* Amount Input */}
-            <Text style={styles.label}>Amount *</Text>
-            <TextInput
-              style={styles.input}
-              value={amount}
-              onChangeText={setAmount}
-              keyboardType="numeric"
-              editable={false}
-            />
-
-            {/* Buttons */}
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                onPress={() => setPayNowModalVisible(false)}
-                style={styles.cancelButton}
-              >
-                <Text>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={async () => {
-                  console.log('Submitting:', {
-                    paymentType,
-                    paymentMode,
-                    amount,
-                  });
-
-                  // Validate required fields
-                  if (!paymentType || !paymentMode) {
-                    Alert.alert(
-                      'Validation Error',
-                      'Please fill all required fields',
-                    );
-                    return;
-                  }
-
-                  if (
-                    paymentMode !== 'Cash' &&
-                    (!refNo || !bankName || !branchName)
-                  ) {
-                    Alert.alert(
-                      'Validation Error',
-                      'Please fill all payment details',
-                    );
-                    return;
-                  }
-
-                  // Close payment modal first
-                  setPayNowModalVisible(false);
-
-                  // Process the payment
-                  const paymentResult = await processPayment();
-
-                  if (paymentResult.success) {
-                    // Store transaction ID for receipt
-                    setTransactionId(paymentResult.tranId);
-
-                    // Refresh demand data after payment
-                    await viewdemand(id);
-
-                    // Check if all demand values are now 0 (payment completed)
-                    setTimeout(() => {
-                      const allValuesZero = demandlist?.every(item => {
-                        const totalDue =
-                          parseFloat(item.dueHoldingTax || 0) +
-                          parseFloat(item.dueLatrineTax || 0) +
-                          parseFloat(item.dueWaterTax || 0) +
-                          parseFloat(item.dueHealthCessTax || 0) +
-                          parseFloat(item.dueEducationCessTax || 0) +
-                          parseFloat(item.dueRwhTax || 0) +
-                          parseFloat(item.monthlyPenalty || 0);
-                        return totalDue === 0;
-                      });
-
-                      // Always show receipt after successful payment, regardless of demand data
-                      setPaymentCompleted(true);
-                      setViewDemandVisible(false); // Close demand modal
-                      setPaymentReceiptVisible(true); // Show receipt
-
-                      if (
-                        allValuesZero ||
-                        parseFloat(maindata?.payableAmount || 0) === 0
-                      ) {
-                        console.log(
-                          'Payment completed - all demand values are now zero',
-                        );
-                      }
-                    }, 500); // Small delay to ensure data is updated
-                  }
-                }}
-                style={styles.confirmButton}
-              >
-                <Text>Proceed</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* View Demand Modal */}
-      <Modal
+      <ViewDemandModal
         visible={viewDemandVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setViewDemandVisible(false)}
-      >
-        <ScrollView>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <Text style={styles.title}>📄 View Demand</Text>
+        onClose={() => setViewDemandVisible(false)}
+        demandlist={demandlist}
+        maindata={maindata}
+        showPayNow={showPayNow}
+        onPayNowPress={() => setPayNowModalVisible(true)}
+      />
 
-              {console.log('Modal render - demandlist:', demandlist)}
-              {console.log(
-                'Modal render - demandlist length:',
-                demandlist?.length,
-              )}
-              {console.log('Modal render - first item:', demandlist?.[0])}
-
-              {demandlist ? (
-                <View>
-                  {/* 🟩 Demand Table */}
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{
-                      paddingBottom: 20,
-                      paddingRight: 10,
-                    }}
-                  >
-                    <View style={styles.table}>
-                      {/* Table Header */}
-                      <View style={[styles.tableRow, styles.tableHeader]}>
-                        <Text style={[styles.tableCell, styles.headerText]}>
-                          #
-                        </Text>
-                        <Text style={[styles.tableCell, styles.headerText]}>
-                          Fyear/Qtr
-                        </Text>
-                        <Text style={[styles.tableCell, styles.headerText]}>
-                          Due Date
-                        </Text>
-                        <Text
-                          style={[
-                            styles.tableCell,
-                            styles.headerText,
-                            { minWidth: 700 },
-                          ]}
-                        >
-                          Tax
-                        </Text>
-                        <Text
-                          style={[
-                            styles.tableCell,
-                            styles.headerText,
-                            { minWidth: 700 },
-                          ]}
-                        >
-                          Due
-                        </Text>
-                        <Text style={[styles.tableCell, styles.headerText]}>
-                          Month Deference
-                        </Text>
-                        <Text style={[styles.tableCell, styles.headerText]}>
-                          Penalty
-                        </Text>
-                        <Text style={[styles.tableCell, styles.headerText]}>
-                          Total Due
-                        </Text>
-                      </View>
-
-                      {/* Sub-header for Tax and Due columns */}
-                      <View style={[styles.tableRow, styles.tableSubHeader]}>
-                        <Text style={styles.tableCell}></Text>
-                        <Text style={styles.tableCell}></Text>
-                        <Text style={styles.tableCell}></Text>
-                        <Text style={styles.tableCell}>Holding Tax</Text>
-                        <Text style={styles.tableCell}>Latrine Tax</Text>
-                        <Text style={styles.tableCell}>Water Tax</Text>
-                        <Text style={styles.tableCell}>HealthCess Tax</Text>
-                        <Text style={styles.tableCell}>EducationCess Tax</Text>
-                        <Text style={styles.tableCell}>RWH Tax</Text>
-                        <Text style={styles.tableCell}>Total Tax</Text>
-                        <Text style={styles.tableCell}>Holding Tax</Text>
-                        <Text style={styles.tableCell}>Latrine Tax</Text>
-                        <Text style={styles.tableCell}>Water Tax</Text>
-                        <Text style={styles.tableCell}>HealthCess Tax</Text>
-                        <Text style={styles.tableCell}>EducationCess Tax</Text>
-                        <Text style={styles.tableCell}>RWH Tax</Text>
-                        <Text style={styles.tableCell}>Total Tax</Text>
-                        <Text style={styles.tableCell}></Text>
-                        <Text style={styles.tableCell}></Text>
-                        <Text style={styles.tableCell}></Text>
-                      </View>
-
-                      {demandlist?.map((item, index) => (
-                        <View key={index} style={styles.tableRow}>
-                          <Text style={styles.tableCell}>{index + 1}</Text>
-                          <Text style={styles.tableCell}>
-                            {item.fyear || ''}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {item.dueDate || ''}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {typeof item.holdingTax === 'object'
-                              ? JSON.stringify(item.holdingTax)
-                              : item.holdingTax || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {typeof item.latrineTax === 'object'
-                              ? JSON.stringify(item.latrineTax)
-                              : item.latrineTax || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {typeof item.waterTax === 'object'
-                              ? JSON.stringify(item.waterTax)
-                              : item.waterTax || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {typeof item.healthCessTax === 'object'
-                              ? JSON.stringify(item.healthCessTax)
-                              : item.healthCessTax || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {typeof item.educationCessTax === 'object'
-                              ? JSON.stringify(item.educationCessTax)
-                              : item.educationCessTax || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {typeof item.rwhTax === 'object'
-                              ? JSON.stringify(item.rwhTax)
-                              : item.rwhTax || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {typeof item.totalTax === 'object'
-                              ? JSON.stringify(item.totalTax)
-                              : item.totalTax || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {typeof item.dueHoldingTax === 'object'
-                              ? JSON.stringify(item.dueHoldingTax)
-                              : item.dueHoldingTax || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {typeof item.dueLatrineTax === 'object'
-                              ? JSON.stringify(item.dueLatrineTax)
-                              : item.dueLatrineTax || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {typeof item.dueWaterTax === 'object'
-                              ? JSON.stringify(item.dueWaterTax)
-                              : item.dueWaterTax || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {typeof item.dueHealthCessTax === 'object'
-                              ? JSON.stringify(item.dueHealthCessTax)
-                              : item.dueHealthCessTax || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {typeof item.dueEducationCessTax === 'object'
-                              ? JSON.stringify(item.dueEducationCessTax)
-                              : item.dueEducationCessTax || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {typeof item.dueRwhTax === 'object'
-                              ? JSON.stringify(item.dueRwhTax)
-                              : item.dueRwhTax || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {(() => {
-                              const dueTotalTax =
-                                parseFloat(item.dueHoldingTax || 0) +
-                                parseFloat(item.dueLatrineTax || 0) +
-                                parseFloat(item.dueWaterTax || 0) +
-                                parseFloat(item.dueHealthCessTax || 0) +
-                                parseFloat(item.dueEducationCessTax || 0) +
-                                parseFloat(item.dueRwhTax || 0);
-                              return dueTotalTax.toFixed(2);
-                            })()}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {item.monthDiff || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {item.monthlyPenalty || '0'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {(() => {
-                              const totalDue =
-                                parseFloat(item.dueHoldingTax || 0) +
-                                parseFloat(item.dueLatrineTax || 0) +
-                                parseFloat(item.dueWaterTax || 0) +
-                                parseFloat(item.dueHealthCessTax || 0) +
-                                parseFloat(item.dueEducationCessTax || 0) +
-                                parseFloat(item.dueRwhTax || 0) +
-                                parseFloat(item.monthlyPenalty || 0);
-                              return totalDue.toFixed(2);
-                            })()}
-                          </Text>
-                        </View>
-                      ))}
-
-                      {/* Table Footer */}
-                      <View style={[styles.tableRow, styles.tableFooter]}>
-                        <Text style={styles.tableCell}>Total</Text>
-                        <Text style={styles.tableCell}></Text>
-                        <Text style={styles.tableCell}></Text>
-                        <Text style={styles.tableCell}>
-                          {demandlist
-                            ?.reduce((sum, item) => {
-                              const holdingTax =
-                                typeof item.holdingTax === 'object'
-                                  ? 0
-                                  : parseFloat(item.holdingTax || 0);
-                              return sum + holdingTax;
-                            }, 0)
-                            .toFixed(2)}
-                        </Text>
-                        <Text style={styles.tableCell}>0.00</Text>
-                        <Text style={styles.tableCell}>0.00</Text>
-                        <Text style={styles.tableCell}>0.00</Text>
-                        <Text style={styles.tableCell}>0.00</Text>
-                        <Text style={styles.tableCell}>
-                          {demandlist
-                            ?.reduce((sum, item) => {
-                              const rwhTax =
-                                typeof item.rwhTax === 'object'
-                                  ? 0
-                                  : parseFloat(item.rwhTax || 0);
-                              return sum + rwhTax;
-                            }, 0)
-                            .toFixed(2)}
-                        </Text>
-                        <Text style={styles.tableCell}>
-                          {demandlist
-                            ?.reduce((sum, item) => {
-                              const totalTax =
-                                typeof item.totalTax === 'object'
-                                  ? 0
-                                  : parseFloat(item.totalTax || 0);
-                              return sum + totalTax;
-                            }, 0)
-                            .toFixed(2)}
-                        </Text>
-                        <Text style={styles.tableCell}>
-                          {demandlist
-                            ?.reduce((sum, item) => {
-                              const dueHoldingTax =
-                                typeof item.dueHoldingTax === 'object'
-                                  ? 0
-                                  : parseFloat(item.dueHoldingTax || 0);
-                              return sum + dueHoldingTax;
-                            }, 0)
-                            .toFixed(2)}
-                        </Text>
-                        <Text style={styles.tableCell}>0.00</Text>
-                        <Text style={styles.tableCell}>0.00</Text>
-                        <Text style={styles.tableCell}>0.00</Text>
-                        <Text style={styles.tableCell}>0.00</Text>
-                        <Text style={styles.tableCell}>
-                          {demandlist
-                            ?.reduce((sum, item) => {
-                              const dueRwhTax =
-                                typeof item.dueRwhTax === 'object'
-                                  ? 0
-                                  : parseFloat(item.dueRwhTax || 0);
-                              return sum + dueRwhTax;
-                            }, 0)
-                            .toFixed(2)}
-                        </Text>
-                        <Text style={styles.tableCell}>
-                          {demandlist
-                            ?.reduce((sum, item) => {
-                              const dueTotalTax =
-                                parseFloat(item.dueHoldingTax || 0) +
-                                parseFloat(item.dueLatrineTax || 0) +
-                                parseFloat(item.dueWaterTax || 0) +
-                                parseFloat(item.dueHealthCessTax || 0) +
-                                parseFloat(item.dueEducationCessTax || 0) +
-                                parseFloat(item.dueRwhTax || 0);
-                              return sum + dueTotalTax;
-                            }, 0)
-                            .toFixed(2)}
-                        </Text>
-                        <Text style={styles.tableCell}>-</Text>
-                        <Text style={styles.tableCell}>
-                          {demandlist
-                            ?.reduce((sum, item) => {
-                              const monthlyPenalty = parseFloat(
-                                item.monthlyPenalty || 0,
-                              );
-                              return sum + monthlyPenalty;
-                            }, 0)
-                            .toFixed(2)}
-                        </Text>
-                        <Text style={styles.tableCell}>
-                          {demandlist
-                            ?.reduce((sum, item) => {
-                              const totalDue =
-                                parseFloat(item.dueHoldingTax || 0) +
-                                parseFloat(item.dueLatrineTax || 0) +
-                                parseFloat(item.dueWaterTax || 0) +
-                                parseFloat(item.dueHealthCessTax || 0) +
-                                parseFloat(item.dueEducationCessTax || 0) +
-                                parseFloat(item.dueRwhTax || 0) +
-                                parseFloat(item.monthlyPenalty || 0);
-                              return sum + totalDue;
-                            }, 0)
-                            .toFixed(2)}
-                        </Text>
-                      </View>
-                    </View>
-                  </ScrollView>
-
-                  {/* 🟩 Main Demand */}
-                  <Text style={styles.sectionHeader}>Main Demand</Text>
-                  <View style={styles.row}>
-                    <Text style={styles.label}>Current Demand:</Text>
-                    <Text style={styles.value}>
-                      ₹ {maindata?.currentDemandAmount || '0.00'}
-                    </Text>
-                  </View>
-                  <View style={styles.row}>
-                    <Text style={styles.label}>Arrear Demand:</Text>
-                    <Text style={styles.value}>
-                      ₹ {maindata?.arrearDemandAmount || '0.00'}
-                    </Text>
-                  </View>
-
-                  {/* 🟥 Penalties */}
-                  <Text style={styles.sectionHeader}>Penalties</Text>
-                  <View style={styles.penaltyBox}>
-                    <Text>
-                      Late Assessment Penalty: ₹{' '}
-                      {maindata?.lateAssessmentPenalty || '0.00'}
-                    </Text>
-                  </View>
-                  <View style={styles.penaltyBox}>
-                    <Text>
-                      Monthly Penalty: ₹ {maindata?.monthlyPenalty || '0.00'}
-                    </Text>
-                  </View>
-                  <View style={styles.penaltyBox}>
-                    <Text>
-                      Other Penalty: ₹ {maindata?.otherPenalty || '0.00'}
-                    </Text>
-                  </View>
-
-                  {/* 🟩 Rebates */}
-                  <Text style={styles.sectionHeader}>Rebates</Text>
-                  <View>
-                    <View style={styles.rebateBox}>
-                      <Text>Special Rebate: ₹ {maindata.specialRebate}</Text>
-                    </View>
-
-                    <View style={styles.rebateBox}>
-                      <Text>JSK Rebate: ₹ {maindata.jskRebate}</Text>
-                    </View>
-
-                    <View style={styles.rebateBox}>
-                      <Text>Online Rebate: ₹ {maindata.onlineRebate}</Text>
-                    </View>
-
-                    <View style={styles.rebateBox}>
-                      <Text>
-                        First Qtr Rebate: ₹ {maindata.firstQuatreRebate}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* 🟨 Total Payable */}
-                  <View style={styles.totalPayableBox}>
-                    <Text style={styles.totalPayableLabel}>
-                      Total Payable Amount:
-                    </Text>
-                    <Text style={styles.totalPayableAmount}>
-                      ₹ {maindata?.payableAmount}
-                    </Text>
-                  </View>
-                  {showPayNow && (
-                    <TouchableOpacity
-                      style={styles.payNowButton}
-                      onPress={() => {
-                        console.log('Pay Now Clicked');
-                        setPayNowModalVisible(true); // 👈 Show modal
-                      }}
-                    >
-                      <Text style={styles.payNowButtonText}>💳 Pay Now</Text>
-                    </TouchableOpacity>
-                  )}
-
-                  <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => setViewDemandVisible(false)}
-                  >
-                    <Text style={styles.closeButtonText}>Close</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={{ padding: 20, alignItems: 'center' }}>
-                  <Text style={{ fontSize: 16, color: '#666' }}>
-                    Loading demand data...
-                  </Text>
-                  <Text style={{ fontSize: 12, color: '#999', marginTop: 10 }}>
-                    {demandlist
-                      ? 'Data received but structure may be different'
-                      : 'No data received'}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        </ScrollView>
-      </Modal>
-
-      <Modal
+      <PaymentReceiptModal
         visible={modalVisible}
-        transparent={false}
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <ScrollView style={styles.modalContainer}>
-          {/* Header */}
-          <Text style={styles.header}>View Receipt</Text>
-
-          {/* Logo */}
-          <View style={styles.logoWrapper}>
-            <Text style={styles.logoCircle}>🏛️</Text>
-          </View>
-
-          {/* Corporation Name */}
-          <Text style={styles.corpName}>
-            {paymentDtls?.ulbDtl?.ulbName || 'Ranchi Municipal Corporation'}
-          </Text>
-
-          {/* Subheading */}
-          <Text style={styles.receiptType}>
-            {paymentDtls?.description || 'HOLDING TAX RECEIPT'}
-          </Text>
-
-          {/* Horizontal line */}
-          <View style={styles.divider} />
-
-          {/* Meta Info Section */}
-          <View style={styles.metaRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.labelFixed}>
-                Receipt No.:{' '}
-                <Text style={styles.bold}>{paymentDtls?.tranNo}</Text>
-              </Text>
-              <Text style={styles.labelFixed}>
-                Department:{' '}
-                <Text style={styles.bold}>{paymentDtls?.department}</Text>
-              </Text>
-              <Text style={styles.labelFixed}>
-                Account:{' '}
-                <Text style={styles.bold}>
-                  {paymentDtls?.accountDescription}
-                </Text>
-              </Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.labelFixed}>
-                Date: <Text style={styles.bold}>{paymentDtls?.tranDate}</Text>
-              </Text>
-              <Text style={styles.labelFixed}>
-                Ward No: <Text style={styles.bold}>{paymentDtls?.wardNo}</Text>
-              </Text>
-              <Text style={styles.labelFixed}>
-                New Ward No:{' '}
-                <Text style={styles.bold}>{paymentDtls?.newWardNo}</Text>
-              </Text>
-              <Text style={styles.labelFixed}>
-                SAF No: <Text style={styles.bold}>{paymentDtls?.safNo}</Text>
-              </Text>
-            </View>
-          </View>
-
-          {/* Owner Info */}
-          <View style={{ marginTop: 10 }}>
-            <Text style={styles.labelFixed}>
-              Received From:{' '}
-              <Text style={styles.bold}>{paymentDtls?.ownerName}</Text>
-            </Text>
-            <Text style={styles.labelFixed}>
-              Address: <Text style={styles.bold}>{paymentDtls?.address}</Text>
-            </Text>
-            <Text style={styles.labelFixed}>
-              A Sum of Rs.:{' '}
-              <Text style={styles.bold}>{paymentDtls?.amount}</Text>
-            </Text>
-            <Text style={styles.labelFixed}>
-              (In words):{' '}
-              <Text style={styles.bold}>{paymentDtls?.amountInWords}</Text>
-            </Text>
-            <Text style={styles.labelFixed}>
-              Towards:{' '}
-              <Text style={styles.bold}>{paymentDtls?.accountDescription}</Text>{' '}
-              Vide: <Text style={styles.bold}>{paymentDtls?.paymentMode}</Text>
-            </Text>
-          </View>
-
-          {/* Tax Table */}
-          <View style={styles.tableWrapper}>
-            <View style={styles.tableHeaderRow}>
-              <Text style={[styles.col, { flex: 2 }]}>Description</Text>
-              <Text style={styles.col}>From QTR</Text>
-              <Text style={styles.col}>From FY</Text>
-              <Text style={styles.col}>To QTR</Text>
-              <Text style={styles.col}>To FY</Text>
-              <Text style={[styles.col, { flex: 1 }]}>Amount</Text>
-            </View>
-
-            {/* Holding Tax */}
-            <View style={styles.tableRowModal}>
-              <Text style={[styles.col, { flex: 2 }]}>Holding Tax</Text>
-              <Text style={styles.col}>{paymentDtls?.fromQtr}</Text>
-              <Text style={styles.col}>{paymentDtls?.fromFyear}</Text>
-              <Text style={styles.col}>{paymentDtls?.uptoQtr}</Text>
-              <Text style={styles.col}>{paymentDtls?.uptoFyear}</Text>
-              <Text style={[styles.col, { flex: 1 }]}>
-                {paymentDtls?.holdingTax}
-              </Text>
-            </View>
-
-            {/* RWH */}
-            <View style={styles.tableRowModal}>
-              <Text style={[styles.col, { flex: 2 }]}>RWH</Text>
-              <Text style={styles.col}>{paymentDtls?.fromQtr}</Text>
-              <Text style={styles.col}>{paymentDtls?.fromFyear}</Text>
-              <Text style={styles.col}>{paymentDtls?.uptoQtr}</Text>
-              <Text style={styles.col}>{paymentDtls?.uptoFyear}</Text>
-              <Text style={[styles.col, { flex: 1 }]}>
-                {paymentDtls?.rwhTax}
-              </Text>
-            </View>
-
-            {/* JSK Rebate (if exists) */}
-            {paymentDtls?.fineRebate?.length > 0 &&
-              paymentDtls.fineRebate.map((item, index) => (
-                <View key={index} style={styles.tableRowModal}>
-                  <Text style={[styles.col, { flex: 2 }]}>{item.headName}</Text>
-                  <Text style={styles.col}>-</Text>
-                  <Text style={styles.col}>-</Text>
-                  <Text style={styles.col}>-</Text>
-                  <Text style={styles.col}>-</Text>
-                  <Text style={[styles.col, { flex: 1 }]}>{item.amount}</Text>
-                </View>
-              ))}
-
-            {/* Totals */}
-            <View style={styles.tableRowModal}>
-              <Text style={[styles.col, { flex: 5, fontWeight: 'bold' }]}>
-                Total Amount
-              </Text>
-              <Text style={[styles.col, { flex: 1 }]}>
-                {paymentDtls?.amount}
-              </Text>
-            </View>
-            <View style={styles.tableRowModal}>
-              <Text style={[styles.col, { flex: 5, fontWeight: 'bold' }]}>
-                Total Paid Amount
-              </Text>
-              <Text style={[styles.col, { flex: 1 }]}>
-                {paymentDtls?.amount}
-              </Text>
-            </View>
-          </View>
-
-          {/* Footer with QR & Contact */}
-          <View style={styles.footerRow}>
-            <View style={{ flex: 1 }}>
-              <View style={styles.qrBox} />
-            </View>
-            <View style={{ flex: 2 }}>
-              <Text style={styles.footerText}>Visit:</Text>
-              <Text style={styles.footerText}>Call: 8002158818</Text>
-              <Text style={styles.footerText}>In collaboration with</Text>
-              <Text style={styles.footerText}>Uinfo Technology PVT LTD.</Text>
-            </View>
-          </View>
-
-          <Text style={styles.generatedNote}>
-            ** This is a computer-generated receipt and does not require
-            signature. **
-          </Text>
-
-          <TouchableOpacity
-            onPress={() => setModalVisible(false)}
-            style={styles.closeButton}
-          >
-            <Text style={{ color: 'white', fontWeight: 'bold' }}>Close</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </Modal>
-      <Modal
+        onClose={() => setModalVisible(false)}
+        paymentDtls={paymentDtls}
+      />
+      <DocumentViewModal
         visible={docModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setDocModalVisible(false)}
-      >
-        <View style={styles.docModalContainer}>
-          <View style={styles.docModalContent}>
-            <Text style={styles.docModalTitle}>📄 Document View</Text>
+        onClose={() => setDocModalVisible(false)}
+        uploadedDocs={uploadedDocs}
+        onDocumentPress={doc => {
+          const fileExtension = doc.docPath.split('.').pop().toLowerCase();
+          if (fileExtension === 'pdf') {
+            Alert.alert(
+              'PDF Document',
+              'PDF files will open in external viewer',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Open', onPress: () => Linking.openURL(doc.docPath) },
+              ],
+            );
+          } else {
+            setSelectedDoc(doc);
+            setSelectedImageUri(doc.docPath);
+            setImageLoading(true);
+            setImageModalVisible(true);
+          }
+        }}
+      />
 
-            <View style={styles.docTableHeader}>
-              <Text style={styles.docCellHeader}>#</Text>
-              <Text style={styles.docCellHeader}>Document Name</Text>
-              <Text style={styles.docCellHeader}>File</Text>
-              <Text style={styles.docCellHeader}>Status</Text>
-            </View>
-
-            <ScrollView>
-              {uploadedDocs?.map((doc, index) => (
-                <View key={doc.id} style={styles.docTableRow}>
-                  <Text style={styles.docCell}>{index + 1}</Text>
-                  <Text style={styles.docCell}>{doc.docName}</Text>
-                  <TouchableOpacity
-                    onPress={() => {
-                      console.log('Document clicked:', doc);
-                      console.log('Document path:', doc.docPath);
-
-                      // Check if it's a PDF or image
-                      const fileExtension = doc.docPath
-                        .split('.')
-                        .pop()
-                        .toLowerCase();
-                      console.log('File extension:', fileExtension);
-
-                      if (fileExtension === 'pdf') {
-                        // For PDF files, fall back to Linking
-                        Alert.alert(
-                          'PDF Document',
-                          'PDF files will open in external viewer',
-                          [
-                            { text: 'Cancel', style: 'cancel' },
-                            {
-                              text: 'Open',
-                              onPress: () => Linking.openURL(doc.docPath),
-                            },
-                          ],
-                        );
-                      } else {
-                        // For image files, open in modal
-                        setSelectedDoc(doc);
-                        setSelectedImageUri(doc.docPath);
-                        setImageLoading(true);
-                        setImageModalVisible(true);
-                      }
-                    }}
-                  >
-                    <Text style={[styles.docCell, styles.docFileLink]}>
-                      View File
-                    </Text>
-                  </TouchableOpacity>
-                  <Text style={styles.docCell}>
-                    {doc.verifiedStatus === 1 ? 'Pending' : 'Verified'}
-                  </Text>
-                </View>
-              ))}
-            </ScrollView>
-
-            <TouchableOpacity
-              style={styles.docCloseButton}
-              onPress={() => setDocModalVisible(false)}
-            >
-              <Text style={styles.docCloseButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Full-screen Image/PDF Modal */}
-      <Modal
+      <ImageViewModal
         visible={imageModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setImageModalVisible(false)}
-      >
-        <View style={styles.fullScreenModalContainer}>
-          <TouchableOpacity
-            style={styles.closeFullScreenButton}
-            onPress={() => setImageModalVisible(false)}
-          >
-            <Text style={styles.closeFullScreenButtonText}>✕ Close</Text>
-          </TouchableOpacity>
-
-          {imageLoading && (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#fff" />
-              <Text style={styles.loadingText}>Loading document...</Text>
-            </View>
-          )}
-
-          <ScrollView
-            style={styles.fullScreenScrollView}
-            contentContainerStyle={styles.fullScreenScrollContent}
-            maximumZoomScale={3}
-            minimumZoomScale={1}
-            showsVerticalScrollIndicator={true}
-            showsHorizontalScrollIndicator={true}
-          >
-            {selectedImageUri ? (
-              <Image
-                source={{ uri: selectedImageUri }}
-                style={styles.fullScreenImage}
-                resizeMode="contain"
-                onLoad={() => {
-                  console.log('Image loaded successfully');
-                  setImageLoading(false);
-                }}
-                onError={error => {
-                  console.log('Image load error:', error);
-                  console.log('Failed URI:', selectedImageUri);
-                  setImageLoading(false);
-                  Alert.alert(
-                    'Load Error',
-                    `Failed to load document. Path: ${selectedImageUri}\n\nWould you like to try opening it externally?`,
-                    [
-                      { text: 'Cancel', style: 'cancel' },
-                      {
-                        text: 'Open Externally',
-                        onPress: () => {
-                          Linking.openURL(selectedImageUri);
-                          setImageModalVisible(false);
-                        },
-                      },
-                    ],
-                  );
-                }}
-              />
-            ) : null}
-          </ScrollView>
-        </View>
-      </Modal>
+        onClose={() => setImageModalVisible(false)}
+        selectedImageUri={selectedImageUri}
+        imageLoading={imageLoading}
+        setImageLoading={setImageLoading}
+      />
 
       {/* Payment Receipt Modal */}
       <PaymentReceiptModal
@@ -2126,7 +1299,7 @@ const SafDueDetails = ({ route, navigation }) => {
   );
 };
 
-export default SafDueDetails;
+export default HoldingDetails;
 
 const styles = StyleSheet.create({
   scroll: {

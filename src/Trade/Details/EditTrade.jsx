@@ -7,8 +7,8 @@ import {
   Alert,
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import FormField from '../Components/FormField';
-import Colors from '../Constants/Colors';
+import FormField from '../../Components/FormField';
+import Colors from '../../Constants/Colors';
 import {
   responsiveHeight,
   responsiveWidth,
@@ -16,16 +16,18 @@ import {
 } from 'react-native-responsive-dimensions';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import CustomAlert from '../Components/CustomAlert';
-import { BASE_URL } from '../config';
-import HeaderNavigation from '../Components/HeaderNavigation';
-import { API_ROUTES } from '../api/apiRoutes';
+import CustomAlert from '../../Components/CustomAlert';
+import HeaderNavigation from '../../Components/HeaderNavigation';
 
-const RenewLicensePage = ({ navigation, route }) => {
+import { BASE_URL } from '../../config';
+
+import { API_ROUTES } from '../../api/apiRoutes';
+
+const EditTrade = ({ navigation, route }) => {
   const { id } = route.params;
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-  const [applicationType] = useState('RENEW LICENSE');
+  const [applicationType] = useState('SURRENDER LICENSE');
   const [firmType, setFirmType] = useState('');
   const [ownershipType, setOwnershipType] = useState('');
   const [category, setCategory] = useState('');
@@ -93,7 +95,6 @@ const RenewLicensePage = ({ navigation, route }) => {
 
     const payload = {
       applicationType: 'RENEW LICENSE',
-
       firmTypeId: firmType || 1,
       ownershipTypeId: ownershipType || 1,
       wardMstrId: wardNo || 1,
@@ -252,7 +253,7 @@ const RenewLicensePage = ({ navigation, route }) => {
         const token = storedToken ? JSON.parse(storedToken) : null;
 
         const body = {
-          applicationType: 'NEW LICENSE',
+          applicationType: 'RENEW LICENSE',
           firmEstablishmentDate: '2020-02-20',
           areaInSqft: '100',
           licenseForYears: '2',
@@ -267,7 +268,6 @@ const RenewLicensePage = ({ navigation, route }) => {
         });
 
         console.log('✅ Tax Review Response:', response.data?.data);
-        console.log('Response.data:', response.data?.status);
         setTaxData(response.data.data);
       } catch (error) {
         console.error(
@@ -638,7 +638,7 @@ const RenewLicensePage = ({ navigation, route }) => {
   );
 };
 
-export default RenewLicensePage;
+export default EditTrade;
 
 const styles = StyleSheet.create({
   container: {

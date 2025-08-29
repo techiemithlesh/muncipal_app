@@ -1,5 +1,5 @@
 // TradeModels.jsx
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Modal,
   View,
@@ -7,9 +7,22 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Linking,
+  Image,
+  Dimensions,
+  FlatList,
+  Alert,
+  ToastAndroid,
 } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import { Dropdown } from 'react-native-element-dropdown';
+import { WebView } from 'react-native-webview';
+import RNFS from 'react-native-fs';
+import RNBlobUtil from 'react-native-blob-util';
+import FileViewer from 'react-native-file-viewer';
+import PrintButton from '../../../Components/PrintButton';
+import Toast from 'react-native-toast-message';
+import { showToast } from '../../../utils/toast';
 
 // 1. View Trade License Modal
 export const ViewTradeLicenseModal = ({ visible, onClose, tradeDetails }) => (
@@ -304,59 +317,206 @@ export const PaymentModal = ({ visible, onClose, tradeDetails }) => {
   );
 };
 
-// 4. Document Modal
-export const DocumentModal = ({ visible, onClose, tradeDetails }) => (
-  <Modal visible={visible} transparent animationType="slide">
-    <View style={styles.overlay}>
-      <View style={styles.modalContent}>
-        <ScrollView>
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Text style={styles.closeText}>Close</Text>
-          </TouchableOpacity>
+const { width, height } = Dimensions.get('window');
 
-          <Text style={styles.mainTitle}>Uploaded Documents</Text>
+export const DocumentModal = ({ visible, onClose, documents }) => {
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const flatListRef = useRef(null);
 
-          <View style={styles.sectionContainer}>
-            {[
-              { name: 'Trade License', status: 'Verified', date: '2019-01-24' },
-              {
-                name: 'Application Form',
-                status: 'Verified',
-                date: '2019-01-24',
-              },
-              {
-                name: 'Identity Proof',
-                status: 'Verified',
-                date: '2019-01-24',
-              },
-              { name: 'Address Proof', status: 'Pending', date: '2019-01-24' },
-              {
-                name: 'NOC Certificate',
-                status: 'Verified',
-                date: '2019-01-25',
-              },
-            ].map((doc, index) => (
-              <View key={index} style={styles.documentItem}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.documentName}>{doc.name}</Text>
-                  <Text style={styles.documentDate}>Uploaded: {doc.date}</Text>
-                </View>
-                <Text
-                  style={[
-                    styles.documentStatus,
-                    { color: doc.status === 'Verified' ? 'green' : 'orange' },
-                  ]}
-                >
-                  {doc.status}
-                </Text>
-              </View>
-            ))}
+  const openPreview = index => {
+    setCurrentIndex(index);
+    setPreviewVisible(true);
+  };
+  const downloadPDF = async url => {
+    try {
+      const { fs } = RNBlobUtil;
+      const dir = fs.dirs.DownloadDir; // Downloads folder
+      const path = `${dir}/document_${Date.now()}.pdf`;
+
+      const res = await RNBlobUtil.config({
+        fileCache: true,
+        addAndroidDownloads: {
+          useDownloadManager: true,
+          notification: true,
+          path: path,
+          description: 'Downloading PDF...',
+        },
+      }).fetch('GET', url);
+
+      showToast('success', '📄 Success', 'PDF Downloaded Successfully!');
+      console.log('PDF saved to:', res.path());
+    } catch (err) {
+      console.error('Download error:', err);
+      Alert.alert('Error', 'Download failed!');
+    }
+  };
+  const renderPreviewItem = ({ item }) => {
+    const isPDF = item.docPath?.toLowerCase().endsWith('.pdf');
+
+    return (
+      <View
+        style={{
+          width,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        {isPDF ? (
+          <View style={{ alignItems: 'center' }}>
+            {/* PDF Preview via Google Docs viewer */}
+            <WebView
+              source={{
+                uri: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
+                  item.docPath,
+                )}`,
+              }}
+              style={{
+                width: width * 0.95,
+                height: height * 0.75,
+                borderRadius: 10,
+                backgroundColor: 'white',
+              }}
+            />
+
+            {/* Download Button */}
+            <TouchableOpacity
+              style={styles.downloadBtn}
+              onPress={() => downloadPDF(item.docPath)}
+            >
+              <Text style={styles.downloadText}>Download PDF</Text>
+            </TouchableOpacity>
+            <View style={{ padding: 20 }}>
+              <Text style={{}}>Trade Documents</Text>
+              <PrintButton fileUrl={item.docPath} title="Print" />
+            </View>
           </View>
-        </ScrollView>
+        ) : (
+          <Image
+            source={{ uri: item.docPath }}
+            style={styles.previewImage}
+            resizeMode="contain"
+          />
+        )}
       </View>
-    </View>
-  </Modal>
-);
+    );
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide">
+      <View style={styles.overlay}>
+        {/* Document List Modal */}
+        <View style={styles.modalContent}>
+          <ScrollView>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+              <Text style={styles.closeText}>Close</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.mainTitle}>Uploaded Documents</Text>
+
+            <View style={styles.sectionContainer}>
+              {documents?.length > 0 ? (
+                documents.map((doc, index) => (
+                  <View key={index} style={styles.documentItem}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.documentName}>
+                        {doc.docName} ({doc.ownerName || 'N/A'})
+                      </Text>
+                      <Text style={styles.documentDate}>
+                        Uploaded By: {doc.uploadedBy || 'N/A'}
+                      </Text>
+                      <Text style={styles.documentDate}>
+                        Owner: {doc.ownerName || 'N/A'}
+                      </Text>
+                      <Text style={styles.documentDate}>
+                        Uploaded At: {doc.createdAt?.split('T')[0] || 'N/A'}
+                      </Text>
+                      {doc.verifiedAt && (
+                        <Text style={styles.documentDate}>
+                          Verified At: {doc.verifiedAt}
+                        </Text>
+                      )}
+                    </View>
+
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text
+                        style={[
+                          styles.documentStatus,
+                          {
+                            color:
+                              doc.verifiedStatus === 1
+                                ? 'green'
+                                : doc.verifiedStatus === 2
+                                ? 'red'
+                                : 'orange',
+                          },
+                        ]}
+                      >
+                        {doc.verifiedStatus === 1
+                          ? 'Verified'
+                          : doc.verifiedStatus === 2
+                          ? 'Rejected'
+                          : 'Pending'}
+                      </Text>
+
+                      {/* View Button */}
+                      <TouchableOpacity
+                        style={styles.viewBtn}
+                        onPress={() => openPreview(index)}
+                      >
+                        <Text style={styles.viewBtnText}>View</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))
+              ) : (
+                <Text style={{ textAlign: 'center', color: '#666' }}>
+                  No Documents Uploaded
+                </Text>
+              )}
+            </View>
+          </ScrollView>
+        </View>
+
+        {/* Preview Modal */}
+        <Modal visible={previewVisible} transparent animationType="fade">
+          <View style={styles.previewOverlay}>
+            <TouchableOpacity
+              style={styles.previewCloseBtn}
+              onPress={() => setPreviewVisible(false)}
+            >
+              <Text style={styles.closeText}>Close</Text>
+            </TouchableOpacity>
+
+            <FlatList
+              ref={flatListRef}
+              data={documents}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              initialScrollIndex={currentIndex}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={renderPreviewItem}
+              getItemLayout={(data, index) => ({
+                length: width,
+                offset: width * index,
+                index,
+              })}
+              onScrollToIndexFailed={info => {
+                setTimeout(() => {
+                  flatListRef.current?.scrollToIndex({
+                    index: info.index,
+                    animated: true,
+                  });
+                }, 300);
+              }}
+            />
+          </View>
+        </Modal>
+      </View>
+    </Modal>
+  );
+};
 
 // 5. Payment Receipt Modal
 export const PaymentReceiptModal = ({ visible, onClose, receiptData }) => (
@@ -494,56 +654,30 @@ export const PaymentReceiptModal = ({ visible, onClose, receiptData }) => (
 );
 
 const styles = StyleSheet.create({
-  dropdown: {
-    height: 50,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-  },
-  row: {
-    marginBottom: 10,
-  },
-  label: {
-    fontSize: 14,
-    marginBottom: 5,
-    fontWeight: '600',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    padding: 8,
-  },
-  submitBtn: {
-    backgroundColor: 'red',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-    marginTop: 15,
-  },
-  submitText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     padding: 10,
   },
   modalContent: {
     backgroundColor: '#fff',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     maxHeight: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 10,
   },
   closeBtn: {
     alignSelf: 'flex-end',
     marginBottom: 10,
+    padding: 6,
   },
   closeText: {
-    color: 'red',
+    color: '#b30000',
     fontWeight: 'bold',
     fontSize: 16,
   },
@@ -552,34 +686,36 @@ const styles = StyleSheet.create({
     color: '#b30000',
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   subTitle: {
     textAlign: 'center',
     fontWeight: 'bold',
     fontSize: 14,
-    marginBottom: 5,
+    marginBottom: 4,
+    color: '#333',
   },
   tinyText: {
     fontSize: 10,
     textAlign: 'center',
-    marginBottom: 15,
+    marginBottom: 12,
     color: '#666',
   },
   sectionContainer: {
     marginTop: 10,
-    padding: 10,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 5,
+    padding: 12,
+    backgroundColor: '#f7f7f7',
+    borderRadius: 8,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
     marginBottom: 10,
     color: '#333',
   },
   rowContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 8,
     paddingVertical: 4,
   },
@@ -594,29 +730,29 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   declaration: {
-    marginTop: 15,
+    marginTop: 12,
     fontSize: 13,
     lineHeight: 20,
     color: '#333',
   },
   term: {
     fontSize: 12,
-    marginVertical: 3,
+    marginVertical: 2,
     color: '#444',
   },
   note: {
-    marginTop: 15,
+    marginTop: 12,
     fontStyle: 'italic',
     fontSize: 11,
     color: '#666',
     textAlign: 'center',
   },
   printBtn: {
-    marginTop: 20,
+    marginTop: 18,
     backgroundColor: '#0c3c78',
     paddingVertical: 12,
     alignItems: 'center',
-    borderRadius: 5,
+    borderRadius: 6,
   },
   printText: {
     color: '#fff',
@@ -633,10 +769,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
+  dropdown: {
+    height: 50,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#fff',
+  },
+  row: {
+    marginBottom: 12,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    padding: 10,
+    backgroundColor: '#fff',
+  },
+  submitBtn: {
+    backgroundColor: '#b30000',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  submitText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
   documentItem: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
@@ -644,6 +811,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#333',
+    marginBottom: 2,
   },
   documentDate: {
     fontSize: 12,
@@ -652,6 +820,125 @@ const styles = StyleSheet.create({
   },
   documentStatus: {
     fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 5,
+  },
+  viewBtn: {
+    backgroundColor: '#0c3c78',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+    marginTop: 4,
+  },
+  viewBtnText: {
+    color: '#fff',
     fontWeight: 'bold',
+    fontSize: 12,
+  },
+  closeBtn: {
+    alignSelf: 'flex-end',
+    marginBottom: 10,
+    padding: 6,
+    backgroundColor: 'white',
+  },
+  closeText: {
+    color: '#b30000',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  mainTitle: {
+    fontSize: 18,
+    color: '#b30000',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  sectionContainer: {
+    marginTop: 10,
+    padding: 12,
+    backgroundColor: '#f7f7f7',
+    borderRadius: 8,
+  },
+  documentItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  documentName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 2,
+  },
+  documentDate: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+  documentStatus: {
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 5,
+  },
+  viewBtn: {
+    backgroundColor: '#0c3c78',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+    marginTop: 4,
+  },
+  viewBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  // Preview styles
+  previewOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewCloseBtn: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    padding: 6,
+  },
+  // Preview Modal
+  previewOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+  },
+  previewCloseBtn: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    padding: 6,
+  },
+  previewImage: {
+    width: '95%',
+    height: '75%',
+    borderRadius: 10,
+  },
+  downloadBtn: {
+    marginTop: 15,
+    backgroundColor: '#0c3c78',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+  },
+  downloadText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });

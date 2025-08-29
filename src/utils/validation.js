@@ -38,9 +38,9 @@ export const validateRequired = (value, fieldName) => {
 };
 
 export const validateEmail = (email) => {
-  if (!email.trim()) return "Email is required";
+  if (!email.trim()) return false;
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email) ? "" : "Invalid email format";
+  return regex.test(email.trim());
 };
 
 export const validateUsername = (username) => {

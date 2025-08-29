@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import moment from 'moment';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import HeaderLogin from '../Screen/HeaderLogin';
+import HeaderLogin from '../../Screen/HeaderLogin';
 import { Dropdown } from 'react-native-element-dropdown';
 import { useEffect, useState } from 'react';
 import {
@@ -23,8 +23,8 @@ import axios from 'axios';
 import CalendarPicker from 'react-native-calendar-picker';
 import Modal from 'react-native-modal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BASE_URL } from '../config';
-import HeaderNavigation from '../Components/HeaderNavigation';
+import { BASE_URL } from '../../config';
+import HeaderNavigation from '../../Components/HeaderNavigation';
 
 const TradeInbox = ({ navigation }) => {
   const data1 = [
@@ -76,58 +76,66 @@ const TradeInbox = ({ navigation }) => {
   const handleSearch = () => {
     // Add your search filter logic here
   };
-
   const renderItem = ({ item }) => {
-    console.log(item, 'item');
     return (
       <View style={styles.card}>
         <View style={styles.row}>
-          <Text style={styles.cardLabel}>Ward No.:</Text>
-          <Text style={styles.value}>{item?.safNo}</Text>
+          <Text style={styles.cardLabel}>Application No.:</Text>
+          <Text style={styles.value}>{item?.applicationNo}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.cardLabel}>Assessment Type:</Text>
-          <Text style={styles.value}>{item?.assessmentType}</Text>
+          <Text style={styles.cardLabel}>Application Type:</Text>
+          <Text style={styles.value}>{item?.applicationType}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.cardLabel}>Property Type:</Text>
-          <Text style={styles.value}>{item?.propertyType}</Text>
+          <Text style={styles.cardLabel}>Owner Name:</Text>
+          <Text style={styles.value}>{item?.ownerName}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.cardLabel}>Applicant Name:</Text>
-          <Text style={styles.value}>{item?.id}</Text>
+          <Text style={styles.cardLabel}>Guardian Name:</Text>
+          <Text style={styles.value}>{item?.guardianName}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.cardLabel}>Mobile No.:</Text>
           <Text style={styles.value}>{item?.mobileNo}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.cardLabel}>Property Type:</Text>
-          <Text style={styles.value}>{item?.propertyType}</Text>
+          <Text style={styles.cardLabel}>Firm Type:</Text>
+          <Text style={styles.value}>{item?.firmType}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.cardLabel}>Address:</Text>
+          <Text style={styles.value}>{item?.address}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.cardLabel}>Ward No.:</Text>
           <Text style={styles.value}>{item?.wardNo}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.cardLabel}>SAF No.:</Text>
-          <Text style={styles.value}>{item?.safNo}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.cardLabel}>Holding No.:</Text>
-          <Text style={styles.value}>{item?.propertyAddress}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.cardLabel}>Property Address:</Text>
-          <Text style={styles.value}>{item?.propAddress}</Text>
-        </View>
-        <View style={styles.row}>
           <Text style={styles.cardLabel}>Apply Date:</Text>
           <Text style={styles.value}>{item?.applyDate}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.cardLabel}>Forward Date:</Text>
+          <Text style={styles.cardLabel}>Receiving Date:</Text>
           <Text style={styles.value}>{item?.receivingDate}</Text>
+        </View>
+
+        {/* Optional role info */}
+        <View style={styles.row}>
+          <Text style={styles.cardLabel}>Current Role ID:</Text>
+          <Text style={styles.value}>{item?.currentRoleId}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.cardLabel}>Initiator Role ID:</Text>
+          <Text style={styles.value}>{item?.initiatorRoleId}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.cardLabel}>Finisher Role ID:</Text>
+          <Text style={styles.value}>{item?.finisherRoleId}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.cardLabel}>Max Level Attempt:</Text>
+          <Text style={styles.value}>{item?.maxLevelAttempt}</Text>
         </View>
 
         <TouchableOpacity

@@ -15,14 +15,14 @@ import {
   responsiveWidth,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
-import Colors from '../Constants/Colors';
-import HeaderNavigation from '../Components/HeaderNavigation';
+import Colors from '../../Constants/Colors';
+import HeaderNavigation from '../../Components/HeaderNavigation';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
-import { BASE_URL } from '../config';
-import { API_ROUTES } from '../api/apiRoutes';
+import { BASE_URL } from '../../config';
+import { API_ROUTES } from '../../api/apiRoutes';
 
-const RenwLicense = ({ navigation }) => {
+const Search = ({ navigation }) => {
   const [value, setValue] = useState(null); // selected ward id
   const [keyword, setKeyword] = useState('');
   const [masterData, setMasterData] = useState(null);
@@ -114,8 +114,7 @@ const RenwLicense = ({ navigation }) => {
   };
 
   const handleViewPress = item => {
-    navigation.navigate('RenewLicensePage', { id: item.id });
-    console.log(item.id, 'my id is');
+    navigation.navigate('TradeDetails', { id: item.id });
   };
 
   const renderItem = ({ item, index }) => (
@@ -228,7 +227,7 @@ const RenwLicense = ({ navigation }) => {
   );
 };
 
-export default RenwLicense;
+export default Search;
 
 const styles = StyleSheet.create({
   container: {

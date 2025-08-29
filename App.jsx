@@ -1,6 +1,11 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { AlertNotificationRoot } from 'react-native-alert-notification';
+import { MasterDataProvider } from './src/Context/MasterDataContext';
+
+// Screens
 import DashBoard from './src/Screen/DashBoard';
 import StaffCard from './src/Screen/StaffCard';
 import Property from './src/Screen/Property';
@@ -13,33 +18,34 @@ import ForgotPassword from './src/Screen/ForgetPassword';
 import VerifiedStatus from './src/PropertyMenu/VerifiedStatus';
 import SearchAssesment from './src/PropertyMenu/SearchAssesment';
 import SafDueDetails from './src/PropertyMenu/SafDueDetails';
-import { AlertNotificationRoot } from 'react-native-alert-notification';
 import ApplyAssessment from './src/PropertyMenu/ApplyAssessment';
 import AssessmentSummary from './src/PropertyMenu/AssessmentSummary';
 import PreviewScreen from './src/Screen/PreviewScreen';
 import ApplyAssessmentComponentized from './src/PropertyMenu/ApplyAssessmentComponentized';
-import { Button, View } from 'react-native';
 import ApplyLicense from './src/Trade/ApplyLicense';
-import Search from './src/Trade/Search';
-import InboxScreen from './src/Trade/InboxScreen';
-import TradeLicenseSummary from './src/Trade/TradeLicenseSummary';
+import Search from './src/Trade/Details/Search';
+import InboxScreen from './src/Trade/Inbox/InboxScreen';
+import TradeDetails from './src/Trade/Details/TradeDetails';
 import ApplyLicenseSummary from './src/Trade/ApplyLicenseSummary';
-import RenewLicense from './src/Trade/RenewLicense';
-import { MasterDataProvider } from './src/Context/MasterDataContext';
-import SurrenderLicense from './src/Trade/SurrenderLicense';
 import SubmitVarification from './src/PropertyMenu/SubmitVarification';
 import DocUpload from './src/Trade/DocUpload';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ApplyWaterConnectionForm from './src/Water/ApplyWaterConnectionForm';
 import LoginScreen from './src/Screen/LoginScreen';
-import LicenseVerificationScreen from './src/Trade/LicenseVerificationScreen';
 import SearchWater from './src/Water/SearchWater';
 import WaterBillScreen from './src/Water/WaterBillScreen';
-import RenewLicensePage from './src/Trade/RenewLicensePage';
-import SurrenderLicensePage from './src/Trade/SurrenderLicensePage';
+import SurrenderLicense from './src/Trade/Surender/SurrenderLicense';
+import SurrenderLicensePage from './src/Trade/Surender/SurrenderLicensePage';
+import RenewLicensePage from './src/Trade/Renew/RenewLicensePage';
+import RenewLicense from './src/Trade/Renew/RenewLicense';
+import EditTrade from './src/Trade/Details/EditTrade';
+import InboxDtls from './src/Trade/Inbox/InboxDtls';
+import SearchHolding from './src/PropertyMenu/Holding/Search';
+import HoldingDetails from './src/PropertyMenu/Holding/HoldingDetails';
+import Toast from 'react-native-toast-message';
+
 const Stack = createNativeStackNavigator();
 
-const App = ({ navigation }) => {
+const App = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <MasterDataProvider>
@@ -86,19 +92,16 @@ const App = ({ navigation }) => {
                 component={FieldVarification}
                 options={{ headerShown: false }}
               />
-
               <Stack.Screen
                 name="ForgotPassword"
                 component={ForgotPassword}
                 options={{ headerShown: false }}
               />
-
               <Stack.Screen
                 name="VerifiedStatus"
                 component={VerifiedStatus}
                 options={{ headerShown: false }}
               />
-
               <Stack.Screen
                 name="SearchAssesment"
                 component={SearchAssesment}
@@ -140,8 +143,8 @@ const App = ({ navigation }) => {
                 options={{ headerShown: false }}
               />
               <Stack.Screen
-                name="TradeLicenseSummary"
-                component={TradeLicenseSummary}
+                name="TradeDetails"
+                component={TradeDetails}
                 options={{ headerShown: false }}
               />
               <Stack.Screen
@@ -175,17 +178,6 @@ const App = ({ navigation }) => {
                 options={{ headerShown: false }}
               />
               <Stack.Screen
-                name="LoginScreen"
-                component={LoginScreen}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="LicenseVerificationScreen"
-                component={LicenseVerificationScreen}
-                options={{ headerShown: false }}
-              />
-
-              <Stack.Screen
                 name="SearchWater"
                 component={SearchWater}
                 options={{ headerShown: false }}
@@ -205,8 +197,31 @@ const App = ({ navigation }) => {
                 component={RenewLicensePage}
                 options={{ headerShown: false }}
               />
+              <Stack.Screen
+                name="EditTrade"
+                component={EditTrade}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="InboxDtls"
+                component={InboxDtls}
+                options={{ headerShown: false }}
+              />
+
+              {/* Holding Navigators */}
+              <Stack.Screen
+                name="SearchHolding"
+                component={SearchHolding}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="HoldingDetails"
+                component={HoldingDetails}
+                options={{ headerShown: false }}
+              />
             </Stack.Navigator>
           </NavigationContainer>
+          <Toast />
         </AlertNotificationRoot>
       </MasterDataProvider>
     </GestureHandlerRootView>

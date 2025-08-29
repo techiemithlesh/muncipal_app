@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,66 +6,75 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import {
   responsiveHeight,
   responsiveWidth,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
-import Colors from '../Constants/Colors';
-import Card from '../Components/Card';
+import Colors from '../../Constants/Colors';
+import Card from '../../Components/Card';
 import { useNavigation } from '@react-navigation/native';
-import { useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import HeaderNavigation from '../Components/HeaderNavigation';
-import { BASE_URL } from '../config';
+import HeaderNavigation from '../../Components/HeaderNavigation';
+import { BASE_URL } from '../../config';
+import { getToken } from '../../utils/auth';
+
 const InboxScreen = () => {
   const navigation = useNavigation();
 
   const [data, setData] = useState([]);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const storedToken = await AsyncStorage.getItem('token');
-        const token = storedToken ? JSON.parse(storedToken) : null;
-        console.log(token, 'our token');
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false); // loader state
 
-        const body = {
-          perPage: 20,
-          page: 1,
-          keyWord: 'a',
-          wardId: [1, 2, 3],
-        };
-
-        if (!token) {
-          console.warn('No token found');
-          return;
-        }
-
-        const response = await axios.post(
-          `${BASE_URL}/api/trade/inbox`,
-          body, // <-- passing body here
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-        const list = response.data?.data?.data || [];
-        console.log('List:', list);
-
-        console.log('Fetched Data:', response.data?.data);
-        setData(response.data?.data?.data || []);
-      } catch (error) {
-        console.error('Error fetching data:', error);
+  // Fetch inbox data
+  const fetchData = async (searchKeyword = 'a') => {
+    try {
+      setLoading(true); // start loader
+      const token = await getToken();
+      if (!token) {
+        console.warn('No token found');
+        setLoading(false);
+        return;
       }
-    };
 
+      const body = {
+        perPage: 20,
+        page: 1,
+        keyWord: searchKeyword,
+        wardId: [1, 2, 3],
+      };
+
+      const response = await axios.post(`${BASE_URL}/api/trade/inbox`, body, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.data?.status) {
+        const applications = response.data?.data?.data;
+        setData(applications);
+      } else {
+        console.warn('API returned false status:', response.data);
+        setData([]);
+      }
+    } catch (error) {
+      console.error(
+        'Error fetching data:',
+        error.response?.data || error.message,
+      );
+      setData([]);
+    } finally {
+      setLoading(false); // stop loader
+    }
+  };
+
+  // Initial fetch on page load
+  useEffect(() => {
     fetchData();
   }, []);
-
-  console.log(data, 'data');
 
   const renderEmpty = () => (
     <View style={styles.emptyRow}>
@@ -79,6 +88,7 @@ const InboxScreen = () => {
       <View style={styles.container}>
         <Text style={styles.title}>Inbox</Text>
 
+        {/* Top buttons and search */}
         <View style={styles.topBar}>
           <TouchableOpacity style={styles.excelButton}>
             <Text style={styles.buttonText}>Excel</Text>
@@ -88,39 +98,53 @@ const InboxScreen = () => {
           </TouchableOpacity>
 
           <View style={styles.searchContainer}>
-            <TextInput placeholder="Search..." style={styles.searchInput} />
-            <TouchableOpacity style={styles.searchButton}>
+            <TextInput
+              placeholder="Search..."
+              style={styles.searchInput}
+              value={search}
+              onChangeText={setSearch}
+            />
+            <TouchableOpacity
+              style={styles.searchButton}
+              onPress={() => fetchData(search)}
+            >
               <Text style={styles.buttonText}>Search</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* 💠 Card Container */}
-        <FlatList
-          data={data}
-          keyExtractor={item => item.id.toString()}
-          contentContainerStyle={{ padding: 10 }}
-          ListEmptyComponent={renderEmpty}
-          renderItem={({ item, index }) => (
-            <Card
-              index={index + 1}
-              applicationNo={item.applicationNo}
-              wardNo={item.wardNo}
-              firmType={item.firmType}
-              ownerName={item.ownerName}
-              applyDate={item.applyDate}
-              address={item.address}
-              natureOfBusiness={item.natureOfBusiness}
-              onPress={() =>
-                navigation.navigate(
-                  'LicenseVerificationScreen',
-                  { id: item.id },
-                  console.log(item.id, 'my id'),
-                )
-              }
-            />
-          )}
-        />
+        {/* Loader or FlatList */}
+        {loading ? (
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <ActivityIndicator size="large" color={Colors.primary} />
+          </View>
+        ) : (
+          <FlatList
+            data={data}
+            keyExtractor={item => item.id.toString()}
+            contentContainerStyle={{ padding: 10 }}
+            ListEmptyComponent={renderEmpty}
+            renderItem={({ item, index }) => (
+              <Card
+                index={index + 1}
+                applicationNo={item.applicationNo}
+                wardNo={item.wardNo}
+                firmType={item.firmType}
+                ownerName={item.ownerName}
+                applyDate={item.applyDate}
+                address={item.address}
+                natureOfBusiness={item.natureOfBusiness}
+                onPress={() =>
+                  navigation.navigate('InboxDtls', {
+                    id: item.id,
+                  })
+                }
+              />
+            )}
+          />
+        )}
       </View>
     </View>
   );

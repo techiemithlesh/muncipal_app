@@ -15,14 +15,13 @@ import {
   responsiveWidth,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
-import Colors from '../Constants/Colors';
-import HeaderNavigation from '../Components/HeaderNavigation';
+import Colors from '../../Constants/Colors';
+import HeaderNavigation from '../../Components/HeaderNavigation';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
-import { BASE_URL } from '../config';
-import { API_ROUTES } from '../api/apiRoutes';
+import { API_ROUTES } from '../../api/apiRoutes';
 
-const Search = ({ navigation }) => {
+const SurrenderLicense = ({ navigation }) => {
   const [value, setValue] = useState(null); // selected ward id
   const [keyword, setKeyword] = useState('');
   const [masterData, setMasterData] = useState(null);
@@ -114,7 +113,7 @@ const Search = ({ navigation }) => {
   };
 
   const handleViewPress = item => {
-    navigation.navigate('TradeLicenseSummary', { id: item.id });
+    navigation.navigate('SurrenderLicensePage', { id: item.id });
   };
 
   const renderItem = ({ item, index }) => (
@@ -227,7 +226,7 @@ const Search = ({ navigation }) => {
   );
 };
 
-export default Search;
+export default SurrenderLicense;
 
 const styles = StyleSheet.create({
   container: {

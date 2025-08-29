@@ -7,8 +7,8 @@ import {
   Alert,
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import FormField from '../Components/FormField';
-import Colors from '../Constants/Colors';
+import FormField from '../../Components/FormField';
+import Colors from '../../Constants/Colors';
 import {
   responsiveHeight,
   responsiveWidth,
@@ -16,10 +16,12 @@ import {
 } from 'react-native-responsive-dimensions';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import CustomAlert from '../Components/CustomAlert';
-import { BASE_URL } from '../config';
-import HeaderNavigation from '../Components/HeaderNavigation';
-import { API_ROUTES } from '../api/apiRoutes';
+import CustomAlert from '../../Components/CustomAlert';
+import HeaderNavigation from '../../Components/HeaderNavigation';
+
+import { BASE_URL } from '../../config';
+
+import { API_ROUTES } from '../../api/apiRoutes';
 
 const SurrenderLicensePage = ({ navigation, route }) => {
   const { id } = route.params;

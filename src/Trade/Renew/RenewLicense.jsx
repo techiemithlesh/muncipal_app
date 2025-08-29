@@ -15,14 +15,14 @@ import {
   responsiveWidth,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
-import Colors from '../Constants/Colors';
-import HeaderNavigation from '../Components/HeaderNavigation';
+import Colors from '../../Constants/Colors';
+import HeaderNavigation from '../../Components/HeaderNavigation';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import { BASE_URL } from '../config';
-import { API_ROUTES } from '../api/apiRoutes';
+import { API_ROUTES } from '../../api/apiRoutes';
 
-const SurrenderLicense = ({ navigation }) => {
+const RenwLicense = ({ navigation }) => {
   const [value, setValue] = useState(null); // selected ward id
   const [keyword, setKeyword] = useState('');
   const [masterData, setMasterData] = useState(null);
@@ -114,7 +114,8 @@ const SurrenderLicense = ({ navigation }) => {
   };
 
   const handleViewPress = item => {
-    navigation.navigate('SurrenderLicensePage', { id: item.id });
+    navigation.navigate('RenewLicensePage', { id: item.id });
+    console.log(item.id, 'my id is');
   };
 
   const renderItem = ({ item, index }) => (
@@ -227,7 +228,7 @@ const SurrenderLicense = ({ navigation }) => {
   );
 };
 
-export default SurrenderLicense;
+export default RenwLicense;
 
 const styles = StyleSheet.create({
   container: {
