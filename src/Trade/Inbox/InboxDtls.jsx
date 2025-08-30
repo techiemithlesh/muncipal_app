@@ -277,7 +277,9 @@ const InboxDtls = ({ route }) => {
         {/* Field Verification */}
         <Section title="Field Verification">
           <View style={styles.noDataContainer}>
-            <Text style={styles.noDataText}>No Field Verification Available!</Text>
+            <Text style={styles.noDataText}>
+              No Field Verification Available!
+            </Text>
           </View>
         </Section>
 
@@ -513,37 +515,49 @@ const styles = StyleSheet.create({
   },
   paymentCol: { flex: 1, textAlign: 'center' },
   viewBtn: {
-    backgroundColor: '#0c3c78',
+    backgroundColor: '#d71717ff',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 4,
+    borderWidth: 2, // sets border thickness
+    borderColor: Colors.primary,
   },
   viewBtnText: { color: '#fff', fontWeight: '600' },
 
   noRemarksContainer: { padding: 10, alignItems: 'center' },
   noRemarksText: { color: '#999' },
 
-  noDataContainer: { 
-    padding: 20, 
+  noDataContainer: {
+    padding: 20,
     alignItems: 'center',
     backgroundColor: '#f9f9f9',
     borderRadius: 6,
   },
-  noDataText: { 
+  noDataText: {
     color: '#666',
-    fontSize: 14,
+    fontSize: 10,
     fontStyle: 'italic',
   },
 
   tradeLicenseBtn: {
     backgroundColor: '#0f3969ff',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    marginBottom: 20,
+    marginBottom: 40,
     borderRadius: 6,
     alignItems: 'center',
+    justifyContent: 'center', // centers content horizontally
+    flexDirection: 'row', // ensures content is in a row
+    // paddingHorizontal: 10, // optional, adds spacing inside the button
+    // paddingVertical: 5, // optional, adjusts height
+    borderWidth: 1, // sets border thickness
+    borderColor: 'red',
+    padding: 2,
   },
-  tradeLicenseText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
+  tradeLicenseText: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: 'bold',
+    marginLeft: 5, // optional, if you have an icon next to text
+  },
 });
 
 export default InboxDtls;

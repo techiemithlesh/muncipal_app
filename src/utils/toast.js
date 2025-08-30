@@ -6,5 +6,7 @@ export const showToast = (type = 'success', title = '', message = '') => {
     text1: title,
     text2: message,
     visibilityTime: 2500,
+    position: 'top',
+    topOffset: 60,
   });
 };

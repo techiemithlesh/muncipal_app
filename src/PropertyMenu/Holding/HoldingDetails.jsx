@@ -33,7 +33,7 @@ import { getToken } from '../../utils/auth';
 import { HOLDIGN_API_ROUTES } from '../../api/apiRoutes';
 const HoldingDetails = ({ route, navigation }) => {
   const { id } = route.params;
-  // console.log(id, 'holdign id');
+  console.log(id, 'holdign id');
   const [holdingData, setHoldingData] = useState('');
   const [safData, setSafData] = useState(null);
   const [loading, setLoading] = useState(true);

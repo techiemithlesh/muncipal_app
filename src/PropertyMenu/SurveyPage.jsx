@@ -306,7 +306,7 @@ const SurveyPage = ({ route, navigation }) => {
         <HeaderNavigation />
         <View style={styles.gradientWrapper}>
           <LinearGradient
-            colors={['#007BFF', '#00BFFF']}
+            colors={['#055441ff', '#110850ff']}
             style={styles.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -372,10 +372,10 @@ const SurveyPage = ({ route, navigation }) => {
           <>
             {/* #################### Parking ############# */}
             <LinearGradient
-              colors={['red', 'black']}
+              colors={['#B6D9E0', '#2C5364']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={styles.gradientContainer} // use your own style
+              style={styles.gradientContainer}
             >
               <Text
                 style={{
@@ -383,7 +383,7 @@ const SurveyPage = ({ route, navigation }) => {
                   marginBottom: 5,
                   marginLeft: 15,
                   marginRight: 8,
-                  color: 'white', // white text to contrast background
+                  color: 'red', // white text to contrast background
                   fontWeight: 'bold',
                   fontSize: 16,
                 }}
@@ -453,7 +453,7 @@ const SurveyPage = ({ route, navigation }) => {
               />
             </LinearGradient>
             <LinearGradient
-              colors={['red', 'black']}
+              colors={['#B6D9E0', '#2C5364']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.gradientContainer} // use your own style
@@ -464,7 +464,7 @@ const SurveyPage = ({ route, navigation }) => {
                   marginBottom: 5,
                   marginLeft: 15,
                   marginRight: 8,
-                  color: 'white', // white text to contrast background
+                  color: 'red', // white text to contrast background
                   fontWeight: 'bold',
                   fontSize: 16,
                 }}
@@ -1386,6 +1386,13 @@ const styles = StyleSheet.create({
   gradientContainer: {
     borderRadius: 10,
     margin: 10,
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    // Android shadow
+    elevation: 5,
   },
   dropdown: {
     height: 50,

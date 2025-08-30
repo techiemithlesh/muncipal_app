@@ -32,24 +32,49 @@ const LoginScreen = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false); // Show/hide password
 
   const handleLogin = async () => {
-    if (selected === null) {
-      Alert.alert('Error', 'Please select Email or Username');
+    // Regex for email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Check fields
+    if (selected === 'email') {
+      if (!email) {
+        showToast('error', 'Please enter your email!');
+        return;
+      }
+      if (!emailRegex.test(email)) {
+        showToast('error', 'Please enter a valid email address!');
+        return;
+      }
+    }
+
+    if (selected === 'username') {
+      if (!userName) {
+        showToast('error', 'Please enter your username!');
+        return;
+      }
+      // Optional: username length check
+      if (userName.length < 3) {
+        showToast('error', 'Username must be at least 3 characters!');
+        return;
+      }
+    }
+
+    // Password validation
+    if (!password) {
+      showToast('error', 'Please enter your password!');
+      return;
+    }
+    // Optional: password strength
+    if (password.length < 6) {
+      showToast('error', 'Password must be at least 6 characters!');
       return;
     }
 
+    // If all validations pass, create payload
     const loginPayload =
       selected === 'email'
         ? { email, password, type: 'mobile' }
         : { userName, password, type: 'mobile' };
-
-    if (
-      (selected === 'email' && !email) ||
-      (selected === 'username' && !userName) ||
-      !password
-    ) {
-      Alert.alert('Error', 'Please fill all fields');
-      return;
-    }
 
     try {
       const response = await axios.post(`${BASE_URL}/api/login`, loginPayload);
@@ -62,10 +87,10 @@ const LoginScreen = ({ navigation }) => {
         showToast('success', 'Login Successfully!');
 
         navigation.navigate('DashBoard');
-        console.log('Login successful, userDetails:', userDetails);
-        console.log('MenuTree data:', userDetails.menuTree);
+        // console.log('Login successful, userDetails:', userDetails);
+        // console.log('MenuTree data:', userDetails.menuTree);
       } else {
-        Alert.alert('Login Failed', 'Invalid credentials');
+        showToast('error', 'Check email & password please!');
       }
     } catch (error) {
       console.error('Login error:', error.response?.data || error.message);

@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AlertNotificationRoot } from 'react-native-alert-notification';
 import { MasterDataProvider } from './src/Context/MasterDataContext';
 import Toast from 'react-native-toast-message';
+import { toastConfig } from './src/utils/toastConfig';
 
 // Screens
 import DashBoard from './src/Screen/DashBoard';
@@ -227,7 +228,12 @@ const App = () => {
       </MasterDataProvider>
 
       {/* 👇 Toast outside everything, stays above Modals */}
-      <Toast topOffset={60} />
+      <Toast 
+        config={toastConfig}
+        topOffset={60} 
+        visibilityTime={2500}
+        position="top"
+      />
     </GestureHandlerRootView>
   );
 };

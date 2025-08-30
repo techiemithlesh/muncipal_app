@@ -23,6 +23,7 @@ import FileViewer from 'react-native-file-viewer';
 import PrintButton from '../../../Components/PrintButton';
 import Toast from 'react-native-toast-message';
 import { showToast } from '../../../utils/toast';
+import { toastConfig } from '../../../utils/toastConfig';
 
 // 1. View Trade License Modal
 export const ViewTradeLicenseModal = ({ visible, onClose, tradeDetails }) => (
@@ -522,6 +523,8 @@ export const DocumentModal = ({ visible, onClose, documents }) => {
                 }, 300);
               }}
             />
+            {/* Toast inside modal to ensure it appears above modal content */}
+            <Toast config={toastConfig} position="top" topOffset={60} />
           </View>
         </Modal>
       </View>
