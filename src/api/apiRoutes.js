@@ -19,7 +19,8 @@ export const API_ROUTES = {
 export const SAF_API_ROUTES = {
   // trade api routes
   SAF_VARIFICATION_MODEL: `${BASE_URL}/api/property/field-verification-dtl`,
-  TRADE_SEARCH: `${BASE_URL}/api/trade/search`,
+  
+  APPLY_SAF: `${BASE_URL}/api/property/saf-apply`,
   TRADE_MASTER_DETAILS:`${BASE_URL}/api/trade/get-trade-master-data`,
   TRADE_DUE_DETAILS:`${BASE_URL}/api/trade/get-due`,
   TRADE_PAYMENT:`${BASE_URL}/api/trade/pay-demand`,

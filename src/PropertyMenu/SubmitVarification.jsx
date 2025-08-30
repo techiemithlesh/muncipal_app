@@ -4,6 +4,9 @@ import { useEffect } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import HeaderNavigation from '../Components/HeaderNavigation';
+import axios from 'axios';
+import { PROPERTY_API } from '../api/apiRoutes';
+import { getToken } from '../utils/auth';
 
 const Card = ({ title, children }) => (
   <View style={styles.card}>
@@ -13,12 +16,12 @@ const Card = ({ title, children }) => (
 );
 
 const SubmitVarification = ({ route }) => {
-  const { submissionData, location, photo1, photo2, photo3 } = route.params;
+  const { submissionData, location, photo1, photo2, photo3, id } = route.params;
 
   useEffect(() => {
     const fetchFieldVerification = async () => {
       const payload = {
-        safDetailId: 51,
+        safDetailId: id,
         wardMstrId: 3,
         newWardMstrId: 1,
         propTypeMstrId: 1,
@@ -43,13 +46,18 @@ const SubmitVarification = ({ route }) => {
       };
 
       try {
-        const response = await axios.post(FIELD_VERIFICATION_API, payload, {
-          headers: {
-            'Content-Type': 'application/json',
-            // "Authorization": `Bearer ${yourToken}`, // add if required
+        const token = getToken();
+        const response = await axios.post(
+          PROPERTY_API.FIELD_VARIFICATION_API,
+          payload,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`, // add if required
+            },
+            timeout: 15000,
           },
-          timeout: 15000,
-        });
+        );
 
         console.log('✅ Field Verification Response:', response.data);
       } catch (error) {
@@ -64,7 +72,7 @@ const SubmitVarification = ({ route }) => {
     };
 
     fetchFieldVerification();
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     console.log('Submission Data:', submissionData);

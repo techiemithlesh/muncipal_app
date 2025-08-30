@@ -25,7 +25,18 @@ import PropertyDetails from './components/PropertyDetails';
 
 const ApplyAssessmentComponentized = ({ navigation, route }) => {
   // Get data from route params if it's a reassessment or mutation
-  const { id, isRessessment, isMutation, safData, ownerList, taxDetails, transDtls, memoDtls, tcVerfivication, paymentDtls } = route?.params || {};
+  const {
+    id,
+    isRessessment,
+    isMutation,
+    safData,
+    ownerList,
+    taxDetails,
+    transDtls,
+    memoDtls,
+    tcVerfivication,
+    paymentDtls,
+  } = route?.params || {};
 
   // All state and logic copied from ApplyAssessment.jsx
   const [waterConnectionNo, setWaterConnectionNo] = useState('');
@@ -74,12 +85,19 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
   const [data, setData] = useState(null);
   const [zone, setZone] = useState('');
   const [transferMode, setTransferMode] = useState('');
-  const [propertyTransferPercentage, setPropertyTransferPercentage] = useState('');
+  const [propertyTransferPercentage, setPropertyTransferPercentage] =
+    useState('');
   const [isChecked, setIsChecked] = useState(false);
-  const [showWaterConnectionDatePicker, setShowWaterConnectionDatePicker] = useState(false);
-  const [showInstallationDatePicker, setShowInstallationDatePicker] = useState(false);
-  const [showHoardingInstallationDatePicker, setShowHoardingInstallationDatePicker] = useState(false);
-  const [showPumpInstallationDatePicker, setShowPumpInstallationDatePicker] = useState(false);
+  const [showWaterConnectionDatePicker, setShowWaterConnectionDatePicker] =
+    useState(false);
+  const [showInstallationDatePicker, setShowInstallationDatePicker] =
+    useState(false);
+  const [
+    showHoardingInstallationDatePicker,
+    setShowHoardingInstallationDatePicker,
+  ] = useState(false);
+  const [showPumpInstallationDatePicker, setShowPumpInstallationDatePicker] =
+    useState(false);
   const [correspondingAddress, setCorrespondingAddress] = useState('');
   const [correspondingCity, setCorrespondingCity] = useState('');
   const [correspondingDistrict, setCorrespondingDistrict] = useState('');
@@ -89,10 +107,10 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
   const [showDobPicker, setShowDobPicker] = useState(false);
   const [ownerName, setOwnerName] = useState('');
   const [guardianName, setGuardianName] = useState('');
-//   const validateMobile = mobile => /^[6-9]\d{9}$/.test(mobile);
-//   const validateAadhaar = aadhaar => /^\d{12}$/.test(aadhaar);
-//   const validatePAN = pan => /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan);
-//   const validateEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.toLowerCase());
+  //   const validateMobile = mobile => /^[6-9]\d{9}$/.test(mobile);
+  //   const validateAadhaar = aadhaar => /^\d{12}$/.test(aadhaar);
+  //   const validatePAN = pan => /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan);
+  //   const validateEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.toLowerCase());
   const [floorDetails, setFloorDetails] = useState([
     {
       floorName: '',
@@ -104,7 +122,11 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
       uptoDate: '',
     },
   ]);
-  const [datePicker, setDatePicker] = useState({ index: null, field: '', show: false });
+  const [datePicker, setDatePicker] = useState({
+    index: null,
+    field: '',
+    show: false,
+  });
   const updateFloorDetail = (index, field, value) => {
     const updated = [...floorDetails];
     updated[index][field] = value;
@@ -196,7 +218,7 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
       rainHarvesting,
       completionDate: completionDate ? completionDate.toISOString() : '',
     };
-    
+
     if (propertyTypeLabel !== 'VACANT LAND') {
       formData.floors = floorDetails.map(floor => ({
         floorName: floor.floorName,
@@ -208,11 +230,11 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
         uptoDate: floor.uptoDate,
       }));
     }
-    
-    navigation.navigate('AssessmentSummary', { 
+
+    navigation.navigate('AssessmentSummary', {
       data: formData,
       isRessessment: isRessessment,
-      isMutation: isMutation
+      isMutation: isMutation,
     });
   };
   useEffect(() => {
@@ -275,13 +297,39 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
       console.error('Error fetching new ward:', error);
     }
   };
-  const floorNameOptions = data?.floorType?.map(floor => ({ label: floor.floorName, value: floor.id })) || [];
-  const usageTypeOptions = data?.usageType?.map(usetype => ({ label: usetype.usageType, value: usetype.id })) || [];
-  const occupancyTypeOptions = data?.occupancyType?.map(occupy => ({ label: occupy.occupancyName, value: occupy.id })) || [];
-  const constructionTypeOptions = data?.constructionType?.map(cunstruct => ({ label: cunstruct.constructionType, value: cunstruct.id })) || [];
-  const wardDropdownOptions = data?.wardList?.map(ward => ({ label: ward?.wardNo, value: ward?.id })) || [];
-  const ownershipDropdownOptions = data?.ownershipType?.map(item => ({ label: item.ownershipType, value: item.id })) || [];
-  const propertyTypeDropdownOptions = data?.propertyType?.map(item => ({ label: item.propertyType, value: item.id })) || [];
+  const floorNameOptions =
+    data?.floorType?.map(floor => ({
+      label: floor.floorName,
+      value: floor.id,
+    })) || [];
+  const usageTypeOptions =
+    data?.usageType?.map(usetype => ({
+      label: usetype.usageType,
+      value: usetype.id,
+    })) || [];
+  const occupancyTypeOptions =
+    data?.occupancyType?.map(occupy => ({
+      label: occupy.occupancyName,
+      value: occupy.id,
+    })) || [];
+  const constructionTypeOptions =
+    data?.constructionType?.map(cunstruct => ({
+      label: cunstruct.constructionType,
+      value: cunstruct.id,
+    })) || [];
+  const wardDropdownOptions =
+    data?.wardList?.map(ward => ({ label: ward?.wardNo, value: ward?.id })) ||
+    [];
+  const ownershipDropdownOptions =
+    data?.ownershipType?.map(item => ({
+      label: item.ownershipType,
+      value: item.id,
+    })) || [];
+  const propertyTypeDropdownOptions =
+    data?.propertyType?.map(item => ({
+      label: item.propertyType,
+      value: item.id,
+    })) || [];
   const genderOptions = [
     { label: 'Male', value: 'male' },
     { label: 'Female', value: 'female' },
@@ -319,18 +367,26 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
 
       // Basic Details - Assessment Type
       // Find the correct ward ID from master data
-      const oldWardOption = data?.wardList?.find(ward => ward.wardNo === safData.wardNo);
+      const oldWardOption = data?.wardList?.find(
+        ward => ward.wardNo === safData.wardNo,
+      );
       setOldWard(oldWardOption?.id || '');
-      
-      const newWardOption = data?.wardList?.find(ward => ward.wardNo === safData.newWardNo);
+
+      const newWardOption = data?.wardList?.find(
+        ward => ward.wardNo === safData.newWardNo,
+      );
       setNewWard(newWardOption?.id || '');
 
       // Find ownership type ID
-      const ownershipOption = data?.ownershipType?.find(item => item.ownershipType === safData.ownershipType);
+      const ownershipOption = data?.ownershipType?.find(
+        item => item.ownershipType === safData.ownershipType,
+      );
       setOwnershipType(ownershipOption?.id || '');
 
       // Find property type ID
-      const propertyTypeOption = data?.propertyType?.find(item => item.propertyType === safData.propertyType);
+      const propertyTypeOption = data?.propertyType?.find(
+        item => item.propertyType === safData.propertyType,
+      );
       setPropertyType(propertyTypeOption?.id || '');
       setPropertyTypeLabel(safData.propertyType || '');
 
@@ -338,9 +394,15 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
       const zoneValue = safData.zone || '';
       // Map zone values to dropdown format
       let mappedZone = '';
-      if (zoneValue.toLowerCase().includes('zone 1') || zoneValue.toLowerCase().includes('zone1')) {
+      if (
+        zoneValue.toLowerCase().includes('zone 1') ||
+        zoneValue.toLowerCase().includes('zone1')
+      ) {
         mappedZone = 'Zone1';
-      } else if (zoneValue.toLowerCase().includes('zone 2') || zoneValue.toLowerCase().includes('zone2')) {
+      } else if (
+        zoneValue.toLowerCase().includes('zone 2') ||
+        zoneValue.toLowerCase().includes('zone2')
+      ) {
         mappedZone = 'Zone2';
       } else {
         mappedZone = zoneValue; // Keep original if no match
@@ -358,18 +420,20 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
       if (ownerList && ownerList.length > 0) {
         const owner = ownerList[0];
         console.log('Setting owner data:', owner);
-        
+
         setOwnerName(owner.ownerName || '');
-        
+
         // Set gender dropdown value
         const genderValue = owner.gender?.toLowerCase() || '';
         setGender(genderValue);
 
         setDob(owner.dob || '');
         setGuardianName(owner.guardianName || '');
-        
+
         // Find relation type ID
-        const relationOption = selectRelation.find(item => item.label === owner.relationType);
+        const relationOption = selectRelation.find(
+          item => item.label === owner.relationType,
+        );
         setRelation(relationOption?.value || '');
 
         setMobile(owner.mobileNo || '');
@@ -384,9 +448,11 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
       setKno(safData.electConsumerNo || '');
       setAccNo(safData.electAccNo || '');
       setBindBookNo(safData.electBindBookNo || '');
-      
+
       // Find electricity category ID
-      const electricityCategoryOption = selectelectcate.find(item => item.label === safData.electConsCategory);
+      const electricityCategoryOption = selectelectcate.find(
+        item => item.label === safData.electConsCategory,
+      );
       setElectricityCategory(electricityCategoryOption?.value || '');
 
       // Water Connection Details
@@ -427,30 +493,43 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
 
       // Extra Charges - Rainwater Harvesting
       setRainHarvesting(safData.isWaterHarvesting ? 'yes' : 'no');
-      setCompletionDate(safData.petrolPumpCompletionDate ? new Date(safData.petrolPumpCompletionDate) : null);
+      setCompletionDate(
+        safData.petrolPumpCompletionDate
+          ? new Date(safData.petrolPumpCompletionDate)
+          : null,
+      );
 
       // Populate floor details from existing data
       if (safData.floors && safData.floors.length > 0) {
         console.log('Setting floor data:', safData.floors);
-        
+
         const populatedFloorDetails = safData.floors.map(floor => {
           // Find the correct IDs from master data options
-          const floorNameOption = data?.floorType?.find(item => item.floorName === floor.floorName);
-          const usageTypeOption = data?.usageType?.find(item => item.usageType === floor.usageType);
-          const occupancyTypeOption = data?.occupancyType?.find(item => item.occupancyName === floor.occupancyName);
-          const constructionTypeOption = data?.constructionType?.find(item => item.constructionType === floor.constructionType);
-          
+          const floorNameOption = data?.floorType?.find(
+            item => item.floorName === floor.floorName,
+          );
+          const usageTypeOption = data?.usageType?.find(
+            item => item.usageType === floor.usageType,
+          );
+          const occupancyTypeOption = data?.occupancyType?.find(
+            item => item.occupancyName === floor.occupancyName,
+          );
+          const constructionTypeOption = data?.constructionType?.find(
+            item => item.constructionType === floor.constructionType,
+          );
+
           return {
             floorName: floorNameOption?.id || floor.floorName || '',
             usageType: usageTypeOption?.id || floor.usageType || '',
             occupancyType: occupancyTypeOption?.id || floor.occupancyName || '',
-            constructionType: constructionTypeOption?.id || floor.constructionType || '',
+            constructionType:
+              constructionTypeOption?.id || floor.constructionType || '',
             builtUpArea: floor.builtupArea || '',
             fromDate: floor.dateFrom || '',
             uptoDate: floor.dateUpto || '',
           };
         });
-        
+
         setFloorDetails(populatedFloorDetails);
         console.log('Floor details populated:', populatedFloorDetails);
       }
@@ -465,7 +544,11 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
       <Header />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.header}>
-          {isRessessment ? 'Reassessment Type' : isMutation ? 'Mutation Type' : 'Assessment Type'}
+          {isRessessment
+            ? 'Reassessment Type'
+            : isMutation
+            ? 'Mutation Type'
+            : 'Assessment Type'}
         </Text>
         <View style={styles.section}>
           <Text style={styles.label}>Old Ward *</Text>
@@ -535,7 +618,7 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
           <Text style={{ color: 'red', fontSize: 12 }}>
             Zone 2: Rest area other than Zone 1.
           </Text>
-          
+
           {/* Mutation-specific fields */}
           {isMutation && (
             <>
@@ -678,8 +761,12 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
           setHoardingArea={setHoardingArea}
           hoardingInstallationDate={hoardingInstallationDate}
           setHoardingInstallationDate={setHoardingInstallationDate}
-          showHoardingInstallationDatePicker={showHoardingInstallationDatePicker}
-          setShowHoardingInstallationDatePicker={setShowHoardingInstallationDatePicker}
+          showHoardingInstallationDatePicker={
+            showHoardingInstallationDatePicker
+          }
+          setShowHoardingInstallationDatePicker={
+            setShowHoardingInstallationDatePicker
+          }
           petrolPump={petrolPump}
           setPetrolPump={setPetrolPump}
           pumpArea={pumpArea}
@@ -698,7 +785,7 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
           isRessessment={isRessessment}
           isMutation={isMutation}
         />
-         <PropertyDetails
+        <PropertyDetails
           khataNo={khataNo}
           setKhataNo={setKhataNo}
           plotNo={plotNo}
@@ -875,4 +962,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ApplyAssessmentComponentized; 
+export default ApplyAssessmentComponentized;

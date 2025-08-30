@@ -1,7 +1,19 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, Button } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Button,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import Colors from '../Constants/Colors';
 import Header from '../Screen/Header';
+import axios from 'axios';
+import { SAF_API_ROUTES } from '../api/apiRoutes'; // make sure this is your API route
+import { getToken } from '../utils/auth';
+
 const Row = ({ label, value }) => (
   <View style={styles.row}>
     <Text style={styles.label}>{label}</Text>
@@ -18,8 +30,91 @@ const Section = ({ title, children }) => (
 
 const AssessmentSummary = ({ route, navigation }) => {
   const data = route.params?.data || {};
-  const isRessessment = route.params?.isRessessment || false;
-  const isMutation = route.params?.isMutation || false;
+  console.log('data', data);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      const token = await getToken(); // if async
+      // Map data to API structure
+      const payload = data => {
+        return {
+          assessmentType: data.assessmentType || 'New Assessment',
+          zoneMstrId: data.zone || null,
+          wardMstrId: data.oldWard || null,
+          newWardMstrId: data.newWard || null,
+          ownershipTypeMstrId: data.ownershipType || null,
+          propTypeMstrId: data.propertyType || null,
+          appartmentDetailsId: data.appartmentDetailsId || '',
+          flatRegistryDate: data.flatRegistryDate || null,
+          roadWidth: data.roadWidth || '',
+          khataNo: data.khataNo || '',
+          plotNo: data.plotNo || '',
+          villageMaujaName: data.villageName || '',
+          areaOfPlot: data.plotArea || 0,
+          propAddress: data.propertyAddress || '',
+          propCity: data.city || '',
+          propDist: data.district || '',
+          propPinCode: data.pincode || '',
+          propState: data.state || '',
+          isMobileTower: data.mobileTower === 'yes' ? 1 : 0,
+          towerArea: data.towerArea || 0,
+          towerInstallationDate: data.installationDate || null,
+          isHoardingBoard: data.hoarding === 'yes' ? 1 : 0,
+          hoardingArea: data.hoardingArea || 0,
+          hoardingInstallationDate: data.hoardingInstallationDate || null,
+          isPetrolPump: data.petrolPump === 'yes' ? 1 : 0,
+          underGroundArea: data.underGroundArea || 0,
+          petrolPumpCompletionDate: data.pumpInstallationDate || null,
+          landOccupationDate: data.landOccupationDate || null,
+          isWaterHarvesting: data.rainHarvesting === 'yes' ? 1 : 0,
+          waterConnectionNo: data.waterConnectionNo || '',
+          waterConnectionDate: data.waterConnectionDate || null,
+          ownerDtl: [
+            {
+              ownerName: data.ownerName || '',
+              mobileNo: data.mobile || '',
+              gender: data.gender || '',
+              dob: data.dob || null,
+              isArmedForce: data.armedForces === 'yes' ? 1 : 0,
+              isSpeciallyAbled: data.speciallyAbled === 'yes' ? 1 : 0,
+              relation: data.relation || '',
+              aadhaar: data.aadhaar || '',
+              pan: data.pan || '',
+            },
+          ],
+          floorDtl: (data.floors || []).map(floor => ({
+            builtupArea: floor.builtUpArea || 0,
+            dateFrom: floor.fromDate || null,
+            dateUpto1: floor.uptoDate || null,
+            floorMasterId: floor.floorName || null,
+            usageTypeMasterId: floor.usageType || null,
+            constructionTypeMasterId: floor.constructionType || null,
+            occupancyTypeMasterId: floor.occupancyType || null,
+          })),
+        };
+      };
+      console.log(payload, 'my payload data');
+      const response = await axios.post(SAF_API_ROUTES.APPLY_SAF, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setLoading(false);
+
+      if (response.data.success) {
+        Alert.alert('Success', 'Assessment submitted successfully');
+        navigation.goBack();
+      } else {
+        Alert.alert('Error', response.data.message || 'Something went wrong');
+      }
+    } catch (error) {
+      setLoading(false);
+      Alert.alert('Error', error.message || 'API request failed');
+    }
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -28,15 +123,9 @@ const AssessmentSummary = ({ route, navigation }) => {
           <Row label="ID" value={data.id} />
         </Section>
       )}
+
       <Section title="Property Details">
-        <Row
-          label="Assessment Type"
-          value={
-            isRessessment ? 'Reassessment' : 
-            isMutation ? 'Mutation' : 
-            data.assessmentType || 'New Assessment'
-          }
-        />
+        <Row label="Assessment Type" value="New Assessment" />
         <Row label="Zone" value={data.zone} />
         <Row label="Old Ward" value={data.oldWard} />
         <Row label="New Ward" value={data.newWard} />
@@ -44,6 +133,7 @@ const AssessmentSummary = ({ route, navigation }) => {
         <Row label="Property Type" value={data.propertyType} />
         <Row label="Road Width (ft)" value={data.roadWidth} />
       </Section>
+
       <Section title="Property Address">
         <Row label="Property Address" value={data.propertyAddress} />
         <Row label="City" value={data.city} />
@@ -54,7 +144,7 @@ const AssessmentSummary = ({ route, navigation }) => {
           label="Is Correspondence Address Different?"
           value={data.correspondingAddress ? 'Yes' : 'No'}
         />
-        {data.correspondingAddress ? (
+        {data.correspondingAddress && (
           <>
             <Row
               label="Correspondence Address"
@@ -65,12 +155,12 @@ const AssessmentSummary = ({ route, navigation }) => {
             <Row label="State" value={data.correspondingState} />
             <Row label="Pincode" value={data.correspondingPincode} />
           </>
-        ) : null}
+        )}
       </Section>
+
       <Section title="Owner Details">
         <Row label="Owner Name" value={data.ownerName} />
         <Row label="Guardian Name" value={data.guardianName} />
-        <Row label="Name" value={data.ownerName} />
         <Row label="Gender" value={data.gender} />
         <Row label="DOB" value={data.dob} />
         <Row label="Mobile No." value={data.mobile} />
@@ -81,12 +171,14 @@ const AssessmentSummary = ({ route, navigation }) => {
         <Row label="Is Armed Force?" value={data.armedForces} />
         <Row label="Is Specially Abled?" value={data.speciallyAbled} />
       </Section>
+
       <Section title="Electricity Details">
         <Row label="KNO" value={data.kno} />
         <Row label="ACC No" value={data.accNo} />
         <Row label="BIND/BOOK No" value={data.bindBookNo} />
         <Row label="Electricity Category" value={data.electricityCategory} />
       </Section>
+
       <Section title="Water Connection Details">
         <Row label="Water Connection No" value={data.waterConnectionNo} />
         <Row
@@ -98,6 +190,7 @@ const AssessmentSummary = ({ route, navigation }) => {
           }
         />
       </Section>
+
       <Section title="Extra Charges">
         <Row label="Have Mobile Tower?" value={data.mobileTower} />
         {data.mobileTower === 'yes' && (
@@ -157,6 +250,7 @@ const AssessmentSummary = ({ route, navigation }) => {
           />
         )}
       </Section>
+
       {Array.isArray(data.floors) && data.floors.length > 0 && (
         <Section title="Floor Details">
           {data.floors.map((floor, index) => (
@@ -189,8 +283,22 @@ const AssessmentSummary = ({ route, navigation }) => {
           ))}
         </Section>
       )}
+
       <View style={{ margin: 20 }}>
-        <Button title="Back" onPress={() => navigation.goBack()} />
+        {loading ? (
+          <ActivityIndicator size="large" color={Colors.headignColor} />
+        ) : (
+          <>
+            <Button title="Back" onPress={() => navigation.goBack()} />
+            <View style={{ marginTop: 10 }}>
+              <Button
+                title="Submit Assessment"
+                onPress={handleSubmit}
+                color={Colors.headignColor}
+              />
+            </View>
+          </>
+        )}
       </View>
     </ScrollView>
   );
@@ -213,10 +321,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 8,
     color: '#333',
-    padding: 10, // or whatever value you want
+    padding: 10,
     backgroundColor: Colors.headignColor,
   },
-  
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -226,7 +333,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#555',
     flex: 1,
-   
   },
   value: {
     flex: 1,

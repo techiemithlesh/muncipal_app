@@ -23,9 +23,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import HeaderLogin from '../Screen/HeaderLogin';
 import MonthYearPicker from 'react-native-month-year-picker';
 import HeaderNavigation from '../Components/HeaderNavigation';
+import { BASE_URL } from '../config';
 
 const SurveyPage = ({ route, navigation }) => {
   const { id } = route.params;
+  console.log(id);
   // floor related
   const [addExtraFloor, setAddExtraFloor] = useState(false);
   const [floors, setFloors] = useState([]);
@@ -173,7 +175,7 @@ const SurveyPage = ({ route, navigation }) => {
     console.log('Submitted Data:', submissionData);
 
     // Navigate and optionally pass data
-    navigation.navigate('VerifiedStatus', { submissionData });
+    navigation.navigate('VerifiedStatus', { submissionData, id });
   };
 
   const showToPicker = () => setToPickerVisible(true);
@@ -199,7 +201,7 @@ const SurveyPage = ({ route, navigation }) => {
         console.log('toke', token);
 
         const response = await axios.post(
-          'http://145.223.19.33/api/property/get-saf-field-verification',
+          `${BASE_URL}/api/property/get-saf-field-verification`,
           { id },
           {
             headers: {
@@ -209,7 +211,7 @@ const SurveyPage = ({ route, navigation }) => {
         );
 
         const response1 = await axios.post(
-          'http://145.223.19.33/api/property/get-saf-master-data',
+          `${BASE_URL}/api/property/get-saf-master-data`,
           { id },
           {
             headers: {
@@ -220,6 +222,7 @@ const SurveyPage = ({ route, navigation }) => {
 
         setMasterData(response1.data.data);
         setData(response.data.data);
+        console.log('data', data);
       } catch (error) {
         console.error('Fetch error:', error);
       }

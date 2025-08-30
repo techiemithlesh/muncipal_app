@@ -19,7 +19,8 @@ import HeaderNavigation from '../Components/HeaderNavigation';
 
 const VerifiedStatus = ({ route }) => {
   const navigation = useNavigation();
-  const { submissionData, floorsData, hasExtraFloors } = route.params || {};
+  const { submissionData, floorsData, hasExtraFloors, id } = route.params || {};
+  console.log('Received ID:', id);
   const [photo1, setPhoto1] = useState(null);
   const [photo2, setPhoto2] = useState(null);
   const [photo3, setPhoto3] = useState(null);
@@ -356,7 +357,7 @@ const VerifiedStatus = ({ route }) => {
                       },
                       {
                         enableHighAccuracy: true,
-                        timeout: 60000, // wait up to 1 min for GPS fix
+                        timeout: 60000, // wait up to 1 min  for GPS fix
                         maximumAge: 30000,
                       },
                     );
@@ -448,6 +449,7 @@ const VerifiedStatus = ({ route }) => {
             photo1,
             photo2,
             photo3,
+            id,
           })
         }
       >
