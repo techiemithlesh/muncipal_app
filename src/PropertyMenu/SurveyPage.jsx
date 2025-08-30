@@ -196,6 +196,7 @@ const SurveyPage = ({ route, navigation }) => {
       try {
         const storedToken = await AsyncStorage.getItem('token');
         const token = storedToken ? JSON.parse(storedToken) : null;
+        console.log('toke', token);
 
         const response = await axios.post(
           'http://145.223.19.33/api/property/get-saf-field-verification',
@@ -286,7 +287,7 @@ const SurveyPage = ({ route, navigation }) => {
 
   const parkingFloor = data?.floor?.[0];
   const basementFloor = data?.floor?.[1];
-  console.log(parkingFloor, ' parkingFloor floor Date');
+  // console.log(parkingFloor, ' parkingFloor floor Date');
 
   // Add state for date picker modals
   const [showDateFromParkingPicker, setShowDateFromParkingPicker] =
@@ -937,232 +938,332 @@ const SurveyPage = ({ route, navigation }) => {
             <View style={styles.modalContainer}>
               <Text style={styles.modalTitle}>Preview Details</Text>
               <ScrollView style={styles.modalContent}>
-                {/* Combined Card for Ward, Zone, Property Type */}
-                <PreviewCard title="Property Details">
-                  <PreviewRow label="Ward No" value={previewData['Ward No']} />
-                  <PreviewRow
-                    label="Verified Ward"
-                    value={previewData['Verified_Ward']}
-                  />
-                  <PreviewRow
-                    label="New Ward No"
-                    value={previewData['New Ward No (Current)']}
-                  />
-                  <PreviewRow
-                    label="Verified New Ward"
-                    value={previewData['Verified_NewWard']}
-                  />
-                  <PreviewRow
-                    label="Zone"
-                    value={previewData['Zone (Current)']}
-                  />
-                  <PreviewRow
-                    label="Verified Zone"
-                    value={previewData['Verified_Zone']}
-                  />
-                  <PreviewRow
-                    label="Property Type"
-                    value={previewData['Property Type (Current)']}
-                  />
-                  <PreviewRow
-                    label="Verified Property Type"
-                    value={previewData['Verified_PropertyType']}
-                  />
-                </PreviewCard>
+                {/* Property Details Table */}
+                <View style={styles.tableContainer}>
+                  <Text style={styles.tableTitle}>Property Details</Text>
+                  <View style={styles.table}>
+                    <View style={styles.tableHeader}>
+                      <Text style={styles.tableHeaderText}>Field</Text>
+                      <Text style={styles.tableHeaderText}>Current Value</Text>
+                      <Text style={styles.tableHeaderText}>Verified Value</Text>
+                    </View>
+                    <View style={styles.tableRow}>
+                      <Text style={styles.tableCellLabel}>Ward No</Text>
+                      <Text style={styles.tableCell}>
+                        {previewData['Ward No'] || 'N/A'}
+                      </Text>
+                      <Text style={styles.tableCell}>
+                        {previewData['Verified_Ward'] || 'N/A'}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableRow, styles.tableRowAlternate]}>
+                      <Text style={styles.tableCellLabel}>New Ward No</Text>
+                      <Text style={styles.tableCell}>
+                        {previewData['New Ward No (Current)'] || 'N/A'}
+                      </Text>
+                      <Text style={styles.tableCell}>
+                        {previewData['Verified_NewWard'] || 'N/A'}
+                      </Text>
+                    </View>
+                    <View style={styles.tableRow}>
+                      <Text style={styles.tableCellLabel}>Zone</Text>
+                      <Text style={styles.tableCell}>
+                        {previewData['Zone (Current)'] || 'N/A'}
+                      </Text>
+                      <Text style={styles.tableCell}>
+                        {previewData['Verified_Zone'] || 'N/A'}
+                      </Text>
+                    </View>
+                    <View style={[styles.tableRow, styles.tableRowAlternate]}>
+                      <Text style={styles.tableCellLabel}>Property Type</Text>
+                      <Text style={styles.tableCell}>
+                        {previewData['Property Type (Current)'] || 'N/A'}
+                      </Text>
+                      <Text style={styles.tableCell}>
+                        {previewData['Verified_PropertyType'] || 'N/A'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
 
                 {data?.propertyType !== 'VACANT LAND' && (
                   <>
-                    {/* Parking Card */}
-                    <PreviewCard title="Parking Details">
-                      <PreviewRow
-                        label="Usage Type"
-                        value={previewData['Usage Type (Parking Current)']}
-                      />
-                      <PreviewRow
-                        label="Verified Usage"
-                        value={previewData['Verified_UsageParking']}
-                      />
-                      <PreviewRow
-                        label="Occupancy Type"
-                        value={previewData['Occupancy Type (Parking Current)']}
-                      />
-                      <PreviewRow
-                        label="Verified Occupancy"
-                        value={previewData['Verified_OccupancyParking']}
-                      />
-                      <PreviewRow
-                        label="Construction Type"
-                        value={
-                          previewData['Construction Type (Parking Current)']
-                        }
-                      />
-                      <PreviewRow
-                        label="Verified Construction"
-                        value={previewData['Verified_ConstructionParking']}
-                      />
-                      <PreviewRow
-                        label="Built-up Area"
-                        value={previewData['Built-up Area (Parking Current)']}
-                      />
-                      <PreviewRow
-                        label="Verified Built-up Area"
-                        value={previewData['Verified_BuiltUpParking']}
-                      />
-                      <PreviewRow
-                        label="Date From"
-                        value={previewData['Date From (Parking Current)']}
-                      />
-                      <PreviewRow
-                        label="Verified Date From"
-                        value={previewData['Verified_DateFromParking']}
-                      />
-                      <PreviewRow
-                        label="Date To"
-                        value={previewData['Date To (Parking Current)']}
-                      />
-                      <PreviewRow
-                        label="Verified Date To"
-                        value={previewData['Verified_DateToParking']}
-                      />
-                    </PreviewCard>
+                    {/* Parking Details Table */}
+                    <View style={styles.tableContainer}>
+                      <Text style={styles.tableTitle}>Parking Details</Text>
+                      <View style={styles.table}>
+                        <View style={styles.tableHeader}>
+                          <Text style={styles.tableHeaderText}>Field</Text>
+                          <Text style={styles.tableHeaderText}>
+                            Current Value
+                          </Text>
+                          <Text style={styles.tableHeaderText}>
+                            Verified Value
+                          </Text>
+                        </View>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableCellLabel}>Usage Type</Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Usage Type (Parking Current)'] ||
+                              'N/A'}
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Verified_UsageParking'] || 'N/A'}
+                          </Text>
+                        </View>
+                        <View
+                          style={[styles.tableRow, styles.tableRowAlternate]}
+                        >
+                          <Text style={styles.tableCellLabel}>
+                            Occupancy Type
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Occupancy Type (Parking Current)'] ||
+                              'N/A'}
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Verified_OccupancyParking'] || 'N/A'}
+                          </Text>
+                        </View>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableCellLabel}>
+                            Construction Type
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData[
+                              'Construction Type (Parking Current)'
+                            ] || 'N/A'}
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Verified_ConstructionParking'] ||
+                              'N/A'}
+                          </Text>
+                        </View>
+                        <View
+                          style={[styles.tableRow, styles.tableRowAlternate]}
+                        >
+                          <Text style={styles.tableCellLabel}>
+                            Built-up Area
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Built-up Area (Parking Current)'] ||
+                              'N/A'}
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Verified_BuiltUpParking'] || 'N/A'}
+                          </Text>
+                        </View>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableCellLabel}>Date From</Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Date From (Parking Current)'] ||
+                              'N/A'}
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Verified_DateFromParking'] || 'N/A'}
+                          </Text>
+                        </View>
+                        <View
+                          style={[styles.tableRow, styles.tableRowAlternate]}
+                        >
+                          <Text style={styles.tableCellLabel}>Date To</Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Date To (Parking Current)'] || 'N/A'}
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Verified_DateToParking'] || 'N/A'}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
 
-                    {/* Basement Card */}
-                    <PreviewCard title="Basement Details">
-                      <PreviewRow
-                        label="Usage Type"
-                        value={previewData['Usage Type (Basement Current)']}
-                      />
-                      <PreviewRow
-                        label="Verified Usage"
-                        value={previewData['Verified_UsageBasement']}
-                      />
-                      <PreviewRow
-                        label="Occupancy Type"
-                        value={previewData['Occupancy Type (Basement Current)']}
-                      />
-                      <PreviewRow
-                        label="Verified Occupancy"
-                        value={previewData['Verified_OccupancyBasement']}
-                      />
-                      <PreviewRow
-                        label="Construction Type"
-                        value={
-                          previewData['Construction Type (Basement Current)']
-                        }
-                      />
-                      <PreviewRow
-                        label="Verified Construction"
-                        value={previewData['Verified_ConstructionBasement']}
-                      />
-                      <PreviewRow
-                        label="Built-up Area"
-                        value={previewData['Built-up Area (Basement Current)']}
-                      />
-                      <PreviewRow
-                        label="Verified Built-up Area"
-                        value={previewData['Verified_BuiltUpBasement']}
-                      />
-                      <PreviewRow
-                        label="Date From"
-                        value={previewData['Date From (Basement Current)']}
-                      />
-                      <PreviewRow
-                        label="Verified Date From"
-                        value={previewData['Verified_DateFromBasement']}
-                      />
-                      <PreviewRow
-                        label="Date To"
-                        value={previewData['Date To (Basement Current)']}
-                      />
-                      <PreviewRow
-                        label="Verified Date To"
-                        value={previewData['Verified_DateToBasement']}
-                      />
-                    </PreviewCard>
+                    {/* Basement Details Table */}
+                    <View style={styles.tableContainer}>
+                      <Text style={styles.tableTitle}>Basement Details</Text>
+                      <View style={styles.table}>
+                        <View style={styles.tableHeader}>
+                          <Text style={styles.tableHeaderText}>Field</Text>
+                          <Text style={styles.tableHeaderText}>
+                            Current Value
+                          </Text>
+                          <Text style={styles.tableHeaderText}>
+                            Verified Value
+                          </Text>
+                        </View>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableCellLabel}>Usage Type</Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Usage Type (Basement Current)'] ||
+                              'N/A'}
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Verified_UsageBasement'] || 'N/A'}
+                          </Text>
+                        </View>
+                        <View
+                          style={[styles.tableRow, styles.tableRowAlternate]}
+                        >
+                          <Text style={styles.tableCellLabel}>
+                            Occupancy Type
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Occupancy Type (Basement Current)'] ||
+                              'N/A'}
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Verified_OccupancyBasement'] || 'N/A'}
+                          </Text>
+                        </View>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableCellLabel}>
+                            Construction Type
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData[
+                              'Construction Type (Basement Current)'
+                            ] || 'N/A'}
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Verified_ConstructionBasement'] ||
+                              'N/A'}
+                          </Text>
+                        </View>
+                        <View
+                          style={[styles.tableRow, styles.tableRowAlternate]}
+                        >
+                          <Text style={styles.tableCellLabel}>
+                            Built-up Area
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Built-up Area (Basement Current)'] ||
+                              'N/A'}
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Verified_BuiltUpBasement'] || 'N/A'}
+                          </Text>
+                        </View>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableCellLabel}>Date From</Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Date From (Basement Current)'] ||
+                              'N/A'}
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Verified_DateFromBasement'] || 'N/A'}
+                          </Text>
+                        </View>
+                        <View
+                          style={[styles.tableRow, styles.tableRowAlternate]}
+                        >
+                          <Text style={styles.tableCellLabel}>Date To</Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Date To (Basement Current)'] || 'N/A'}
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData['Verified_DateToBasement'] || 'N/A'}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    {/* Extra Floor Details Cards */}
+                    {addExtraFloor &&
+                      floors.length > 0 &&
+                      floors.map((floor, floorIndex) => (
+                        <View key={floorIndex} style={styles.cardContainer}>
+                          <Text style={styles.cardTitle}>
+                            Extra Floor {floorIndex + 1} Details
+                          </Text>
 
-                    {/* Remarks Card */}
-                    <PreviewCard title="Remarks">
-                      <Text>{previewData['Remarks (Preview)']}</Text>
-                    </PreviewCard>
+                          {[
+                            {
+                              label: 'Floor Type',
+                              value:
+                                getLabelByValue(
+                                  floorNameDropdownOptions,
+                                  floor.floorName,
+                                ) || 'N/A',
+                            },
+                            {
+                              label: 'Construction Type',
+                              value:
+                                getLabelByValue(
+                                  constructionTypeDropdownOptions,
+                                  floor.constructionType,
+                                ) || 'N/A',
+                            },
+                            {
+                              label: 'Occupancy Type',
+                              value:
+                                getLabelByValue(
+                                  occupancyTypeDropdownOptions,
+                                  floor.occupancyType,
+                                ) || 'N/A',
+                            },
+                            {
+                              label: 'Usage Type',
+                              value:
+                                getLabelByValue(
+                                  usageTypeDropdownOptions,
+                                  floor.usageType,
+                                ) || 'N/A',
+                            },
+                            {
+                              label: 'Built-up Area',
+                              value: floor.builtupArea || 'N/A',
+                            },
+                            {
+                              label: 'Date From',
+                              value: floor.fromDate
+                                ? formatDate(floor.fromDate)
+                                : 'N/A',
+                            },
+                            {
+                              label: 'Date To',
+                              value: floor.toDate
+                                ? formatDate(floor.toDate)
+                                : 'N/A',
+                            },
+                          ].map((item, idx) => (
+                            <View key={idx} style={styles.cardRow}>
+                              <Text style={styles.cardLabel}>{item.label}</Text>
+                              <Text style={styles.cardValue}>{item.value}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      ))}
 
-                    {/* Extra Floor Card */}
-                    {addExtraFloor && floors.length > 0 && (
-                      <PreviewCard title="Extra Floor Details">
-                        {floors.map((floor, index) => (
-                          <View key={index} style={styles.floorCard}>
-                            <Text style={styles.previewLabel}>
-                              Extra Floor {index + 1}
-                            </Text>
-                            <PreviewRow
-                              label="Floor Type"
-                              value={getLabelByValue(
-                                floorNameDropdownOptions,
-                                floor.floorName,
-                              )}
-                            />
-                            <PreviewRow
-                              label="Construction Type"
-                              value={getLabelByValue(
-                                constructionTypeDropdownOptions,
-                                floor.constructionType,
-                              )}
-                            />
-                            <PreviewRow
-                              label="Occupancy Type"
-                              value={getLabelByValue(
-                                occupancyTypeDropdownOptions,
-                                floor.occupancyType,
-                              )}
-                            />
-                            <PreviewRow
-                              label="Usage Type"
-                              value={getLabelByValue(
-                                usageTypeDropdownOptions,
-                                floor.usageType,
-                              )}
-                            />
-                            <PreviewRow
-                              label="From Date"
-                              value={
-                                floor.fromDate
-                                  ? formatDate(floor.fromDate)
-                                  : 'N/A'
-                              }
-                            />
-                            <PreviewRow
-                              label="To Date"
-                              value={
-                                floor.toDate ? formatDate(floor.toDate) : 'N/A'
-                              }
-                            />
-                          </View>
-                        ))}
-                      </PreviewCard>
-                    )}
-
-                    {/* Remarks Card */}
-                    {remarks && (
-                      <PreviewCard title="Remarks">
-                        <Text style={styles.remarksPreviewText}>{remarks}</Text>
-                      </PreviewCard>
+                    {/* Remarks Section */}
+                    {(remarks || previewData['Remarks (Preview)']) && (
+                      <View style={styles.remarksContainer}>
+                        <Text style={styles.tableTitle}>Remarks</Text>
+                        <View style={styles.remarksBox}>
+                          <Text style={styles.remarksText}>
+                            {remarks ||
+                              previewData['Remarks (Preview)'] ||
+                              'No remarks'}
+                          </Text>
+                        </View>
+                      </View>
                     )}
                   </>
                 )}
               </ScrollView>
 
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setIsPreviewVisible(false)}
-              >
-                <Text style={styles.closeButtonText}>Close</Text>
-              </TouchableOpacity>
+              <View style={styles.modalButtonContainer}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.closeButton]}
+                  onPress={() => setIsPreviewVisible(false)}
+                >
+                  <Text style={styles.closeButtonText}>Close</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleSubmitPreview}
-              >
-                <Text style={styles.submitButtonText}>Submit</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.submitButton]}
+                  onPress={handleSubmitPreview}
+                >
+                  <Text style={styles.submitButtonText}>Submit</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -1207,20 +1308,6 @@ const SurveyPage = ({ route, navigation }) => {
     </KeyboardAvoidingView>
   );
 };
-
-const PreviewCard = ({ title, children }) => (
-  <View style={styles.previewCard}>
-    <Text style={styles.previewCardTitle}>{title}</Text>
-    {children}
-  </View>
-);
-
-const PreviewRow = ({ label, value }) => (
-  <View style={styles.previewRow}>
-    <Text style={styles.previewLabel}>{label}:</Text>
-    <Text style={styles.previewValue}>{value}</Text>
-  </View>
-);
 
 export default SurveyPage;
 
@@ -1426,11 +1513,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
-    width: '85%',
+    width: '95%',
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
-    maxHeight: '80%',
+    maxHeight: '90%',
   },
   modalTitle: {
     fontSize: 20,
@@ -1441,51 +1528,94 @@ const styles = StyleSheet.create({
   modalContent: {
     marginBottom: 20,
   },
-  previewCard: {
-    backgroundColor: '#f9f9f9',
+  tableContainer: {
+    marginBottom: 20,
+    backgroundColor: '#fff',
     borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#e0e0e0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  previewCardTitle: {
+  tableTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    paddingBottom: 8,
+    color: '#333',
+    padding: 12,
+    backgroundColor: '#f5f5f5',
+    borderBottomWidth: 2,
+    borderBottomColor: '#007AFF',
   },
-  previewRow: {
+  table: {
+    backgroundColor: '#fff',
+  },
+  tableHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-    paddingHorizontal: 8,
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
   },
-  previewLabel: {
+  tableHeaderText: {
+    flex: 1,
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  tableRowAlternate: {
+    backgroundColor: '#f9f9f9',
+  },
+  tableCellLabel: {
+    flex: 1,
+    fontSize: 13,
     fontWeight: '600',
     color: '#555',
+    paddingRight: 5,
   },
-  previewValue: {
-    color: '#333',
+  tableCell: {
     flex: 1,
-    textAlign: 'right',
+    fontSize: 13,
+    color: '#333',
+    textAlign: 'center',
   },
-  floorCard: {
-    marginBottom: 12,
-    padding: 12,
+  remarksBox: {
+    padding: 15,
+    backgroundColor: '#f9f9f9',
     borderRadius: 6,
-    backgroundColor: '#fff',
+    margin: 10,
     borderWidth: 1,
-    borderColor: '#e9e9e9',
+    borderColor: '#e0e0e0',
   },
-  closeButton: {
-    backgroundColor: '#007AFF',
+  remarksText: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 15,
+    gap: 10,
+  },
+  modalButton: {
+    flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 10,
+  },
+  closeButton: {
+    backgroundColor: '#6c757d',
   },
   closeButtonText: {
     color: '#fff',
@@ -1525,5 +1655,40 @@ const styles = StyleSheet.create({
     color: '#333',
     lineHeight: responsiveHeight(3),
     paddingHorizontal: responsiveWidth(2),
+  },
+  cardContainer: {
+    backgroundColor: '#ffffffff',
+    borderRadius: 12,
+    padding: 15,
+    marginVertical: 10,
+    elevation: 3, // shadow for Android
+    shadowColor: '#000', // shadow for iOS
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    borderWidth: 2,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: '#0f3969',
+  },
+  cardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#eee',
+    paddingBottom: 4,
+  },
+  cardLabel: {
+    fontWeight: '600',
+    color: '#333',
+    flex: 1,
+  },
+  cardValue: {
+    color: '#555',
+    flex: 1,
+    textAlign: 'right',
   },
 });

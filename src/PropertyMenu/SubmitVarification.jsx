@@ -16,6 +16,57 @@ const SubmitVarification = ({ route }) => {
   const { submissionData, location, photo1, photo2, photo3 } = route.params;
 
   useEffect(() => {
+    const fetchFieldVerification = async () => {
+      const payload = {
+        safDetailId: 51,
+        wardMstrId: 3,
+        newWardMstrId: 1,
+        propTypeMstrId: 1,
+        zoneMstrId: 1,
+        roadWidth: 20,
+        areaOfPlot: 80,
+        isMobileTower: false,
+        isHoardingBoard: false,
+        isPetrolPump: false,
+        isWaterHarvesting: false,
+        floorDtl: [
+          {
+            safFloorDetailId: 38,
+            builtupArea: 400,
+            dateFrom: '2025-05',
+            floorMasterId: '4',
+            usageTypeMasterId: '13',
+            constructionTypeMasterId: '1',
+            occupancyTypeMasterId: '1',
+          },
+        ],
+      };
+
+      try {
+        const response = await axios.post(FIELD_VERIFICATION_API, payload, {
+          headers: {
+            'Content-Type': 'application/json',
+            // "Authorization": `Bearer ${yourToken}`, // add if required
+          },
+          timeout: 15000,
+        });
+
+        console.log('✅ Field Verification Response:', response.data);
+      } catch (error) {
+        if (error.response) {
+          console.error('❌ API Error:', error.response.data);
+        } else if (error.request) {
+          console.error('❌ No response from server:', error.request);
+        } else {
+          console.error('❌ Error:', error.message);
+        }
+      }
+    };
+
+    fetchFieldVerification();
+  }, []);
+
+  useEffect(() => {
     console.log('Submission Data:', submissionData);
     console.log('Location:', location);
     console.log('Photo 1:', photo1);
