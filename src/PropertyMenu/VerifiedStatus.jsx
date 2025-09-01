@@ -20,6 +20,38 @@ import HeaderNavigation from '../Components/HeaderNavigation';
 const VerifiedStatus = ({ route }) => {
   const navigation = useNavigation();
   const { submissionData, floorsData, hasExtraFloors, id } = route.params || {};
+
+  console.log('Raw floor data:', submissionData.extraFloors);
+  const parseDate = str => {
+    if (!str) return null;
+
+    // Case 1: MM/YYYY (e.g., "09/2025")
+    if (str.includes('/')) {
+      const [month, year] = str.split('/');
+      return `${year}-${month.padStart(2, '0')}`;
+    }
+
+    // Case 2: "September 2025"
+    const months = {
+      january: '01',
+      february: '02',
+      march: '03',
+      april: '04',
+      may: '05',
+      june: '06',
+      july: '07',
+      august: '08',
+      september: '09',
+      october: '10',
+      november: '11',
+      december: '12',
+    };
+
+    const [monthName, year] = str.split(' ');
+    const month = months[monthName.toLowerCase()];
+    return month && year ? `${year}-${month}` : null;
+  };
+
   console.log('Received ID:', id);
   const [photo1, setPhoto1] = useState(null);
   const [photo2, setPhoto2] = useState(null);
@@ -162,23 +194,14 @@ const VerifiedStatus = ({ route }) => {
             <Text style={{ fontWeight: '600' }}>Built-up Area:</Text>
             <Text>{floor.builtupArea || 'N/A'}</Text>
           </View>
-
           <View style={{ marginBottom: 6 }}>
             <Text style={{ fontWeight: '600' }}>Date From:</Text>
-            <Text>
-              {floor.fromDate
-                ? new Date(floor.fromDate).toLocaleDateString()
-                : 'N/A'}
-            </Text>
+            <Text>{parseDate(floor.fromDate)}</Text>
           </View>
 
           <View>
             <Text style={{ fontWeight: '600' }}>Date To:</Text>
-            <Text>
-              {floor.toDate
-                ? new Date(floor.toDate).toLocaleDateString()
-                : 'N/A'}
-            </Text>
+            <Text>{parseDate(floor.toDate)}</Text>
           </View>
         </View>
       ));

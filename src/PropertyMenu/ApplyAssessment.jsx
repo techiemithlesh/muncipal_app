@@ -236,9 +236,13 @@ const ApplyAssessment = ({ navigation }) => {
   const [floorDetails, setFloorDetails] = useState([
     {
       floorName: '',
+      floorNameId: '',
       usageType: '',
+      usageTypeId: '',
       occupancyType: '',
+      occupancyTypeId: '',
       constructionType: '',
+      constructionTypeId: '',
       builtUpArea: '',
       fromDate: '',
       uptoDate: '',
@@ -278,9 +282,13 @@ const ApplyAssessment = ({ navigation }) => {
       ...prev,
       {
         floorName: '',
+        floorNameId: '',
         usageType: '',
+        usageTypeId: '',
         occupancyType: '',
+        occupancyTypeId: '',
         constructionType: '',
+        constructionTypeId: '',
         builtUpArea: '',
         fromDate: '',
         uptoDate: '',
@@ -325,10 +333,11 @@ const ApplyAssessment = ({ navigation }) => {
       showAlert('Please select Property Type');
       return false;
     }
-    if (!zone) {
-      showAlert('Please select Zone');
-      return false;
-    }
+    // Zone is optional, default to Zone1 if not selected
+    // if (!zone) {
+    //   showAlert('Please select Zone');
+    //   return false;
+    // }
 
     // Owner Details validations
     if (!ownerName || ownerName.trim().length < 2) {
@@ -607,8 +616,11 @@ const ApplyAssessment = ({ navigation }) => {
       oldWard,
       newWard,
       ownershipType,
+      ownershipTypeId: ownershipType, // Pass the ID
       propertyType,
-      zone,
+      propertyTypeId: propertyType, // Pass the ID
+      zone: zone || 'Zone1',
+      zoneId: zone === 'Zone2' ? 2 : 1, // Default to Zone1 (ID: 1) if not selected
       gender,
       relation,
       mobile,
@@ -628,13 +640,15 @@ const ApplyAssessment = ({ navigation }) => {
       roadWidth,
       noRoad,
       waterConnectionNo,
-      waterConnectionDate,
+      waterConnectionDate: waterConnectionDate
+        ? new Date(waterConnectionDate).toISOString().split('T')[0]
+        : '',
       propertyAddress,
       city,
       district,
       state,
       pincode,
-      dob: dob ? new Date(dob).toLocaleDateString('en-GB') : '',
+      dob: dob ? new Date(dob).toISOString().split('T')[0] : '',
       ownerName,
       guardianName,
       correspondingAddress: isChecked ? correspondingAddress : '',
@@ -644,17 +658,22 @@ const ApplyAssessment = ({ navigation }) => {
       correspondingPincode: isChecked ? correspondingPincode : '',
       mobileTower,
       towerArea,
-      installationDate,
+      installationDate: installationDate
+        ? new Date(installationDate).toISOString().split('T')[0]
+        : '',
       hoarding,
       hoardingArea,
-      hoardingInstallationDate,
+      hoardingInstallationDate: hoardingInstallationDate
+        ? new Date(hoardingInstallationDate).toISOString().split('T')[0]
+        : '',
       petrolPump,
       pumpArea,
-      pumpInstallationDate,
+      pumpInstallationDate: pumpInstallationDate
+        ? new Date(pumpInstallationDate).toISOString().split('T')[0]
+        : '',
       rainHarvesting,
       completionDate: completionDate ? completionDate.toISOString() : '',
     };
-
     // Conditionally add floor details
     if (propertyTypeLabel !== 'VACANT LAND') {
       const isValid = floorDetails.every(
@@ -670,9 +689,13 @@ const ApplyAssessment = ({ navigation }) => {
 
       formData.floors = floorDetails.map(floor => ({
         floorName: floor.floorName,
+        floorNameId: floor.floorNameId,
         usageType: floor.usageType,
+        usageTypeId: floor.usageTypeId,
         occupancyType: floor.occupancyType,
+        occupancyTypeId: floor.occupancyTypeId,
         constructionType: floor.constructionType,
+        constructionTypeId: floor.constructionTypeId,
         builtUpArea: floor.builtUpArea,
         fromDate: floor.fromDate,
         uptoDate: floor.uptoDate,
@@ -862,21 +885,21 @@ const ApplyAssessment = ({ navigation }) => {
             style={styles.dropdown}
             data={ownershipDropdownOptions}
             labelField="label"
-            valueField="label"
+            valueField="value"
             placeholder="Select Ownership Type"
             value={ownershipType}
-            onChange={item => setOwnershipType(item.label)}
+            onChange={item => setOwnershipType(item.value)}
           />
           <Text style={styles.label}>Property Type *</Text>
           <Dropdown
             style={styles.dropdown}
             data={propertyTypeDropdownOptions}
             labelField="label"
-            valueField="label"
+            valueField="value"
             placeholder="Select Property Type"
             value={propertyType}
             onChange={item => {
-              setPropertyType(item.label);
+              setPropertyType(item.value);
               setPropertyTypeLabel(item.label); // store label to compare later
             }}
           />
@@ -1097,6 +1120,45 @@ const ApplyAssessment = ({ navigation }) => {
           roadWidthRef={roadWidthRef}
           noRoadRef={noRoadRef}
         />
+
+        <Text style={styles.header}>Water Connection Details</Text>
+        <View style={styles.section}>
+          <Text style={styles.label}>Water Connection No</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Water Connection No"
+            placeholderTextColor="black"
+            value={waterConnectionNo}
+            onChangeText={setWaterConnectionNo}
+          />
+          <Text style={styles.label}>Water Connection Date</Text>
+          <TouchableOpacity
+            style={styles.dateInput}
+            onPress={() => setShowWaterConnectionDatePicker(true)}
+          >
+            <Text style={styles.dateText}>
+              {waterConnectionDate
+                ? new Date(waterConnectionDate).toLocaleDateString('en-GB')
+                : 'Select Water Connection Date'}
+            </Text>
+          </TouchableOpacity>
+          {showWaterConnectionDatePicker && (
+            <DateTimePicker
+              value={
+                waterConnectionDate ? new Date(waterConnectionDate) : new Date()
+              }
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                setShowWaterConnectionDatePicker(false);
+                if (event.type === 'set' && selectedDate) {
+                  setWaterConnectionDate(selectedDate.toISOString());
+                }
+              }}
+            />
+          )}
+        </View>
+
         <TouchableOpacity
           style={styles.checkboxContainer}
           onPress={handleCheckboxToggle}
@@ -1352,12 +1414,13 @@ const ApplyAssessment = ({ navigation }) => {
                 style={styles.dropdown}
                 data={floorNameOptions}
                 labelField="label"
-                valueField="label"
+                valueField="value"
                 placeholder="Select Floor Name"
                 value={floor.floorName}
-                onChange={item =>
-                  updateFloorDetail(index, 'floorName', item.label)
-                }
+                onChange={item => {
+                  updateFloorDetail(index, 'floorName', item.label);
+                  updateFloorDetail(index, 'floorNameId', item.value);
+                }}
               />
 
               <Text style={styles.label}>Usage Type *</Text>
@@ -1365,12 +1428,13 @@ const ApplyAssessment = ({ navigation }) => {
                 style={styles.dropdown}
                 data={usageTypeOptions}
                 labelField="label"
-                valueField="label"
+                valueField="value"
                 placeholder="Select Usage Type"
                 value={floor.usageType}
-                onChange={item =>
-                  updateFloorDetail(index, 'usageType', item.label)
-                }
+                onChange={item => {
+                  updateFloorDetail(index, 'usageType', item.label);
+                  updateFloorDetail(index, 'usageTypeId', item.value);
+                }}
               />
 
               <Text style={styles.label}>Occupancy Type *</Text>
@@ -1378,12 +1442,13 @@ const ApplyAssessment = ({ navigation }) => {
                 style={styles.dropdown}
                 data={occupancyTypeOptions}
                 labelField="label"
-                valueField="label"
+                valueField="value"
                 placeholder="Select Occupancy Type"
                 value={floor.occupancyType}
-                onChange={item =>
-                  updateFloorDetail(index, 'occupancyType', item.label)
-                }
+                onChange={item => {
+                  updateFloorDetail(index, 'occupancyType', item.label);
+                  updateFloorDetail(index, 'occupancyTypeId', item.value);
+                }}
               />
 
               <Text style={styles.label}>Construction Type *</Text>
@@ -1391,12 +1456,13 @@ const ApplyAssessment = ({ navigation }) => {
                 style={styles.dropdown}
                 data={constructionTypeOptions}
                 labelField="label"
-                valueField="label"
+                valueField="value"
                 placeholder="Select Construction Type"
                 value={floor.constructionType}
-                onChange={item =>
-                  updateFloorDetail(index, 'constructionType', item.label)
-                }
+                onChange={item => {
+                  updateFloorDetail(index, 'constructionType', item.label);
+                  updateFloorDetail(index, 'constructionTypeId', item.value);
+                }}
               />
 
               <Text style={styles.label}>Built Up Area (in Sq. Ft) *</Text>

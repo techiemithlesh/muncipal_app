@@ -1,8 +1,14 @@
 // screens/SubmitSummaryScreen.js
-import React from 'react';
-import { useEffect } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import React, { useEffect } from 'react';
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import HeaderNavigation from '../Components/HeaderNavigation';
 import axios from 'axios';
 import { PROPERTY_API } from '../api/apiRoutes';
@@ -17,63 +23,138 @@ const Card = ({ title, children }) => (
 
 const SubmitVarification = ({ route }) => {
   const { submissionData, location, photo1, photo2, photo3, id } = route.params;
+  console.log('submit Varification data', submissionData);
 
-  useEffect(() => {
-    const fetchFieldVerification = async () => {
-      const payload = {
-        safDetailId: id,
-        wardMstrId: 3,
-        newWardMstrId: 1,
-        propTypeMstrId: 1,
-        zoneMstrId: 1,
-        roadWidth: 20,
-        areaOfPlot: 80,
-        isMobileTower: false,
-        isHoardingBoard: false,
-        isPetrolPump: false,
-        isWaterHarvesting: false,
-        floorDtl: [
-          {
-            safFloorDetailId: 38,
-            builtupArea: 400,
-            dateFrom: '2025-05',
-            floorMasterId: '4',
-            usageTypeMasterId: '13',
-            constructionTypeMasterId: '1',
-            occupancyTypeMasterId: '1',
-          },
-        ],
-      };
-
-      try {
-        const token = getToken();
-        const response = await axios.post(
-          PROPERTY_API.FIELD_VARIFICATION_API,
-          payload,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`, // add if required
-            },
-            timeout: 15000,
-          },
-        );
-
-        console.log('✅ Field Verification Response:', response.data);
-      } catch (error) {
-        if (error.response) {
-          console.error('❌ API Error:', error.response.data);
-        } else if (error.request) {
-          console.error('❌ No response from server:', error.request);
-        } else {
-          console.error('❌ Error:', error.message);
-        }
-      }
+  // convert "September 2025" → "2025-09"
+  const convertMonthYear = str => {
+    if (!str) return null;
+    const months = {
+      january: '01',
+      february: '02',
+      march: '03',
+      april: '04',
+      may: '05',
+      june: '06',
+      july: '07',
+      august: '08',
+      september: '09',
+      october: '10',
+      november: '11',
+      december: '12',
     };
 
-    fetchFieldVerification();
-  }, [id]);
+    const [monthName, year] = str.split(' ');
+    const month = months[monthName.toLowerCase()];
+    return month && year ? `${year}-${month}` : null;
+  };
 
+  const handleSubmit = async () => {
+    try {
+      const token = await getToken();
+
+      // ✅ Prepare Floors from extraFloors
+      const preparedFloors = (submissionData?.extraFloors || []).map(floor => ({
+        safFloorDetailId:
+          floor.floorNameId != null ? Number(floor.floorNameId) : null,
+        builtupArea: Number(floor.builtupArea ?? 0),
+        dateFrom: convertMonthYear(floor.fromDate),
+        floorMasterId:
+          floor.floorNameId != null ? String(floor.floorNameId) : null,
+        usageTypeMasterId:
+          floor.usageTypeId != null ? String(floor.usageTypeId) : null,
+        constructionTypeMasterId:
+          floor.constructionTypeId != null
+            ? String(floor.constructionTypeId)
+            : null,
+        occupancyTypeMasterId:
+          floor.occupancyTypeId != null ? String(floor.occupancyTypeId) : null,
+      }));
+      console.log(preparedFloors, 'my floor daat');
+
+      // ✅ Build main payload
+      const fieldPayload = {
+        safDetailId: id,
+        wardMstrId: submissionData?.wardMstrId || 3,
+        newWardMstrId: submissionData?.newWardMstrId || 1,
+        propTypeMstrId: submissionData?.propTypeMstrId || 1,
+        zoneMstrId: submissionData?.zoneMstrId || 1,
+        roadWidth: submissionData?.roadWidth || 20,
+        areaOfPlot: submissionData?.areaOfPlot || 80,
+        isMobileTower: submissionData?.isMobileTower ?? false,
+        isHoardingBoard: submissionData?.isHoardingBoard ?? false,
+        isPetrolPump: submissionData?.isPetrolPump ?? false,
+        isWaterHarvesting: submissionData?.isWaterHarvesting ?? false,
+        floorDtl: preparedFloors,
+      };
+
+      console.log('📦 Final Payload:', JSON.stringify(fieldPayload, null, 2));
+
+      // ----------------------
+      // 1️⃣ Submit Field Verification Data
+      // ----------------------
+      const fieldRes = await axios.post(
+        PROPERTY_API.FIELD_VARIFICATION_API,
+        fieldPayload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          timeout: 15000,
+        },
+      );
+
+      console.log('✅ Field Verification Success:', fieldRes.data);
+
+      // ----------------------
+      // 2️⃣ Submit Geo-Tagging Images
+      // ----------------------
+      const formData = new FormData();
+      formData.append('propertyId', id);
+
+      if (location) {
+        formData.append('latitude', location.latitude);
+        formData.append('longitude', location.longitude);
+      }
+
+      [photo1, photo2, photo3].forEach((photo, index) => {
+        if (photo) {
+          formData.append('images', {
+            uri: photo.uri,
+            type: photo.type || 'image/jpeg',
+            name: photo.fileName || `photo${index + 1}.jpg`,
+          });
+        }
+      });
+
+      const geoRes = await axios.post(
+        PROPERTY_API.GEOTAGING_IMAGE_API,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+          timeout: 20000,
+        },
+      );
+
+      console.log('✅ Geo-Tagging Success:', geoRes.data);
+
+      Alert.alert('Success', 'Data & Images submitted successfully!');
+    } catch (error) {
+      if (error.response) {
+        console.error('❌ API Error:', error.response.data);
+      } else if (error.request) {
+        console.error('❌ No response from server:', error.request);
+      } else {
+        console.error('❌ Error:', error.message);
+      }
+      Alert.alert('Error', 'Submission failed. Please try again.');
+    }
+  };
+
+  // Debugging on mount
   useEffect(() => {
     console.log('Submission Data:', submissionData);
     console.log('Location:', location);
@@ -81,17 +162,13 @@ const SubmitVarification = ({ route }) => {
     console.log('Photo 2:', photo2);
     console.log('Photo 3:', photo3);
   }, []);
-  const handleSubmit = () => {
-    // Handle submission logic here
-    console.log('Submission completed');
-  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <HeaderNavigation />
       <Text style={styles.title}>Submitted Data</Text>
 
-      {/* Group 1: Ward, New Ward, Zone, Property Type */}
+      {/* Property Details */}
       <Card title="Property Details">
         <Text>
           <Text style={{ fontWeight: 'bold' }}>Ward No:</Text>{' '}
@@ -109,7 +186,6 @@ const SubmitVarification = ({ route }) => {
           <Text style={{ fontWeight: 'bold' }}>Verified:</Text>{' '}
           {submissionData?.['Verified_NewWard']}
         </Text>
-
         <Text>
           <Text style={{ fontWeight: 'bold' }}>Zone:</Text>{' '}
           {submissionData?.['Zone (Current)']}
@@ -118,19 +194,17 @@ const SubmitVarification = ({ route }) => {
           <Text style={{ fontWeight: 'bold' }}>Verified:</Text>{' '}
           {submissionData?.['Verified_Zone']}
         </Text>
-
         <Text>
           <Text style={{ fontWeight: 'bold' }}>Property Type:</Text>{' '}
           {submissionData?.['Property Type (Current)']}
         </Text>
-
         <Text>
-          <Text style={{ fontWeight: 'bold' }}>Verified</Text>{' '}
+          <Text style={{ fontWeight: 'bold' }}>Verified:</Text>{' '}
           {submissionData?.['Verified_PropertyType']}
         </Text>
       </Card>
 
-      {/* Group 2: Parking Details */}
+      {/* Parking Details */}
       {(submissionData?.['Usage Type (Parking Current)'] ||
         submissionData?.['Occupancy Type (Parking Current)'] ||
         submissionData?.['Construction Type (Parking Current)'] ||
@@ -163,7 +237,7 @@ const SubmitVarification = ({ route }) => {
         </Card>
       )}
 
-      {/* Group 3: Basement Details */}
+      {/* Basement Details */}
       {(submissionData?.['Usage Type (Basement Current)'] ||
         submissionData?.['Occupancy Type (Basement Current)'] ||
         submissionData?.['Construction Type (Basement Current)'] ||
@@ -196,6 +270,7 @@ const SubmitVarification = ({ route }) => {
         </Card>
       )}
 
+      {/* Extra Floors */}
       {submissionData?.extraFloors?.length > 0 && (
         <>
           <Text style={styles.sectionTitle}>Extra Floors</Text>
@@ -213,7 +288,7 @@ const SubmitVarification = ({ route }) => {
         </>
       )}
 
-      {/* The rest of the data as before */}
+      {/* Location */}
       <Text style={styles.sectionTitle}>Location</Text>
       {location ? (
         <View>
@@ -224,6 +299,7 @@ const SubmitVarification = ({ route }) => {
         <Text>No location data</Text>
       )}
 
+      {/* Photos */}
       <Text style={styles.sectionTitle}>Captured Photos</Text>
       {[photo1, photo2, photo3].map((photo, index) =>
         photo ? (
@@ -232,6 +308,8 @@ const SubmitVarification = ({ route }) => {
           <Text key={index}>Photo {index + 1} not captured</Text>
         ),
       )}
+
+      {/* Submit Button */}
       <View style={styles.submitButtonContainer}>
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>Submit</Text>
@@ -260,7 +338,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-
   container: {
     padding: 16,
   },

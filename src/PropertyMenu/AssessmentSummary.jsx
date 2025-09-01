@@ -33,69 +33,138 @@ const AssessmentSummary = ({ route, navigation }) => {
   console.log('data', data);
   const [loading, setLoading] = useState(false);
 
+  function convertToYearMonth(date) {
+    const [month, year] = date.split('-');
+    return `${year}-${month}`;
+  }
+
+  const parseDate = str => {
+    if (!str) return null;
+    // Convert MM/YYYY → YYYY-MM-01
+    const [month, year] = str.split('/');
+    return new Date(`${year}-${month}-01`);
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     try {
       const token = await getToken(); // if async
-      // Map data to API structure
-      const payload = data => {
-        return {
-          assessmentType: data.assessmentType || 'New Assessment',
-          zoneMstrId: data.zone || null,
-          wardMstrId: data.oldWard || null,
-          newWardMstrId: data.newWard || null,
-          ownershipTypeMstrId: data.ownershipType || null,
-          propTypeMstrId: data.propertyType || null,
-          appartmentDetailsId: data.appartmentDetailsId || '',
-          flatRegistryDate: data.flatRegistryDate || null,
-          roadWidth: data.roadWidth || '',
-          khataNo: data.khataNo || '',
-          plotNo: data.plotNo || '',
-          villageMaujaName: data.villageName || '',
-          areaOfPlot: data.plotArea || 0,
-          propAddress: data.propertyAddress || '',
-          propCity: data.city || '',
-          propDist: data.district || '',
-          propPinCode: data.pincode || '',
-          propState: data.state || '',
-          isMobileTower: data.mobileTower === 'yes' ? 1 : 0,
-          towerArea: data.towerArea || 0,
-          towerInstallationDate: data.installationDate || null,
-          isHoardingBoard: data.hoarding === 'yes' ? 1 : 0,
-          hoardingArea: data.hoardingArea || 0,
-          hoardingInstallationDate: data.hoardingInstallationDate || null,
-          isPetrolPump: data.petrolPump === 'yes' ? 1 : 0,
-          underGroundArea: data.underGroundArea || 0,
-          petrolPumpCompletionDate: data.pumpInstallationDate || null,
-          landOccupationDate: data.landOccupationDate || null,
-          isWaterHarvesting: data.rainHarvesting === 'yes' ? 1 : 0,
-          waterConnectionNo: data.waterConnectionNo || '',
-          waterConnectionDate: data.waterConnectionDate || null,
-          ownerDtl: [
-            {
-              ownerName: data.ownerName || '',
-              mobileNo: data.mobile || '',
-              gender: data.gender || '',
-              dob: data.dob || null,
-              isArmedForce: data.armedForces === 'yes' ? 1 : 0,
-              isSpeciallyAbled: data.speciallyAbled === 'yes' ? 1 : 0,
-              relation: data.relation || '',
-              aadhaar: data.aadhaar || '',
-              pan: data.pan || '',
-            },
-          ],
-          floorDtl: (data.floors || []).map(floor => ({
-            builtupArea: floor.builtUpArea || 0,
-            dateFrom: floor.fromDate || null,
-            dateUpto1: floor.uptoDate || null,
-            floorMasterId: floor.floorName || null,
-            usageTypeMasterId: floor.usageType || null,
-            constructionTypeMasterId: floor.constructionType || null,
-            occupancyTypeMasterId: floor.occupancyType || null,
-          })),
-        };
+
+      // Convert DD/MM/YYYY to YYYY-MM-DD format
+      const formatDate = dateStr => {
+        if (!dateStr) return '2024-01';
+
+        if (dateStr.includes('T')) {
+          const [year, month] = dateStr.split('T')[0].split('-');
+          return `${year}-${month}`;
+        }
+
+        if (dateStr.includes('/')) {
+          const [day, month, year] = dateStr.split('/');
+          return `${year}-${month.padStart(2, '0')}`;
+        }
+
+        if (dateStr.includes('-')) {
+          const [year, month] = dateStr.split('-');
+          return `${year}-${month.padStart(2, '0')}`;
+        }
+
+        return dateStr;
       };
-      console.log(payload, 'my payload data');
+
+      // Map data to API structure
+      const payload = {
+        assessmentType: 'New Assessment',
+        zoneMstrId: data.zoneId || 1,
+        wardMstrId: String(data.oldWard || 1),
+        newWardMstrId: data.newWard || 1,
+        ownershipTypeMstrId: data.ownershipTypeId || data.ownershipType || 1,
+        propTypeMstrId: data.propertyTypeId || data.propertyType || 1,
+        appartmentDetailsId: '',
+        flatRegistryDate: '2024-01-01',
+        roadWidth: String(data.roadWidth || '40'),
+        khataNo: data.khataNo || 'a',
+        plotNo: data.plotNo || 'a',
+        villageMaujaName: data.villageName || 'a',
+        areaOfPlot: String(data.plotArea || '100'),
+        propAddress: data.propertyAddress || 'a',
+        propCity: data.city || 'a',
+        propDist: data.district || 'a',
+        propPinCode: data.pincode || '123456',
+        propState: data.state || 'a',
+        isMobileTower: data.mobileTower === 'yes' ? 1 : 0,
+        towerArea:
+          data.mobileTower === 'yes' ? parseInt(data.towerArea || 50) : 50,
+        towerInstallationDate:
+          data.mobileTower === 'yes'
+            ? formatDate(data.installationDate)
+            : '2024-01-01',
+        isHoardingBoard: data.hoarding === 'yes' ? 1 : 0,
+        hoardingArea:
+          data.hoarding === 'yes' ? String(data.hoardingArea || '50') : '50',
+        hoardingInstallationDate:
+          data.hoarding === 'yes'
+            ? formatDate(data.hoardingInstallationDate)
+            : '2016-04-17',
+        isPetrolPump: data.petrolPump === 'yes' ? 1 : 0,
+        underGroundArea:
+          data.petrolPump === 'yes' ? String(data.pumpArea || '25') : '25',
+        petrolPumpCompletionDate:
+          data.petrolPump === 'yes'
+            ? formatDate(data.pumpInstallationDate)
+            : '2020-04-10',
+        landOccupationDate: '2021-02-03',
+        isWaterHarvesting: data.rainHarvesting === 'yes' ? 1 : 0,
+        ownerDtl: [
+          {
+            ownerName: data.ownerName || '10',
+            mobileNo: data.mobile || '1234567890',
+            gender:
+              data.gender === 'male'
+                ? 'Male'
+                : data.gender === 'female'
+                ? 'Female'
+                : 'Male',
+            dob: formatDate(data.dob) || '2019-02-14',
+            isArmedForce:
+              data.armedForces === 'yes'
+                ? 1
+                : data.armedForces === 'no'
+                ? 0
+                : 1,
+            isSpeciallyAbled: data.speciallyAbled === 'yes' ? 1 : 0,
+          },
+        ],
+        floorDtl:
+          data.floors && data.floors.length > 0
+            ? data.floors.map(floor => ({
+                builtupArea: String(floor.builtUpArea || '100'),
+                dateFrom:
+                  convertToYearMonth(floor.fromDate.replace('/', '-')) ||
+                  '2014-01',
+                dateUpto1:
+                  convertToYearMonth(floor.uptoDate.replace('/', '-')) ||
+                  '2012-04',
+                floorMasterId: String(floor.floorNameId || '2'),
+                usageTypeMasterId: String(floor.usageTypeId || '1'),
+                constructionTypeMasterId: floor.constructionTypeId || 1,
+                occupancyTypeMasterId: floor.occupancyTypeId || 1,
+              }))
+            : [
+                {
+                  builtupArea: '100',
+                  dateFrom: '2014-01',
+                  dateUpto1: '2012-04',
+                  floorMasterId: '2',
+                  usageTypeMasterId: '1',
+                  constructionTypeMasterId: 1,
+                  occupancyTypeMasterId: 1,
+                },
+              ],
+      };
+      // console.log('Final payload:', JSON.stringify(payload, null, 2));
+      // console.log('floor data', data.floors);
+      console.log('payload', payload);
       const response = await axios.post(SAF_API_ROUTES.APPLY_SAF, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -253,34 +322,38 @@ const AssessmentSummary = ({ route, navigation }) => {
 
       {Array.isArray(data.floors) && data.floors.length > 0 && (
         <Section title="Floor Details">
-          {data.floors.map((floor, index) => (
-            <View key={index} style={{ marginBottom: 10 }}>
-              <Text style={{ fontWeight: '600', marginBottom: 4 }}>
-                Floor {index + 1}
-              </Text>
-              <Row label="Floor Name" value={floor.floorName} />
-              <Row label="Usage Type" value={floor.usageType} />
-              <Row label="Occupancy Type" value={floor.occupancyType} />
-              <Row label="Construction Type" value={floor.constructionType} />
-              <Row label="Built-Up Area" value={floor.builtUpArea} />
-              <Row
-                label="From Date"
-                value={
-                  floor.fromDate
-                    ? new Date(floor.fromDate).toLocaleDateString('en-GB')
-                    : ''
-                }
-              />
-              <Row
-                label="Upto Date"
-                value={
-                  floor.uptoDate
-                    ? new Date(floor.uptoDate).toLocaleDateString('en-GB')
-                    : ''
-                }
-              />
-            </View>
-          ))}
+          {data.floors.map((floor, index) => {
+            console.log(floor, 'floor');
+            return (
+              <View key={index} style={{ marginBottom: 10 }}>
+                <Text style={{ fontWeight: '600', marginBottom: 4 }}>
+                  Floor {index + 1}
+                </Text>
+                <Row label="Floor Name" value={floor.floorName} />
+                <Row label="Usage Type" value={floor.usageType} />
+                <Row label="Occupancy Type" value={floor.occupancyType} />
+                <Row label="Construction Type" value={floor.constructionType} />
+                <Row label="Built-Up Area" value={floor.builtUpArea} />
+                <Row
+                  label="From Date"
+                  value={
+                    floor.fromDate
+                      ? parseDate(floor.fromDate).toLocaleDateString('en-GB')
+                      : ''
+                  }
+                />
+
+                <Row
+                  label="Upto Date"
+                  value={
+                    floor.uptoDate
+                      ? parseDate(floor.uptoDate).toLocaleDateString('en-GB')
+                      : ''
+                  }
+                />
+              </View>
+            );
+          })}
         </Section>
       )}
 

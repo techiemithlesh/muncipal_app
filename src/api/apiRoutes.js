@@ -31,7 +31,7 @@ export const WORK_FLOW_PERMISSION = `${BASE_URL}/api/get-workflow-permission`;
 export const PROPERTY_API ={
   MASTER_DATA:`${BASE_URL}/api/property/get-saf-master-data`,
   FIELD_VARIFICATION_API:`${BASE_URL}/api/property/field-verification`,
-  GEOTAGING_IMAGE_API:`${BASE_URL}/api/property/field-verification`,
+  GEOTAGING_IMAGE_API:`${BASE_URL}/api/property/geotage`,
 
 
 };
