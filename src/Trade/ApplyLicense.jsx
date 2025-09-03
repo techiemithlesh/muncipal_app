@@ -102,7 +102,7 @@ const ApplyLicense = ({ navigation }) => {
   };
   const handleSubmit = async () => {
     // Format establishment date to YYYY-MM-DD
-    const formatDate = (date) => {
+    const formatDate = date => {
       if (!date) return '';
       const d = new Date(date);
       const year = d.getFullYear();
@@ -113,29 +113,29 @@ const ApplyLicense = ({ navigation }) => {
 
     // Build the API payload according to the required format
     const payload = {
-      applicationType: "NEW LICENSE",
+      applicationType: 'NEW LICENSE',
       firmTypeId: firmType || 1,
       ownershipTypeId: ownershipType || 1,
       wardMstrId: wardNo || 1,
       newWardMstrId: newWardNo || 1,
-      firmName: firmName || "",
-      firmDescription: businessDescription || "",
-      firmEstablishmentDate: formatDate(establishmentDate) || "2020-02-20",
-      premisesOwnerName: ownerOfPremises || "",
-      areaInSqft: totalArea || "100",
-      address: businessAddress || "",
-      pinCode: pinCode || "",
-      licenseForYears: licenseFor || "1",
+      firmName: firmName || '',
+      firmDescription: businessDescription || '',
+      firmEstablishmentDate: formatDate(establishmentDate) || '2020-02-20',
+      premisesOwnerName: ownerOfPremises || '',
+      areaInSqft: totalArea || '100',
+      address: businessAddress || '',
+      pinCode: pinCode || '',
+      licenseForYears: licenseFor || '1',
       isTobaccoLicense: 0,
-      holdingNo: holdingNo || "",
+      holdingNo: holdingNo || '',
       natureOfBusiness: natureOfBusiness.map(id => ({
-        tradeItemTypeId: String(id)
+        tradeItemTypeId: String(id),
       })),
       ownerDtl: owners.map(owner => ({
-        ownerName: owner.ownerName || "",
-        guardianName: owner.guardianName || "",
-        mobileNo: owner.mobileNo || ""
-      }))
+        ownerName: owner.ownerName || '',
+        guardianName: owner.guardianName || '',
+        mobileNo: owner.mobileNo || '',
+      })),
     };
 
     console.log('✅ API Payload:', JSON.stringify(payload, null, 2));
@@ -145,29 +145,37 @@ const ApplyLicense = ({ navigation }) => {
       apiPayload: payload,
       displayData: {
         applicationType,
-        firmType: firmTypeOptions.find(opt => opt.value === firmType)?.label || '',
-        ownershipType: ownershipTypeOptions.find(opt => opt.value === ownershipType)?.label || '',
-        wardNo: wardDropdownOptions.find(opt => opt.value === wardNo)?.label || '',
-        newWardNo: newWardOptions.find(opt => opt.value === newWardNo)?.label || '',
+        firmType:
+          firmTypeOptions.find(opt => opt.value === firmType)?.label || '',
+        ownershipType:
+          ownershipTypeOptions.find(opt => opt.value === ownershipType)
+            ?.label || '',
+        wardNo:
+          wardDropdownOptions.find(opt => opt.value === wardNo)?.label || '',
+        newWardNo:
+          newWardOptions.find(opt => opt.value === newWardNo)?.label || '',
         firmName,
         businessDescription,
         establishmentDate,
         businessAddress,
         pinCode,
         totalArea,
-        licenseFor: licenseForOptions.find(opt => opt.value === licenseFor)?.label || '',
+        licenseFor:
+          licenseForOptions.find(opt => opt.value === licenseFor)?.label || '',
         holdingNo,
         ownerOfPremises,
-        natureOfBusiness: natureOfBusiness.map(id => {
-          const found = categoryOptions.find(opt => opt.value === id);
-          return found ? found.label : '';
-        }).filter(label => label !== ''),
+        natureOfBusiness: natureOfBusiness
+          .map(id => {
+            const found = categoryOptions.find(opt => opt.value === id);
+            return found ? found.label : '';
+          })
+          .filter(label => label !== ''),
         owners,
         chargeApplied: taxData?.licenseCharge?.toString() || '',
         penalty: taxData?.latePenalty?.toString() || '',
         denialAmount: taxData?.arrearCharge?.toString() || '',
         totalCharge: taxData?.totalCharge?.toString() || '',
-      }
+      },
     };
 
     navigation.navigate('ApplyLicenseSummary', { submittedData: summaryData });
@@ -529,9 +537,7 @@ const ApplyLicense = ({ navigation }) => {
             value={natureOfBusiness} // selected IDs array
             onChange={setNatureOfBusiness} // update selected IDs
             options={categoryOptions} // dropdown options from API
-            placeholder={
-              isLoading ? 'Loading...' : 'Select Nature of Business'
-            }
+            placeholder={isLoading ? 'Loading...' : 'Select Nature of Business'}
           />
         </View>
         {/* Charges */}

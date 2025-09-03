@@ -13,6 +13,7 @@ import HeaderNavigation from '../Components/HeaderNavigation';
 import axios from 'axios';
 import { PROPERTY_API } from '../api/apiRoutes';
 import { getToken } from '../utils/auth';
+import ImageResizer from 'react-native-image-resizer';
 
 const Card = ({ title, children }) => (
   <View style={styles.card}>
@@ -52,47 +53,55 @@ const SubmitVarification = ({ route }) => {
     try {
       const token = await getToken();
 
-      // ✅ Prepare Floors from extraFloors
+      // 1️⃣ Prepare Floors
       const preparedFloors = (submissionData?.extraFloors || []).map(floor => ({
-        safFloorDetailId:
-          floor.floorNameId != null ? Number(floor.floorNameId) : null,
+        safFloorDetailId: floor.safFloorDetailId || 0,
         builtupArea: Number(floor.builtupArea ?? 0),
-        dateFrom: convertMonthYear(floor.fromDate),
+        dateFrom: convertMonthYear(floor.dateFrom), // use correct key
+        dateUpto: convertMonthYear(floor.dateUpto), // add dateUpto if API expects it
         floorMasterId:
-          floor.floorNameId != null ? String(floor.floorNameId) : null,
+          floor.floorMasterId != null ? String(floor.floorMasterId) : null,
         usageTypeMasterId:
-          floor.usageTypeId != null ? String(floor.usageTypeId) : null,
+          floor.usageTypeMasterId != null
+            ? String(floor.usageTypeMasterId)
+            : null,
         constructionTypeMasterId:
-          floor.constructionTypeId != null
-            ? String(floor.constructionTypeId)
+          floor.constructionTypeMasterId != null
+            ? String(floor.constructionTypeMasterId)
             : null,
         occupancyTypeMasterId:
-          floor.occupancyTypeId != null ? String(floor.occupancyTypeId) : null,
+          floor.occupancyTypeMasterId != null
+            ? String(floor.occupancyTypeMasterId)
+            : null,
       }));
-      console.log(preparedFloors, 'my floor daat');
 
-      // ✅ Build main payload
       const fieldPayload = {
         safDetailId: id,
-        wardMstrId: submissionData?.wardMstrId || 3,
-        newWardMstrId: submissionData?.newWardMstrId || 1,
-        propTypeMstrId: submissionData?.propTypeMstrId || 1,
-        zoneMstrId: submissionData?.zoneMstrId || 1,
-        roadWidth: submissionData?.roadWidth || 20,
-        areaOfPlot: submissionData?.areaOfPlot || 80,
-        isMobileTower: submissionData?.isMobileTower ?? false,
-        isHoardingBoard: submissionData?.isHoardingBoard ?? false,
-        isPetrolPump: submissionData?.isPetrolPump ?? false,
-        isWaterHarvesting: submissionData?.isWaterHarvesting ?? false,
+        wardMstrId: submissionData?.wardMstrId,
+        newWardMstrId: submissionData?.newWardMstrId,
+        propTypeMstrId:
+          submissionData?.propTypeMstrId || submissionData?.propertyTypeId,
+        zoneMstrId: submissionData?.zoneMstrId,
+        roadWidth: submissionData?.roadWidth,
+        areaOfPlot: submissionData?.areaOfPlot,
+        isMobileTower: submissionData?.isMobileTower,
+        isHoardingBoard: submissionData?.isHoardingBoard,
+        isPetrolPump: submissionData?.isPetrolPump,
+        isWaterHarvesting: submissionData?.isWaterHarvesting,
+
+        // ✅ Hoarding details (only if true)
+        hoardingArea: submissionData?.isHoardingBoard
+          ? Number(submissionData?.hoardingArea || 0.1)
+          : null,
+        hoardingInstallationDate: submissionData?.isHoardingBoard
+          ? submissionData?.hoardingInstallationDate ||
+            new Date().toISOString().split('T')[0]
+          : null,
+
         floorDtl: preparedFloors,
       };
 
-      console.log('📦 Final Payload:', JSON.stringify(fieldPayload, null, 2));
-
-      // ----------------------
-      // 1️⃣ Submit Field Verification Data
-      // ----------------------
-      const fieldRes = await axios.post(
+      const response = await axios.post(
         PROPERTY_API.FIELD_VARIFICATION_API,
         fieldPayload,
         {
@@ -103,30 +112,84 @@ const SubmitVarification = ({ route }) => {
           timeout: 15000,
         },
       );
+      console.log('Field Verification Response:', response.data);
+      Alert.alert('Success', 'Field Verification Data submitted successfully!');
+      console.log(
+        JSON.stringify(
+          {
+            message: 'Field Verification Data submitted',
+            payload: fieldPayload,
+          },
+          null,
+          2,
+        ),
+      );
 
-      console.log('✅ Field Verification Success:', fieldRes.data);
+      // 3️⃣ Resize Photos
+      const photos = [photo1, photo2, photo3];
+      const resizedPhotos = await Promise.all(
+        photos.map(async (photo, index) => {
+          if (!photo) return null;
+          const resized = await ImageResizer.createResizedImage(
+            photo.uri,
+            1024,
+            1024,
+            'JPEG',
+            80,
+          );
+          return {
+            ...photo,
+            uri: resized.uri,
+            fileName: photo.fileName || `photo${index + 1}.jpg`,
+          };
+        }),
+      );
 
-      // ----------------------
-      // 2️⃣ Submit Geo-Tagging Images
-      // ----------------------
+      // 4️⃣ Build FormData for GeoTag + Images
       const formData = new FormData();
-      formData.append('propertyId', id);
+      formData.append('id', id);
 
-      if (location) {
-        formData.append('latitude', location.latitude);
-        formData.append('longitude', location.longitude);
+      const geoTagArray = resizedPhotos.map((photo, index) => ({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        direction: photo?.direction || 'N',
+        document: photo,
+      }));
+
+      // Ensure at least 3 items
+      while (geoTagArray.length < 3) {
+        geoTagArray.push({
+          latitude: location.latitude,
+          longitude: location.longitude,
+          direction: 'N',
+          document: resizedPhotos[0] || null,
+        });
       }
 
-      [photo1, photo2, photo3].forEach((photo, index) => {
-        if (photo) {
-          formData.append('images', {
-            uri: photo.uri,
-            type: photo.type || 'image/jpeg',
-            name: photo.fileName || `photo${index + 1}.jpg`,
-          });
-        }
+      // Append geoTag with actual files
+      geoTagArray.forEach((item, index) => {
+        if (!item.document) return;
+        formData.append(`geoTag[${index}][latitude]`, item.latitude);
+        formData.append(`geoTag[${index}][longitude]`, item.longitude);
+        formData.append(`geoTag[${index}][direction]`, item.direction);
+        formData.append(`geoTag[${index}][document]`, {
+          uri: item.document.uri,
+          type: item.document.type || 'image/jpeg',
+          name: item.document.fileName,
+        });
       });
 
+      // Append images separately if backend expects it
+      resizedPhotos.forEach((photo, index) => {
+        if (!photo) return;
+        formData.append('images', {
+          uri: photo.uri,
+          type: photo.type || 'image/jpeg',
+          name: photo.fileName,
+        });
+      });
+
+      // 5️⃣ Submit GeoTag + Images
       const geoRes = await axios.post(
         PROPERTY_API.GEOTAGING_IMAGE_API,
         formData,
@@ -139,17 +202,10 @@ const SubmitVarification = ({ route }) => {
         },
       );
 
-      console.log('✅ Geo-Tagging Success:', geoRes.data);
-
       Alert.alert('Success', 'Data & Images submitted successfully!');
+      console.log('Geo-Tagging Success:', geoRes.data);
     } catch (error) {
-      if (error.response) {
-        console.error('❌ API Error:', error.response.data);
-      } else if (error.request) {
-        console.error('❌ No response from server:', error.request);
-      } else {
-        console.error('❌ Error:', error.message);
-      }
+      console.error('Submission Error:', error.response?.data || error.message);
       Alert.alert('Error', 'Submission failed. Please try again.');
     }
   };

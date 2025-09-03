@@ -38,6 +38,7 @@ const PropertyDetails = ({
   setNoRoad,
   showFieldAlert = () => {},
   styles,
+  isEditable,
 }) => {
   const s = styles || defaultStyles;
   return (
@@ -46,32 +47,33 @@ const PropertyDetails = ({
       <Text style={s.label}>Khata No. *</Text>
       <TextInput
         style={s.input}
-        placeholder="sfdsfsa"
+        placeholder="khata no"
         placeholderTextColor="#000"
         value={khataNo}
         onChangeText={setKhataNo}
         onFocus={() => showFieldAlert('Khata No.')}
-        editable={false}
+        // editable={false}
+        editable={isEditable}
       />
       <Text style={s.label}>Plot No. *</Text>
       <TextInput
         style={s.input}
-        placeholder="hbnm,"
+        placeholder="Plot no"
         placeholderTextColor="#000"
         value={plotNo}
         onChangeText={setPlotNo}
         onFocus={() => showFieldAlert('Plot No.')}
-        editable={false}
+        editable={isEditable}
       />
       <Text style={s.label}>Village/Mauja Name *</Text>
       <TextInput
         style={s.input}
-        placeholder="dsafsa"
+        placeholder="Village Name"
         placeholderTextColor="#000"
         value={villageName}
         onChangeText={setVillageName}
         onFocus={() => showFieldAlert('Village/Mauja Name')}
-        editable={false}
+        editable={isEditable}
       />
       <Text style={s.label}>Area of Plot (in Decimal) *</Text>
       <TextInput
@@ -82,18 +84,18 @@ const PropertyDetails = ({
         onChangeText={setPlotArea}
         keyboardType="numeric"
         onFocus={() => showFieldAlert('Area of Plot')}
-        editable={false}
+        editable={isEditable}
       />
       <Text style={s.label}>Road Width (in ft) *</Text>
       <TextInput
         style={s.input}
-        placeholder="12.00"
+        placeholder="Road Width"
         placeholderTextColor="#000"
         value={roadWidth}
         onChangeText={setRoadWidth}
         keyboardType="numeric"
         onFocus={() => showFieldAlert('Road Width')}
-        editable={false}
+        editable={isEditable}
       />
       <Text style={s.label}>
         In Case of No Road Enter "0" (For Vacant Land Only)
@@ -106,7 +108,7 @@ const PropertyDetails = ({
         onChangeText={setNoRoad}
         keyboardType="numeric"
         onFocus={() => showFieldAlert('In Case of No Road')}
-        editable={false}
+        editable={isEditable}
       />
     </View>
   );

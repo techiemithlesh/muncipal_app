@@ -29,7 +29,7 @@ import TradeDetails from './src/Trade/Details/TradeDetails';
 import ApplyLicenseSummary from './src/Trade/ApplyLicenseSummary';
 import SubmitVarification from './src/PropertyMenu/SubmitVarification';
 import DocUpload from './src/Trade/DocUpload';
-import ApplyWaterConnectionForm from './src/Water/ApplyWaterConnectionForm';
+import ApplyWaterConnectionForm from './src/Water/ApplyWater/ApplyWaterConnectionForm';
 import LoginScreen from './src/Screen/LoginScreen';
 import SearchWater from './src/Water/SearchWater';
 import WaterBillScreen from './src/Water/WaterBillScreen';
@@ -41,6 +41,9 @@ import EditTrade from './src/Trade/Details/EditTrade';
 import InboxDtls from './src/Trade/Inbox/InboxDtls';
 import SearchHolding from './src/PropertyMenu/Holding/Search';
 import HoldingDetails from './src/PropertyMenu/Holding/HoldingDetails';
+import RessesmentSummry from './src/PropertyMenu/SubmitData/RessesmentSummry';
+import SubmitApply from './src/Water/ApplyWater/SubmitApply';
+import MyInput from './src/Water/ApplyWater/MyInput';
 
 const Stack = createNativeStackNavigator();
 
@@ -222,15 +225,30 @@ const App = () => {
                 component={LoginScreen}
                 options={{ headerShown: false }}
               />
+              <Stack.Screen
+                name="RessesmentSummry"
+                component={RessesmentSummry}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="SubmitApply"
+                component={SubmitApply}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="MyInput"
+                component={MyInput}
+                options={{ headerShown: false }}
+              />
             </Stack.Navigator>
           </NavigationContainer>
         </AlertNotificationRoot>
       </MasterDataProvider>
 
       {/* 👇 Toast outside everything, stays above Modals */}
-      <Toast 
+      <Toast
         config={toastConfig}
-        topOffset={60} 
+        topOffset={60}
         visibilityTime={2500}
         position="top"
       />

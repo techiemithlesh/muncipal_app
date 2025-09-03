@@ -9,7 +9,6 @@ export const API_ROUTES = {
   TRADE_PAYMENT_RECEIPT:`${BASE_URL}/api/trade/payment-receipt`,
   TRADE_REVIEW_TAX:`${BASE_URL}/api/trade/review-tax`,
   TRADE_APPLY:`${BASE_URL}/api/trade/apply`, 
-
   TRADE_PAY_DEMAND:`${BASE_URL}/api/trade//pay-demand`,
   TRADE_DOCUMENT_DETAILS:`${BASE_URL}/api/trade/get-uploaded-doc-list`,
   TRADE_UPLOAD_DOC:`${BASE_URL}/api/trade/uploaded-doc`,
@@ -17,23 +16,15 @@ export const API_ROUTES = {
   TRADE_APPLY:`${BASE_URL}/api/trade/apply`,
 };
 export const SAF_API_ROUTES = {
-  // trade api routes
   SAF_VARIFICATION_MODEL: `${BASE_URL}/api/property/field-verification-dtl`,
-  
   APPLY_SAF: `${BASE_URL}/api/property/saf-apply`,
-  TRADE_MASTER_DETAILS:`${BASE_URL}/api/trade/get-trade-master-data`,
-  TRADE_DUE_DETAILS:`${BASE_URL}/api/trade/get-due`,
-  TRADE_PAYMENT:`${BASE_URL}/api/trade/pay-demand`,
-  TRADE_PAYMENT_RECEIPT:`${BASE_URL}/api/trade/payment-receipt`,
+  APPLY_SAF_RESSESMENT_API: `${BASE_URL}/api/property/saf-apply Reassessment`,
 };
 export const WORK_FLOW_PERMISSION = `${BASE_URL}/api/get-workflow-permission`;
-
 export const PROPERTY_API ={
   MASTER_DATA:`${BASE_URL}/api/property/get-saf-master-data`,
   FIELD_VARIFICATION_API:`${BASE_URL}/api/property/field-verification`,
   GEOTAGING_IMAGE_API:`${BASE_URL}/api/property/geotage`,
-
-
 };
 
 export const HOLDIGN_API_ROUTES ={

@@ -231,11 +231,13 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
       }));
     }
 
-    navigation.navigate('AssessmentSummary', {
-      data: formData,
-      isRessessment: isRessessment,
-      isMutation: isMutation,
-    });
+    if (isRessessment) {
+      navigation.navigate('RessesmentSummry', { data: formData });
+    } else if (isMutation) {
+      navigation.navigate('MutationScreen', { data: formData });
+    } else {
+      navigation.navigate('AssessmentSummary', { data: formData });
+    }
   };
   useEffect(() => {
     fetchMasterData();

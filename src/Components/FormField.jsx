@@ -142,7 +142,10 @@ const FormField = forwardRef(
         selectedTextStyle={styles.selectedTextStyle}
         selectedStyle={styles.selectedStyle}
         renderSelectedItem={(item, unSelect) => (
-          <Pressable onPress={() => unSelect && unSelect(item)} style={styles.selectedItem}>
+          <Pressable
+            onPress={() => unSelect && unSelect(item)}
+            style={styles.selectedItem}
+          >
             <Text style={styles.selectedItemText}>{item.label}</Text>
             <Text style={styles.selectedItemRemove}>×</Text>
           </Pressable>

@@ -66,9 +66,9 @@ const DashBoard = ({ navigation }) => {
   return (
     <View style={styles.mainDashboard}>
       <HeaderNavigation />
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={[styles.scrollContainer, { flex: 1 }]}>
         <MenuTree />
-      </ScrollView>
+      </View>
       <LogoutButton />
       <View style={styles.footer}>
         <Text style={styles.footerText}>End of Dashboard</Text>

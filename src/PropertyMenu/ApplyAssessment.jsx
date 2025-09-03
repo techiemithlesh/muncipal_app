@@ -701,7 +701,7 @@ const ApplyAssessment = ({ navigation }) => {
         uptoDate: floor.uptoDate,
       }));
     }
-
+    console.log({ data: formData }, 'Apply Assesmet Data');
     // Navigate to summary screen with full data
     navigation.navigate('AssessmentSummary', { data: formData });
   };
@@ -1119,6 +1119,7 @@ const ApplyAssessment = ({ navigation }) => {
           plotAreaRef={plotAreaRef}
           roadWidthRef={roadWidthRef}
           noRoadRef={noRoadRef}
+          isEditable={true}
         />
 
         <Text style={styles.header}>Water Connection Details</Text>

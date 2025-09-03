@@ -1,33 +1,27 @@
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
   View,
-  ScrollView,
   TouchableOpacity,
   TextInput,
   FlatList,
+  ScrollView,
 } from 'react-native';
-import moment from 'moment';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import HeaderLogin from '../Screen/HeaderLogin';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import { Dropdown } from 'react-native-element-dropdown';
-import { useEffect, useState } from 'react';
+import HeaderNavigation from '../Components/HeaderNavigation';
 import {
   responsiveHeight,
   responsiveWidth,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
-import React from 'react';
-import Icon from 'react-native-vector-icons/Ionicons';
-import axios from 'axios';
-import CalendarPicker from 'react-native-calendar-picker';
-import Modal from 'react-native-modal';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from '../config';
-import HeaderNavigation from '../Components/HeaderNavigation';
+import Colors from '../Constants/Colors';
 
 const FieldVarification = ({ navigation }) => {
-  const data1 = [
+  const wardData = [
     { label: 'Select Ward', value: '1' },
     { label: 'Ward 2', value: '2' },
     { label: 'Ward 3', value: '3' },
@@ -35,10 +29,6 @@ const FieldVarification = ({ navigation }) => {
 
   const [value, setValue] = useState(null);
   const [data, setData] = useState([]);
-  const [selectedStartDate, setSelectedStartDate] = useState(null);
-  const [selectedEndDate, setSelectedEndDate] = useState(null);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [activeInput, setActiveInput] = useState('');
   const [token, setToken] = useState(null);
 
   useEffect(() => {
@@ -46,23 +36,18 @@ const FieldVarification = ({ navigation }) => {
       try {
         const storedToken = await AsyncStorage.getItem('token');
         const token = storedToken ? JSON.parse(storedToken) : null;
-        console.log(token, 'our token');
+        setToken(token);
 
-        if (!token) {
-          console.warn('No token found');
-          return;
-        }
+        if (!token) return console.warn('No token found');
+
         const response = await axios.post(
           `${BASE_URL}/api/property/inbox`,
           {},
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           },
         );
 
-        console.log('Fetched Data:', response.data?.data?.data);
         setData(response.data?.data?.data || []);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -71,148 +56,121 @@ const FieldVarification = ({ navigation }) => {
 
     fetchData();
   }, []);
-  console.log(data, 'data');
 
   const handleSearch = () => {
-    // Add your search filter logic here
+    // Add your search logic here
   };
 
-  const renderItem = ({ item }) => {
-    console.log(item, 'item');
-    return (
-      <View style={styles.card}>
-        <View style={styles.row}>
-          <Text style={styles.cardLabel}>Ward No.:</Text>
-          <Text style={styles.value}>{item?.safNo}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.cardLabel}>Assessment Type:</Text>
-          <Text style={styles.value}>{item?.assessmentType}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.cardLabel}>Property Type:</Text>
-          <Text style={styles.value}>{item?.propertyType}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.cardLabel}>Applicant Name:</Text>
-          <Text style={styles.value}>{item?.id}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.cardLabel}>Mobile No.:</Text>
-          <Text style={styles.value}>{item?.mobileNo}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.cardLabel}>Property Type:</Text>
-          <Text style={styles.value}>{item?.propertyType}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.cardLabel}>Ward No.:</Text>
-          <Text style={styles.value}>{item?.wardNo}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.cardLabel}>SAF No.:</Text>
-          <Text style={styles.value}>{item?.safNo}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.cardLabel}>Holding No.:</Text>
-          <Text style={styles.value}>{item?.propertyAddress}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.cardLabel}>Property Address:</Text>
-          <Text style={styles.value}>{item?.propAddress}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.cardLabel}>Apply Date:</Text>
-          <Text style={styles.value}>{item?.applyDate}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.cardLabel}>Forward Date:</Text>
-          <Text style={styles.value}>{item?.receivingDate}</Text>
-        </View>
-
-        <TouchableOpacity
-          style={styles.button1}
-          onPress={() => navigation.navigate('SurveyPage', { id: item.id })}
-        >
-          <Text style={styles.surveyButtonText}>Survey</Text>
-        </TouchableOpacity>
+  const renderItem = ({ item }) => (
+    <View style={styles.card}>
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>Ward No.:</Text>
+        <Text style={styles.value}>{item?.wardNo}</Text>
       </View>
-    );
-  };
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>Assessment Type:</Text>
+        <Text style={styles.value}>{item?.assessmentType}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>Property Type:</Text>
+        <Text style={styles.value}>{item?.propertyType}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>Applicant Name:</Text>
+        <Text style={styles.value}>{item?.id}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>Mobile No.:</Text>
+        <Text style={styles.value}>{item?.mobileNo}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>SAF No.:</Text>
+        <Text style={styles.value}>{item?.safNo}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>Holding No.:</Text>
+        <Text style={styles.value}>{item?.propertyAddress}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>Property Address:</Text>
+        <Text style={styles.value}>{item?.propAddress}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>Apply Date:</Text>
+        <Text style={styles.value}>{item?.applyDate}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>Forward Date:</Text>
+        <Text style={styles.value}>{item?.receivingDate}</Text>
+      </View>
+
+      <TouchableOpacity
+        style={styles.button1}
+        onPress={() => navigation.navigate('SurveyPage', { id: item.id })}
+      >
+        <Text style={styles.surveyButtonText}>Survey</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      <ScrollView>
-        <HeaderNavigation />
+      <HeaderNavigation />
 
-        <View>
-          <ScrollView contentContainerStyle={styles.content}>
-            <Text style={styles.title}>Field Verification</Text>
-            <View style={styles.formGrid}>
-              <View style={styles.inputBox}></View>
+      {/* Form with orange design and shadows */}
+      {/* <View style={styles.formWrapper}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+          <Text style={styles.title}>Field Verification</Text>
+
+          <View style={styles.formGrid}>
+            <View style={styles.inputBox}>
+              <Text style={styles.label}>Ward No</Text>
+              <Dropdown
+                style={styles.dropdown}
+                placeholderStyle={styles.placeholderStyle}
+                selectedTextStyle={styles.selectedTextStyle}
+                data={wardData}
+                labelField="label"
+                valueField="value"
+                placeholder="Select Ward"
+                value={value}
+                onChange={item => setValue(item.value)}
+              />
             </View>
 
-            {/* <View style={styles.formGrid}>
-              <View style={styles.inputBox}>
-                <Text style={styles.label}>Ward No</Text>
-                <Dropdown
-                  style={styles.dropdown}
-                  placeholderStyle={styles.placeholderStyle}
-                  selectedTextStyle={styles.selectedTextStyle}
-                  data={data1}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Select Ward"
-                  placeholderTextColor="black"
-                  value={value}
-                  onChange={item => setValue(item.value)}
-                />
-              </View>
+            <View style={styles.inputBox}>
+              <Text style={styles.label}>Keyword</Text>
+              <TextInput style={styles.input} placeholder="Enter Keyword" />
+            </View>
 
-              <View style={styles.inputBox}>
-                <Text style={styles.label}>Keyword</Text>
-                <TextInput style={styles.input} placeholder="Enter Keyword" />
-              </View>
-
-              <TouchableOpacity style={styles.button} onPress={handleSearch}>
-                <Text style={styles.buttonText}>Search</Text>
-              </TouchableOpacity>
-            </View> */}
-          </ScrollView>
-
-          <View style={styles.applicationList}>
-            <Text style={styles.title}>Application List</Text>
-            <FlatList
-              data={data}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={renderItem}
-              ListEmptyComponent={
-                <Text
-                  style={{
-                    textAlign: 'center',
-                    marginTop: responsiveHeight(2),
-                    backgroundColor: 'red',
-                    color: 'white',
-                    padding: 10,
-                  }}
-                >
-                  No data found.
-                </Text>
-              }
-            />
+            <TouchableOpacity style={styles.button} onPress={handleSearch}>
+              <Text style={styles.buttonText}>Search</Text>
+            </TouchableOpacity>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View> */}
 
-      <View style={styles.modalContent}>
-        {/* <DatePicker
-          modal
-          open={isDatePickerOpen}
-          date={selectedDate}
-          mode="date"
-          onConfirm={handleDateConfirm}
-          onCancel={() => setIsDatePickerOpen(false)}
-        /> */}
+      {/* FlatList for Application List */}
+      <View style={styles.applicationList}>
+        <Text style={styles.title}>Application List</Text>
+        <FlatList
+          data={data}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={renderItem}
+          ListEmptyComponent={
+            <Text
+              style={{
+                textAlign: 'center',
+                marginTop: responsiveHeight(2),
+                backgroundColor: 'red',
+                color: 'white',
+                padding: 10,
+              }}
+            >
+              No data found.
+            </Text>
+          }
+        />
       </View>
     </View>
   );
@@ -220,51 +178,19 @@ const FieldVarification = ({ navigation }) => {
 
 export default FieldVarification;
 
-// Styles remain unchanged
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'white',
-  },
-  header: {
-    paddingTop: 50,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f2f2f2',
-    paddingVertical: 10,
-  },
-  iconContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerText: {
-    marginLeft: 5,
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-  },
-  content: {
-    padding: responsiveWidth(2),
-    backgroundColor: 'orange',
-    color: 'white',
-    marginTop: responsiveHeight(4),
-    marginLeft: responsiveHeight(2),
-    marginRight: responsiveHeight(2),
-    borderRadius: 4,
+  container: { flex: 1, backgroundColor: 'white' },
 
-    // Shadow for iOS
+  formWrapper: {
+    padding: responsiveWidth(2),
+    marginHorizontal: responsiveHeight(2),
+    marginTop: responsiveHeight(2),
+    borderRadius: 4,
+    backgroundColor: 'orange',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-
-    // Shadow for Android
     elevation: 5,
   },
 
@@ -276,6 +202,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: responsiveWidth(2),
     marginBottom: responsiveHeight(2),
+    margin: 20,
   },
 
   formGrid: {
@@ -283,15 +210,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
-  inputBox: {
-    width: '48%',
-    marginBottom: 16,
-  },
-  label: {
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 6,
-  },
+  inputBox: { width: '48%', marginBottom: 16 },
+  label: { fontWeight: '600', color: '#333', marginBottom: 6 },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -301,19 +221,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#f8f8f8',
   },
-  button: {
-    backgroundColor: '#007BFF',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-    width: '100%',
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 16,
-  },
   dropdown: {
     height: 45,
     borderColor: '#ccc',
@@ -322,25 +229,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     backgroundColor: '#fff',
   },
-  placeholderStyle: {
-    color: '#999',
+  placeholderStyle: { color: '#999' },
+  selectedTextStyle: { color: '#000' },
+  button: {
+    backgroundColor: '#007BFF',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+    width: '100%',
   },
-  selectedTextStyle: {
-    color: '#000',
-  },
+  buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+
   applicationList: {
-    margin: 20,
+    flex: 1,
+    paddingHorizontal: responsiveWidth(2),
+    marginBottom: 20,
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 10,
     padding: 16,
-    margin: 16,
-    elevation: 4, // Android shadow
-    shadowColor: '#000', // iOS shadow
+    marginVertical: 8,
+    elevation: 4,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
+    margin: 20,
   },
   row: {
     flexDirection: 'row',
@@ -349,52 +265,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  cardLabel: {
-    fontWeight: '600',
-    color: '#333',
-  },
-  value: {
-    color: '#555',
-  },
+  cardLabel: { fontWeight: '600', color: '#333' },
+  value: { color: '#555' },
   button1: {
     marginTop: 16,
-    backgroundColor: '#4CAF50',
+    backgroundColor: Colors.primary,
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
   },
-  surveyButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  calendarWrapper: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-
-  calendarInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    backgroundColor: '#f8f8f8',
-  },
-  modal: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 0,
-  },
-
-  modalContent: {
-    backgroundColor: 'white',
-    width: responsiveWidth(80),
-    maxHeight: responsiveHeight(100),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  surveyButtonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
 });

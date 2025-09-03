@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import * as Print from 'expo-print'; // ✅ Import print module
 import { SAF_API_ROUTES } from '../../api/apiRoutes';
+import { getToken } from '../utils/auth';
 
 export const TCVerificationModal = ({ visible, onClose, id }) => {
   const [extraFloor, setExtraFloor] = useState([]);
@@ -29,8 +30,7 @@ export const TCVerificationModal = ({ visible, onClose, id }) => {
     const fetchSafDetails = async () => {
       setLoading(true);
       try {
-        const storedToken = await AsyncStorage.getItem('token');
-        const token = storedToken ? JSON.parse(storedToken) : null;
+        const token = getToken();
 
         if (!token) {
           Alert.alert('Error', 'Authentication token not found.');

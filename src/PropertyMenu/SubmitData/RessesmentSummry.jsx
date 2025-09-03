@@ -8,11 +8,10 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import Colors from '../Constants/Colors';
-import Header from '../Screen/Header';
+import Colors from '../../Constants/Colors';
 import axios from 'axios';
-import { SAF_API_ROUTES } from '../api/apiRoutes'; // make sure this is your API route
-import { getToken } from '../utils/auth';
+import { SAF_API_ROUTES } from '../../api/apiRoutes'; // make sure this is your API route
+import { getToken } from '../../utils/auth';
 
 const Row = ({ label, value }) => (
   <View style={styles.row}>
@@ -28,7 +27,7 @@ const Section = ({ title, children }) => (
   </View>
 );
 
-const AssessmentSummary = ({ route, navigation }) => {
+const RessesmentSummry = ({ route, navigation }) => {
   const data = route.params?.data || {};
   console.log('data', data);
   const [loading, setLoading] = useState(false);
@@ -85,7 +84,7 @@ const AssessmentSummary = ({ route, navigation }) => {
 
       // Map data to API structure
       const payload = {
-        assessmentType: 'New Assessment',
+        assessmentType: 'Reassessment',
         zoneMstrId: data.zoneId || 1,
         wardMstrId: Number(data.oldWard || 1),
         newWardMstrId: data.newWard || 1,
@@ -176,16 +175,20 @@ const AssessmentSummary = ({ route, navigation }) => {
       console.log('Final payload:', JSON.stringify(payload, null, 2));
       // console.log('floor data', data.floors);
       console.log('payload', payload);
-      const response = await axios.post(SAF_API_ROUTES.APPLY_SAF, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await axios.post(
+        SAF_API_ROUTES.APPLY_SAF_RESSESMENT_API,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       setLoading(false);
 
       if (response.data.success) {
-        Alert.alert('Success', 'Assessment submitted successfully');
+        Alert.alert('Success', 'Ressessment submitted successfully');
         navigation.goBack();
       } else {
         Alert.alert('Error', response.data.message || 'Something went wrong');
@@ -205,7 +208,7 @@ const AssessmentSummary = ({ route, navigation }) => {
       )}
 
       <Section title="Property Details">
-        <Row label="Assessment Type" value="New Assessment" />
+        <Row label="Assessment Type" value="Ressesment" />
         <Row label="Zone" value={data.zone} />
         <Row label="Old Ward" value={data.oldWard} />
         <Row label="New Ward" value={data.newWard} />
@@ -425,4 +428,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AssessmentSummary;
+export default RessesmentSummry;

@@ -15,6 +15,7 @@ import {
   TextInput,
   Modal,
   KeyboardAvoidingView,
+  ActivityIndicator,
 } from 'react-native';
 
 import { Dropdown } from 'react-native-element-dropdown';
@@ -40,6 +41,7 @@ const SurveyPage = ({ route, navigation }) => {
         constructionType: '',
         occupancyType: '',
         usageType: '',
+        builtupArea: '',
         fromDate: null,
         toDate: null,
         showFromPicker: false,
@@ -70,6 +72,7 @@ const SurveyPage = ({ route, navigation }) => {
   // State for API data
   const [data, setData] = useState(null);
   const [masterData, setMasterData] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
   // Separate state for each card
   const [wardVerification, setWardVerification] = useState(null);
@@ -140,39 +143,109 @@ const SurveyPage = ({ route, navigation }) => {
   };
 
   const handleSubmitPreview = () => {
+    // Get the verified IDs based on selection
+    const getVerifiedId = (verification, originalValue, dropdownValue) => {
+      if (verification === 'Correct' || !dropdownValue) {
+        // If correct or no change, find the original ID from master data
+        return originalValue;
+      }
+      return dropdownValue; // Return the selected dropdown ID
+    };
+
+    // Prepare parking floor data with IDs
+    const parkingFloorData = parkingFloor ? {
+      safFloorDetailId: parkingFloor?.id || parkingFloor?.safFloorDetailId || null,
+      builtupArea: buildupArea === 'Incorrect' && builtupAreaIput 
+        ? Number(builtupAreaIput) 
+        : Number(parkingFloor?.builtupArea || 0),
+      dateFrom: dateFromParking === 'Incorrect' && dateFromParkingDropdown
+        ? formatDate(dateFromParkingDropdown)
+        : parkingFloor?.dateFrom,
+      dateUpto: dateToParking === 'Incorrect' && dateToParkingDropdown
+        ? formatDate(dateToParkingDropdown)
+        : parkingFloor?.dateUpto,
+      floorMasterId: parkingFloor?.floorMasterId || "1", // Parking floor ID
+      usageTypeMasterId: getVerifiedId(usageType, parkingFloor?.usageTypeMasterId, usageTypeDropdown),
+      constructionTypeMasterId: getVerifiedId(constructionType, parkingFloor?.constructionTypeMasterId, constructionTypeDropdown),
+      occupancyTypeMasterId: getVerifiedId(occupancyType, parkingFloor?.occupancyTypeMasterId, occupancyTypeDropdown),
+    } : null;
+
+    // Prepare basement floor data with IDs
+    const basementFloorData = basementFloor ? {
+      safFloorDetailId: basementFloor?.id || basementFloor?.safFloorDetailId || null,
+      builtupArea: buildupAreaBasement === 'Incorrect' && builtupAreaInputBasement
+        ? Number(builtupAreaInputBasement)
+        : Number(basementFloor?.builtupArea || 0),
+      dateFrom: dateFromBasement === 'Incorrect' && dateFromBasementDropdown
+        ? formatDate(dateFromBasementDropdown)
+        : basementFloor?.dateFrom,
+      dateUpto: dateToBasement === 'Incorrect' && dateToBasementDropdown
+        ? formatDate(dateToBasementDropdown)
+        : basementFloor?.dateUpto,
+      floorMasterId: basementFloor?.floorMasterId || "2", // Basement floor ID
+      usageTypeMasterId: usageTypeBasement === 'Incorrect' && usageTypeInputBasement
+        ? usageTypeInputBasement
+        : basementFloor?.usageTypeMasterId,
+      constructionTypeMasterId: constructionTypeBasement === 'Incorrect' && constructionTypeInputBasement
+        ? constructionTypeInputBasement
+        : basementFloor?.constructionTypeMasterId,
+      occupancyTypeMasterId: occupancyTypeBasement === 'Incorrect' && occupancyTypeInputBasement
+        ? occupancyTypeInputBasement
+        : basementFloor?.occupancyTypeMasterId,
+    } : null;
+
     const submissionData = {
       ...previewData,
+      // Main property IDs
+      safDetailId: id,
+      wardMstrId: getVerifiedId(wardVerification, data?.wardMstrId, wardDropdown),
+      newWardMstrId: getVerifiedId(newWardVerification, data?.newWardMstrId, newWardDropdown),
+      propTypeMstrId: getVerifiedId(propertyVerification, data?.propTypeMstrId, propertyDropdown),
+      zoneMstrId: getVerifiedId(zoneVerification, data?.zoneMstrId, zoneDropdown),
+      roadWidth: data?.roadWidth || 20,
+      areaOfPlot: data?.areaOfPlot || 80,
+      isMobileTower: data?.isMobileTower || false,
+      isHoardingBoard: data?.isHoardingBoard || false,
+      isPetrolPump: data?.isPetrolPump || false,
+      isWaterHarvesting: data?.isWaterHarvesting || false,
+      remarks: remarks || '',
+      
+      // Floor details
+      parkingFloor: parkingFloorData,
+      basementFloor: basementFloorData,
+      
+      // Extra floors with IDs
       extraFloors: addExtraFloor
-        ? floors?.map(floor => ({
-            // Save the ID for API
-            floorNameId: floor.floorName,
-            // Save the label for display
+        ? floors?.map((floor, index) => ({
+            safFloorDetailId: null, // New floor, no existing ID
+            floorMasterId: floor.floorName, // This is already the ID from dropdown
             floorName: getLabelByValue(
               floorNameDropdownOptions,
               floor.floorName,
             ),
-            constructionTypeId: floor.constructionType,
+            constructionTypeMasterId: floor.constructionType,
             constructionType: getLabelByValue(
               constructionTypeDropdownOptions,
               floor.constructionType,
             ),
-            occupancyTypeId: floor.occupancyType,
+            occupancyTypeMasterId: floor.occupancyType,
             occupancyType: getLabelByValue(
               occupancyTypeDropdownOptions,
               floor.occupancyType,
             ),
-            usageTypeId: floor.usageType,
+            usageTypeMasterId: floor.usageType,
             usageType: getLabelByValue(
               usageTypeDropdownOptions,
               floor.usageType,
             ),
-            fromDate: floor.fromDate ? formatDate(floor.fromDate) : '',
-            toDate: floor.toDate ? formatDate(floor.toDate) : '',
+            builtupArea: floor.builtupArea || 0,
+            dateFrom: floor.fromDate ? formatDate(floor.fromDate) : '',
+            dateUpto: floor.toDate ? formatDate(floor.toDate) : '',
           }))
         : [],
     };
 
-    console.log('Submitted Data:', submissionData);
+    console.log('Submitted Data with IDs:', submissionData);
 
     // Navigate and optionally pass data
     navigation.navigate('VerifiedStatus', { submissionData, id });
@@ -196,6 +269,7 @@ const SurveyPage = ({ route, navigation }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true);
         const storedToken = await AsyncStorage.getItem('token');
         const token = storedToken ? JSON.parse(storedToken) : null;
         console.log('toke', token);
@@ -222,9 +296,12 @@ const SurveyPage = ({ route, navigation }) => {
 
         setMasterData(response1.data.data);
         setData(response.data.data);
-        console.log('data', data);
+        console.log('API Response Data:', response.data.data);
+        console.log('Master Data:', response1.data.data);
       } catch (error) {
         console.error('Fetch error:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -300,6 +377,15 @@ const SurveyPage = ({ route, navigation }) => {
     useState(false);
   const [showDateToBasementPicker, setShowDateToBasementPicker] =
     useState(false);
+
+  if (isLoading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.loadingText}>Loading survey data...</Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -645,6 +731,17 @@ const SurveyPage = ({ route, navigation }) => {
                           onChange={item =>
                             updateFloor(index, 'usageType', item.value)
                           }
+                        />
+
+                        <Text style={styles.label}>Built-up Area</Text>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Enter built-up area"
+                          value={floor.builtupArea}
+                          onChangeText={text =>
+                            updateFloor(index, 'builtupArea', text)
+                          }
+                          keyboardType="numeric"
                         />
                       </View>
 
@@ -1315,6 +1412,17 @@ const SurveyPage = ({ route, navigation }) => {
 export default SurveyPage;
 
 const styles = StyleSheet.create({
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  loadingText: {
+    marginTop: 15,
+    fontSize: 16,
+    color: '#666',
+  },
   submitButton: {
     backgroundColor: '#007AFF', // 👈 your dynamic color
     paddingVertical: 12,

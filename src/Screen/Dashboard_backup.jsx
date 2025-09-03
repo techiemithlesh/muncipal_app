@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  ScrollView,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Button,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Button } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from './Header';
@@ -45,7 +38,6 @@ const DashBoard = ({ navigation }) => {
   const handleMenuPress = menuItem => {
     switch (menuItem.name) {
       case 'Dashboard':
-        // Already on dashboard
         break;
       case 'Property':
         navigation.navigate('Property');
@@ -154,10 +146,11 @@ const DashBoard = ({ navigation }) => {
         onPress={() => navigation.navigate('WaterBillScreen')}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* <View style={styles.gridContainer}>{renderMenuItems()}</View> */}
+      {/* FIXED: Removed ScrollView around MenuTree */}
+      <View style={styles.scrollContainer}>
         <MenuTree />
-      </ScrollView>
+      </View>
+
       <LogoutButton />
       <View style={styles.footer}>
         <Text style={styles.footerText}>End of Dashboard</Text>

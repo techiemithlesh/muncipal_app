@@ -104,7 +104,7 @@ const Search = ({ navigation }) => {
         const token = await getToken();
 
         const response = await axios.post(
-          HOLDIGN_API_ROUTES.MASTER_DATA,
+          HOLDIGN_API_ROUTES.MASTER_DATA_API,
           {},
           {
             headers: {
