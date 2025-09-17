@@ -20,13 +20,14 @@ import { WebView } from 'react-native-webview';
 import RNFS from 'react-native-fs';
 import RNBlobUtil from 'react-native-blob-util';
 import FileViewer from 'react-native-file-viewer';
-import PrintButton from '../../../Components/PrintButton';
+// import PrintButton from '../../../Components/PrintButton';
+import PrintButton from '../../Components/PrintButton';
 import Toast from 'react-native-toast-message';
-import { showToast } from '../../../utils/toast';
-import { toastConfig } from '../../../utils/toastConfig';
+import { showToast } from '../../utils/toast';
+import { toastConfig } from '../../utils/toastConfig';
 import { useEffect } from 'react';
-import { API_ROUTES } from '../../../api/apiRoutes';
-import { getToken } from '../../../utils/auth';
+import { API_ROUTES } from '../../api/apiRoutes';
+import { getToken } from '../../utils/auth';
 import axios from 'axios';
 // 1. View Trade License Modal
 export const ViewTradeLicenseModal = ({ visible, onClose, tradeDetails }) => (
@@ -252,8 +253,8 @@ export const PaymentModal = ({
   const [bankName, setBankName] = useState('');
   const [branchName, setBranchName] = useState('');
   const [paymentType, setPaymentType] = useState('FULL');
+
   const processPayment = async () => {
-    let response = null; // declare here
     try {
       const token = await getToken();
       if (!token) {
@@ -261,7 +262,6 @@ export const PaymentModal = ({
         return { success: false };
       }
 
-      console.log('tradeDetails', tradeDetails);
       const paymentData = {
         id: tradeDetails?.id,
         paymentType: paymentType.toUpperCase(),
@@ -275,36 +275,31 @@ export const PaymentModal = ({
         branchName: paymentMode.toUpperCase() === 'CASH' ? '' : branchName,
       };
 
-      console.log('paymentData', paymentData);
+      console.log('Processing payment:', paymentData);
 
-      try {
-        response = await axios.post(API_ROUTES.TRADE_PAY_DEMAND, paymentData, {
+      const response = await axios.post(
+        API_ROUTES.TRADE_PAY_DEMAND,
+        paymentData,
+        {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-        });
+        },
+      );
 
-        console.log('Full API Response:', response.data);
-        console.log('Status:', response.data.status);
-        console.log('Message:', response.data.message);
-        console.log('Data:', response.data.data);
-      } catch (error) {
-        console.error(
-          'Payment API Error:',
-          error.response?.data || error.message,
-        );
-        response = error.response; // capture the error response to avoid ReferenceError
-      }
+      console.log('API Response:', response.data.status);
+      console.log('Message:', response?.data?.message);
+      console.log('Data:', response?.data?.data);
 
       const tranId =
         response?.data?.data && typeof response.data.data === 'object'
-          ? response.data.data.id
+          ? response.data.data.tranId
           : null;
 
       console.log('Transaction ID:', tranId);
 
-      if (response?.data?.status === true) {
+      if (response.data.status === true) {
         Alert.alert(
           'Success',
           response.data.message || 'Payment Successfully Done',
@@ -325,10 +320,7 @@ export const PaymentModal = ({
 
         return { success: true, tranId };
       } else {
-        Alert.alert(
-          'Payment Error',
-          response?.data?.message || 'Payment failed',
-        );
+        Alert.alert('Payment Error', response.data.message || 'Payment failed');
         return { success: false };
       }
     } catch (error) {

@@ -31,7 +31,8 @@ import SubmitVarification from './src/PropertyMenu/SubmitVarification';
 import DocUpload from './src/Trade/DocUpload';
 import ApplyWaterConnectionForm from './src/Water/ApplyWater/ApplyWaterConnectionForm';
 import LoginScreen from './src/Screen/LoginScreen';
-import SearchWater from './src/Water/SearchWater';
+import SearchWater from './src/Water/Details/SearchWater';
+import WaterDetails from './src/Water/Details/Details';
 import WaterBillScreen from './src/Water/WaterBillScreen';
 import SurrenderLicense from './src/Trade/Surender/SurrenderLicense';
 import SurrenderLicensePage from './src/Trade/Surender/SurrenderLicensePage';
@@ -44,6 +45,10 @@ import HoldingDetails from './src/PropertyMenu/Holding/HoldingDetails';
 import RessesmentSummry from './src/PropertyMenu/SubmitData/RessesmentSummry';
 import SubmitApply from './src/Water/ApplyWater/SubmitApply';
 import MyInput from './src/Water/ApplyWater/MyInput';
+// customer urls
+import SearchCustomer from './src/Customer/Search';
+
+import CustomerDetails from './src/Customer/Details';
 
 const Stack = createNativeStackNavigator();
 
@@ -238,6 +243,22 @@ const App = () => {
               <Stack.Screen
                 name="MyInput"
                 component={MyInput}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="WaterDetails"
+                component={WaterDetails}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="SearchCustomer"
+                component={SearchCustomer}
+                options={{ headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="CustomerDetails"
+                component={CustomerDetails}
                 options={{ headerShown: false }}
               />
             </Stack.Navigator>

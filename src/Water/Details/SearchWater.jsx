@@ -15,12 +15,13 @@ import {
   responsiveWidth,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
-import Colors from '../Constants/Colors';
-import HeaderNavigation from '../Components/HeaderNavigation';
+import Colors from '../../Constants/Colors';
+import HeaderNavigation from '../../Components/HeaderNavigation';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
-import { BASE_URL } from '../config';
-import { API_ROUTES } from '../api/apiRoutes';
+import { getToken } from '../../utils/auth';
+import { WATER_API_ROUTES } from '../../api/apiRoutes';
+import { API_ROUTES } from '../../api/apiRoutes';
 
 const Search = ({ navigation }) => {
   const [value, setValue] = useState(null); // selected ward id
@@ -35,8 +36,7 @@ const Search = ({ navigation }) => {
     const fetchMaster = async () => {
       try {
         setLoadingMaster(true);
-        const storedToken = await AsyncStorage.getItem('token');
-        const token = storedToken ? JSON.parse(storedToken) : null;
+        const token = await getToken();
 
         if (!token) {
           Alert.alert('Auth error', 'No token found. Please login.');
@@ -78,8 +78,8 @@ const Search = ({ navigation }) => {
   const search = async () => {
     try {
       setLoadingSearch(true);
-      const storedToken = await AsyncStorage.getItem('token');
-      const token = storedToken ? JSON.parse(storedToken) : null;
+      const token = await getToken();
+      console.log('token', token);
 
       if (!token) {
         Alert.alert('Auth error', 'No token found. Please login.');
@@ -94,9 +94,13 @@ const Search = ({ navigation }) => {
         wardId: value ? [value] : [],
       };
 
-      const response = await axios.post(API_ROUTES.TRADE_SEARCH, body, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.post(
+        WATER_API_ROUTES.WATER_SEARCH_API,
+        body,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       if (response.data?.status) {
         const results = response.data.data?.data ?? [];
@@ -114,7 +118,7 @@ const Search = ({ navigation }) => {
   };
 
   const handleViewPress = item => {
-    navigation.navigate('TradeLicenseSummary', { id: item.id });
+    navigation.navigate('WaterDetails', { id: item.id });
   };
 
   const renderItem = ({ item, index }) => (

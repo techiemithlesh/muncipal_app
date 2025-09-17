@@ -16,6 +16,7 @@ export const MasterDataProvider = ({ children }) => {
     propertyTypeList: [],
     ownerTypeList: [],
   });
+  console.log('mater data', masterData);
 
   useEffect(() => {
     const fetchMaster = async () => {

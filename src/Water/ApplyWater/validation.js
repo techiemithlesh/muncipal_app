@@ -1,16 +1,43 @@
-// formValidation.js
-export const scrollToInput = (inputRef, scrollViewRef) => {
-  if (inputRef && scrollViewRef?.current) {
-    inputRef.measureLayout(
-      scrollViewRef.current,
-      (x, y) => {
-        scrollViewRef.current.scrollTo({ y: y, animated: true });
-        inputRef.focus();
-      },
-      error => console.log('measureLayout error:', error)
-    );
+export const scrollToInput = (inputRef, scrollViewRef, offset = -100) => {
+  if (!inputRef?.current || !scrollViewRef?.current) return;
+
+  // For View wrapped dropdowns, get the actual view ref
+  const targetRef = inputRef.current;
+  
+  // Use measure and scrollTo combination which works more reliably
+  if (targetRef && typeof targetRef.measure === 'function') {
+    targetRef.measure((x, y, width, height, pageX, pageY) => {
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({
+          y: Math.max(0, pageY + offset),
+          animated: true
+        });
+        
+        // Focus after scrolling
+        setTimeout(() => {
+          if (inputRef.current) {
+            if (typeof inputRef.current.focus === 'function') {
+              inputRef.current.focus();
+            } else if (typeof inputRef.current.open === 'function') {
+              inputRef.current.open();
+            }
+          }
+        }, 300);
+      }
+    });
+  } else {
+    // Fallback for elements without measure
+    console.log('Using fallback focus without scroll');
+    if (inputRef.current) {
+      if (typeof inputRef.current.focus === 'function') {
+        inputRef.current.focus();
+      } else if (typeof inputRef.current.open === 'function') {
+        inputRef.current.open();
+      }
+    }
   }
 };
+
 
 export const handleValidation = ({
   totalArea,
@@ -18,98 +45,149 @@ export const handleValidation = ({
   pin,
   address,
   applicants,
-  kNo,
-  bindBookNo,
-  accountNo,
-  electricityType,
+  typeOfConnection,
+  connectionThrough,
+  propertyType,
+  ownerType,
+  wardNo,
+  wardNo2,
   totalAreaRef,
   landmarRef,
   pincodeRef,
   addressRef,
   applicantRefs,
-  khataNoRef,
-  bindBookNoRef,
-  electricityTypeRef,
+  typeOfConnectionRef,
+  connectionThroughRef,
+  propertyTypeRef,
+  ownerTypeRef,
+  wardNoRef,
+  wardNo2Ref,
   scrollViewRef,
-  setError
+  scrollToInput,
+  setError,
 }) => {
-  const newError = {};
-
-  if (!totalArea) {
-    newError.totalArea = 'Total area is required';
-    setError(newError);
-    scrollToInput(totalAreaRef.current, scrollViewRef);
+  // Clear previous errors
+  setError({});
+  
+  // Sequential validation - stop at first error
+  // Check Type of Connection
+  if (!typeOfConnection) {
+    setError({ typeOfConnection: 'Type of connection is required' });
+    scrollToInput(typeOfConnectionRef, scrollViewRef);
     return false;
   }
 
-  if (!landmark) {
-    newError.landmark = 'Landmark is required';
-    setError(newError);
-    scrollToInput(landmarRef.current, scrollViewRef);
+  // Check Connection Through
+  if (!connectionThrough) {
+    setError({ connectionThrough: 'Connection through is required' });
+    scrollToInput(connectionThroughRef, scrollViewRef);
     return false;
   }
 
-  if (!pin) {
-    newError.pin = 'Pin code is required';
-    setError(newError);
-    scrollToInput(pincodeRef.current, scrollViewRef);
+  // Check Property Type
+  if (!propertyType) {
+    setError({ propertyType: 'Property type is required' });
+    scrollToInput(propertyTypeRef, scrollViewRef);
     return false;
   }
 
-  if (!address) {
-    newError.address = 'Address is required';
-    setError(newError);
-    scrollToInput(addressRef.current, scrollViewRef);
+  // Check Owner Type
+  if (!ownerType) {
+    setError({ ownerType: 'Owner type is required' });
+    scrollToInput(ownerTypeRef, scrollViewRef);
     return false;
   }
 
-  // Validate applicants
+  // Check Ward No
+  if (!wardNo) {
+    setError({ wardNo: 'Ward number is required' });
+    scrollToInput(wardNoRef, scrollViewRef);
+    return false;
+  }
+
+  // Check New Ward No
+  if (!wardNo2) {
+    setError({ wardNo2: 'New ward number is required' });
+    scrollToInput(wardNo2Ref, scrollViewRef);
+    return false;
+  }
+
+  // Check Total Area
+  if (!totalArea || totalArea.trim() === '') {
+    setError({ totalArea: 'Total area is required' });
+    scrollToInput(totalAreaRef, scrollViewRef);
+    return false;
+  }
+  if (isNaN(totalArea) || parseFloat(totalArea) <= 0) {
+    setError({ totalArea: 'Enter a valid area in sq. ft' });
+    scrollToInput(totalAreaRef, scrollViewRef);
+    return false;
+  }
+
+  // Check Landmark
+  if (!landmark || landmark.trim() === '') {
+    setError({ landmark: 'Landmark is required' });
+    scrollToInput(landmarRef, scrollViewRef);
+    return false;
+  }
+
+  // Check PIN
+  if (!pin || pin.trim() === '') {
+    setError({ pin: 'PIN code is required' });
+    scrollToInput(pincodeRef, scrollViewRef);
+    return false;
+  }
+  if (!/^\d{6}$/.test(pin)) {
+    setError({ pin: 'Enter a valid 6-digit PIN code' });
+    scrollToInput(pincodeRef, scrollViewRef);
+    return false;
+  }
+
+  // Check Address
+  if (!address || address.trim() === '') {
+    setError({ address: 'Address is required' });
+    scrollToInput(addressRef, scrollViewRef);
+    return false;
+  }
+
+  // Validate applicants one by one
   for (let index = 0; index < applicants.length; index++) {
     const applicant = applicants[index];
-
-    if (!applicant.ownerName) {
-      newError[`ownerName-${index}`] = 'Owner name is required';
-      setError(newError);
-      scrollToInput(applicantRefs.current[index * 2], scrollViewRef);
+    
+    // Check Owner Name
+    if (!applicant.ownerName || applicant.ownerName.trim() === '') {
+      setError({ [`ownerName-${index}`]: 'Owner name is required' });
+      if (applicantRefs.current[index * 2]) {
+        scrollToInput({ current: applicantRefs.current[index * 2] }, scrollViewRef);
+      }
       return false;
     }
 
-    if (!applicant.mobileNo) {
-      newError[`mobileNo-${index}`] = 'Mobile number is required';
-      setError(newError);
-      scrollToInput(applicantRefs.current[index * 2 + 1], scrollViewRef);
+    // Check Mobile Number
+    if (!applicant.mobileNo || applicant.mobileNo.trim() === '') {
+      setError({ [`mobileNo-${index}`]: 'Mobile number is required' });
+      if (applicantRefs.current[index * 2 + 1]) {
+        scrollToInput({ current: applicantRefs.current[index * 2 + 1] }, scrollViewRef);
+      }
       return false;
     }
-  }
+    if (!/^[6-9]\d{9}$/.test(applicant.mobileNo)) {
+      setError({ [`mobileNo-${index}`]: 'Enter a valid 10-digit mobile number' });
+      if (applicantRefs.current[index * 2 + 1]) {
+        scrollToInput({ current: applicantRefs.current[index * 2 + 1] }, scrollViewRef);
+      }
+      return false;
+    }
 
-  if (!kNo) {
-    newError.kNo = 'Khata No is required';
-    setError(newError);
-    scrollToInput(khataNoRef.current, scrollViewRef);
-    return false;
+    // Check Email if provided
+    if (applicant.email && applicant.email.trim() !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(applicant.email)) {
+        setError({ [`email-${index}`]: 'Enter a valid email address' });
+        // Email doesn't have a ref in current setup, just show error
+        return false;
+      }
+    }
   }
-
-  if (!bindBookNo) {
-    newError.bindBookNo = 'Bind Book is required';
-    setError(newError);
-    scrollToInput(bindBookNoRef.current, scrollViewRef);
-    return false;
-  }
-
-  if (!accountNo) {
-    newError.accountNo = 'Account No required';
-    setError(newError);
-    scrollToInput(addressRef.current, scrollViewRef);
-    return false;
-  }
-
-  if (!electricityType) {
-    newError.electricityType = 'Electricity Type is required';
-    setError(newError);
-    scrollToInput(electricityTypeRef.current, scrollViewRef);
-    return false;
-  }
-
-  setError({});
   return true;
 };

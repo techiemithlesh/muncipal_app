@@ -6,22 +6,25 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Linking,
+  Image,
 } from 'react-native';
-import Colors from '../../Constants/Colors';
-import { API_ROUTES, WORK_FLOW_PERMISSION } from '../../api/apiRoutes';
+import Colors from '../Constants/Colors';
+import { CUSTOMER_API } from '../api/apiRoutes';
 import axios from 'axios';
-import HeaderNavigation from '../../Components/HeaderNavigation';
+import HeaderNavigation from '../Components/HeaderNavigation';
 import {
   ViewDemandModal,
   ViewTradeLicenseModal,
   PaymentModal,
   DocumentModal,
   PaymentReceiptModal,
-} from './InboxModels';
+} from './Model/CustomerModel';
 import { useNavigation } from '@react-navigation/native';
-import { getToken } from '../../utils/auth';
+import { getToken } from '../utils/auth';
+import { WORK_FLOW_PERMISSION, API_ROUTES } from '../api/apiRoutes';
 
-const InboxDtls = ({ route }) => {
+const Details = ({ route }) => {
   const [showTradeLicenseModal, setShowTradeLicenseModal] = useState(false);
   const [showDemandModal, setShowDemandModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -29,14 +32,20 @@ const InboxDtls = ({ route }) => {
   const [showReceipt, setShowReceipt] = useState(false);
 
   const [receiptData, setTradPaymentRecipt] = useState(null);
-  const [tradeDue, setTradeDue] = useState(null);
+  const [customerDue, setCustomerDue] = useState(null);
+
   const [tradeDetails, setTradeDetails] = useState(null);
-  const [paymentDtl, setPaymentDtl] = useState(null);
+  const [paymentDtl, setPaymentDtl] = useState([]);
+
   const [workflowData, setWorkflowData] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [levelRemarks, setLevelRemarks] = useState([]);
+  const [connectionDtl, setConnectionDtl] = useState('');
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [customerDeuDetails, setCustomerDueDetails] = useState('');
+  const [selectedReceiptId, setSelectedReceiptId] = useState(null);
+  const [receiptDatas, setReceiptData] = useState(null);
 
   const id = route?.params?.id;
   const navigation = useNavigation();
@@ -49,26 +58,30 @@ const InboxDtls = ({ route }) => {
       try {
         const token = await getToken();
 
-        // Fetch trade details first to get workflowId
         const tradeRes = await axios.post(
-          API_ROUTES.TRADE_DETAILS,
+          CUSTOMER_API.CUSTOMER_DETAILS_API,
           { id: Number(id) },
           { headers: { Authorization: `Bearer ${token}` } },
         );
 
+        const paymentIds = paymentDtl.map(item => item.id);
+        console.log('Full Details', paymentIds);
+
         if (tradeRes?.data?.status && tradeRes.data.data) {
           setTradeDetails(tradeRes.data.data);
-          setPaymentDtl(tradeRes.data.data.tranDtls?.[0] || null);
+          setPaymentDtl(tradeRes.data.data.tranDtls || []);
+
           setLevelRemarks(tradeRes.data.data.levelRemarks || []);
+          setConnectionDtl(tradeRes.data.data.connectionDtl);
         }
 
         const workflowId = tradeRes?.data?.data?.workflowId || 0;
-
+        // console.log('Customer Details Api', tradeRes);
         // Run other APIs in parallel
-        const [tradeDueRes, workflowRes, paymentRes, receiptRes, documentRes] =
+        const [customerDue, workflowRes, paymentRes, receiptRes, documentRes] =
           await Promise.all([
             axios.post(
-              API_ROUTES.TRADE_DUE_DETAILS,
+              CUSTOMER_API.CUSTOMER_DUE_API,
               { id },
               { headers: { Authorization: `Bearer ${token}` } },
             ),
@@ -101,10 +114,13 @@ const InboxDtls = ({ route }) => {
               { headers: { Authorization: `Bearer ${token}` } },
             ),
           ]);
+        console.log('Customer Deatails', customerDue.data.data);
 
-        if (tradeDueRes?.data?.status) setTradeDue(tradeDueRes.data.data);
+        if (customerDue?.data?.status)
+          setCustomerDueDetails(customerDue.data.data);
+        if (customerDue?.data?.status)
+          setCustomerDue(customerDue.data.data.demandList);
         if (workflowRes?.data?.status) setWorkflowData(workflowRes.data.data);
-        if (paymentRes?.data?.status) setTradeDue(paymentRes.data.data);
         if (receiptRes?.data?.status)
           setTradPaymentRecipt(receiptRes.data.data);
         if (documentRes?.data?.status) setDocuments(documentRes.data.data);
@@ -120,6 +136,22 @@ const InboxDtls = ({ route }) => {
 
     fetchAllData();
   }, [id]);
+
+  const handleViewReceipt = async id => {
+    setSelectedReceiptId(id);
+    setShowReceipt(true);
+
+    try {
+      const response = await axios.post(
+        CUSTOMER_API.CUSTOMER_PAYMENT_RECIPT_API,
+        { id },
+      );
+      setReceiptData(response.data); // Save API response
+      console.log('Receipt Data:', response.data);
+    } catch (error) {
+      console.error('Error fetching receipt:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -138,7 +170,7 @@ const InboxDtls = ({ route }) => {
         <View style={styles.banner}>
           <Text style={styles.bannerText}>
             Your applied application no.{' '}
-            <Text style={styles.appId}>{tradeDetails?.applicationNo}</Text>. You
+            <Text style={styles.appId}>{tradeDetails?.consumerNo}</Text>. You
             can use this for future reference.
           </Text>
 
@@ -155,50 +187,56 @@ const InboxDtls = ({ route }) => {
             </Text>
           </Text>
         </View>
-
         {/* Basic Details */}
         <Section title="Basic Details">
-          <DetailRow label="Ward No" value={tradeDetails?.wardNo} />
-          <DetailRow
-            label="Licence For"
-            value={`${tradeDetails?.licenseForYears} Years`}
-          />
-          <DetailRow
-            label="Nature Of Business"
-            value={tradeDetails?.natureOfBusiness}
-          />
-          <DetailRow
-            label="Ownership Type"
-            value={tradeDetails?.ownershipType}
-          />
-          <DetailRow label="Landmark" value={tradeDetails?.landmark || 'N/A'} />
-          <DetailRow label="Address" value={tradeDetails?.address} />
-          <DetailRow
-            label="Application No"
-            value={tradeDetails?.applicationNo}
-          />
-          <DetailRow
-            label="Valid Upto"
-            value={tradeDetails?.validUpto || 'N/A'}
-          />
-          <DetailRow
-            label="Updated Date"
-            value={tradeDetails?.updatedAt?.slice(0, 10)}
-          />
-          <DetailRow
-            label="Application Type"
-            value={tradeDetails?.applicationType}
-          />
-          <DetailRow label="Firm Name" value={tradeDetails?.firmName} />
-          <DetailRow label="Firm Type" value={tradeDetails?.firmType} />
-          <DetailRow label="Category Type" value="Others" />
-          <DetailRow
-            label="Firm Establishment Date"
-            value={tradeDetails?.firmEstablishmentDate}
-          />
-          <DetailRow label="Applied Date" value={tradeDetails?.applyDate} />
-          <DetailRow label="Area" value={tradeDetails?.areaInSqft} />
-          <DetailRow label="Pin Code" value={tradeDetails?.pinCode} />
+          <View style={styles.customerCard}>
+            <DetailRow
+              label="Consumer No"
+              value={tradeDetails?.consumerNo || 'N/A'}
+            />
+            <DetailRow
+              label="Consumer Date"
+              value={
+                tradeDetails?.createdAt
+                  ? tradeDetails.createdAt.slice(0, 10)
+                  : 'N/A'
+              }
+            />
+            <DetailRow label="Ward No" value={tradeDetails?.wardNo || 'N/A'} />
+            <DetailRow
+              label="New Ward No"
+              value={tradeDetails?.newWardNo || 'N/A'}
+            />
+            <DetailRow
+              label="Property Type"
+              value={tradeDetails?.propertyType || 'N/A'}
+            />
+            <DetailRow
+              label="Ownership Type"
+              value={tradeDetails?.ownershipType || 'N/A'}
+            />
+            <DetailRow
+              label="Connection Through"
+              value={tradeDetails?.connectionThrough || 'N/A'}
+            />
+            <DetailRow
+              label="Pipeline Type"
+              value={tradeDetails?.pipelineType || 'N/A'}
+            />
+            <DetailRow
+              label="Area in Sqft"
+              value={tradeDetails?.areaSqft || 'N/A'}
+            />
+            <DetailRow label="Address" value={tradeDetails?.address || 'N/A'} />
+            <DetailRow
+              label="Landmark"
+              value={tradeDetails?.landmark || 'N/A'}
+            />
+            <DetailRow
+              label="Pin Code"
+              value={tradeDetails?.pinCode || 'N/A'}
+            />
+          </View>
         </Section>
 
         {/* Owner Details */}
@@ -248,30 +286,154 @@ const InboxDtls = ({ route }) => {
               />
             ))}
         </Section>
-
-        {/* Payment Details */}
         <Section title="Payment Detail">
-          <View style={styles.docHeader}>
-            <Text style={styles.docCol}>Processing Fee</Text>
-            <Text style={styles.docCol}>Transaction Date</Text>
-            <Text style={styles.docCol}>Payment Through</Text>
-            <Text style={styles.docCol}>Payment For</Text>
-            <Text style={styles.docCol}>View</Text>
-          </View>
-          {paymentDtl && (
-            <View style={styles.paymentRow}>
-              <Text style={styles.paymentCol}>{paymentDtl.penaltyAmt}</Text>
-              <Text style={styles.paymentCol}>{paymentDtl.tranDate}</Text>
-              <Text style={styles.paymentCol}>{paymentDtl.paymentMode}</Text>
-              <Text style={styles.paymentCol}>{paymentDtl.tranType}</Text>
-              <TouchableOpacity
-                style={styles.viewBtn}
-                onPress={() => setShowReceipt(true)}
-              >
-                <Text style={styles.viewBtnText}>View</Text>
-              </TouchableOpacity>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View>
+              {/* Table Header */}
+              <View style={styles.docHeader}>
+                <Text style={styles.docCol}>Tran No</Text>
+                <Text style={styles.docCol}>Tran Date</Text>
+                <Text style={styles.docCol}>Payment Mode</Text>
+                <Text style={styles.docCol}>Tran Type</Text>
+                <Text style={styles.docCol}>Demand From</Text>
+                <Text style={styles.docCol}>Demand Upto</Text>
+                <Text style={styles.docCol}>Demand Amt (Excl. Penalty)</Text>
+                <Text style={styles.docCol}>Paid Demand</Text>
+                <Text style={styles.docCol}>Paid Penalty</Text>
+                <Text style={styles.docCol}>Total Paid Amt</Text>
+                <Text style={styles.docCol}>Balance Amt</Text>
+                <Text style={styles.docCol}>View</Text>
+              </View>
+
+              {/* Table Rows */}
+              {paymentDtl && paymentDtl.length > 0 ? (
+                paymentDtl.map((item, index) => (
+                  <View key={item.id || index} style={styles.paymentRow}>
+                    <Text style={styles.paymentCol}>{item.tranNo}</Text>
+                    <Text style={styles.paymentCol}>{item.tranDate}</Text>
+                    <Text style={styles.paymentCol}>{item.paymentMode}</Text>
+                    <Text style={styles.paymentCol}>{item.tranType}</Text>
+                    <Text style={styles.paymentCol}>{item.fromDate}</Text>
+                    <Text style={styles.paymentCol}>{item.uptoDate}</Text>
+                    <Text style={styles.paymentCol}>{item.demandAmt}</Text>
+                    <Text style={styles.paymentCol}>{item.payableAmt}</Text>
+                    <Text style={styles.paymentCol}>{item.penaltyAmt}</Text>
+                    <Text style={styles.paymentCol}>
+                      {parseFloat(item.payableAmt) +
+                        parseFloat(item.penaltyAmt)}
+                    </Text>
+                    <Text style={styles.paymentCol}>{item.balance}</Text>
+
+                    <TouchableOpacity
+                      style={styles.viewBtn}
+                      onPress={() => handleViewReceipt(item.id)}
+                    >
+                      <Text style={styles.viewBtnText}>View</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              ) : (
+                <Text>No payment details found.</Text>
+              )}
             </View>
-          )}
+          </ScrollView>
+        </Section>
+        <Section title="Customer Connection Details">
+          <View style={styles.customerCard}>
+            <DetailRow
+              label="Connection Type"
+              value={connectionDtl.connectionType || 'N/A'}
+            />
+
+            <DetailRow
+              label="Connection Date"
+              value={
+                connectionDtl.connectionDate
+                  ? new Date(connectionDtl.connectionDate).toLocaleDateString()
+                  : 'N/A'
+              }
+            />
+
+            <DetailRow
+              label="Created At"
+              value={
+                connectionDtl.createdAt
+                  ? new Date(connectionDtl.createdAt).toLocaleString()
+                  : 'N/A'
+              }
+            />
+
+            <DetailRow
+              label="Meter No"
+              value={connectionDtl.meterNo || 'N/A'}
+            />
+
+            <DetailRow
+              label="Current Reading"
+              value={connectionDtl.currentReading || 'N/A'}
+            />
+
+            <DetailRow
+              label="Current Reading Date"
+              value={
+                Array.isArray(connectionDtl.currentReadingDate) &&
+                connectionDtl.currentReadingDate.length > 0
+                  ? new Date(
+                      connectionDtl.currentReadingDate[0],
+                    ).toLocaleString()
+                  : 'N/A'
+              }
+            />
+
+            <DetailRow
+              label="Is Meter Working"
+              value={connectionDtl.isMeterWorking || 'N/A'}
+            />
+
+            <DetailRow
+              label="Lock Status"
+              value={connectionDtl.lockStatus ? 'Locked' : 'Unlocked'}
+            />
+
+            <DetailRow
+              label="Meter Type ID"
+              value={connectionDtl.meterTypeId || 'N/A'}
+            />
+
+            <DetailRow
+              label="Reference Unique No"
+              value={connectionDtl.refUniqueNo || 'N/A'}
+            />
+
+            <DetailRow
+              label="Updated At"
+              value={
+                connectionDtl.updatedAt
+                  ? new Date(connectionDtl.updatedAt).toLocaleString()
+                  : 'N/A'
+              }
+            />
+
+            <DetailRow label="User ID" value={connectionDtl.userId || 'N/A'} />
+            <DetailRow
+              label="User Name"
+              value={connectionDtl.userName || 'N/A'}
+            />
+
+            {/* Show Image */}
+            <View style={styles.imageContainer}>
+              <Text style={styles.text}>Last Reading Img</Text>
+              {connectionDtl.docPath ? (
+                <Image
+                  source={{ uri: connectionDtl.docPath }}
+                  style={styles.image}
+                  resizeMode="contain"
+                />
+              ) : (
+                <Text>No document available</Text>
+              )}
+            </View>
+          </View>
         </Section>
 
         {/* Field Verification */}
@@ -361,12 +523,6 @@ const InboxDtls = ({ route }) => {
           >
             <Text style={styles.tradeLicenseText}>View Documents</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
-            onPress={() => navigation.navigate('EditTrade', { id })}
-          >
-            <Text style={styles.tradeLicenseText}>Edit</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -379,13 +535,18 @@ const InboxDtls = ({ route }) => {
       <ViewDemandModal
         visible={showDemandModal}
         onClose={() => setShowDemandModal(false)}
-        tradeDetails={tradeDue}
+        customerDue={customerDue}
         tradeDetails1={tradeDetails}
+        customerDeuDetails={customerDeuDetails}
       />
+
       <PaymentModal
         visible={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
+        customerDue={customerDue}
         tradeDetails={tradeDetails}
+        customerDeuDetails={customerDeuDetails}
+        id={id}
       />
       <DocumentModal
         visible={showDocumentModal}
@@ -395,7 +556,7 @@ const InboxDtls = ({ route }) => {
       <PaymentReceiptModal
         visible={showReceipt}
         onClose={() => setShowReceipt(false)}
-        receiptData={receiptData}
+        receiptData={receiptDatas}
       />
     </View>
   );
@@ -506,21 +667,20 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     alignItems: 'center',
   },
-  docCol: { flex: 1, textAlign: 'center' },
+  docCol: { flex: 1, textAlign: 'center', fontSize: 10 },
 
   paymentRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  paymentCol: { flex: 1, textAlign: 'center' },
+  paymentCol: { flex: 1, textAlign: 'center', fontSize: 10 },
   viewBtn: {
-    backgroundColor: '#d71717ff',
+    backgroundColor: '#0c3c78',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 4,
-    borderWidth: 2, // sets border thickness
-    borderColor: Colors.primary,
+    marginTop: 10,
   },
   viewBtnText: { color: '#fff', fontWeight: '600' },
 
@@ -535,7 +695,7 @@ const styles = StyleSheet.create({
   },
   noDataText: {
     color: '#666',
-    fontSize: 10,
+    fontSize: 14,
     fontStyle: 'italic',
   },
 
@@ -558,6 +718,64 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 5, // optional, if you have an icon next to text
   },
+  customerCard: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    marginVertical: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+
+  customerCardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomColor: '#eee',
+    borderBottomWidth: 1,
+  },
+
+  customerCardLabel: {
+    fontWeight: '600',
+    color: '#333',
+    flex: 1,
+  },
+
+  customerCardValue: {
+    flex: 1,
+    textAlign: 'right',
+    color: '#555',
+  },
+
+  linkText: {
+    color: '#007bff',
+    textDecorationLine: 'underline',
+  },
+  imageContainer: {
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  image: {
+    width: 300,
+    height: 300,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  text: {
+    fontSize: 16,
+    marginRight: 8, // space between text and image
+    backgroundColor: Colors.primary,
+    color: Colors.background,
+    padding: 5,
+  },
+  //   image: {
+  //     width: 24,
+  //     height: 24,
+  //   },
 });
 
-export default InboxDtls;
+export default Details;

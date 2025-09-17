@@ -5,13 +5,17 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import HeaderNavigation from '../../Components/HeaderNavigation';
 import Colors from '../../Constants/Colors';
-
+import { WATER_API_ROUTES } from '../../api/apiRoutes';
+import axios from 'axios';
+import { getToken } from '../../utils/auth';
 const SubmitApply = ({ route }) => {
   const { formData, masterData } = route.params;
   console.log('Form Data:', masterData);
+  // const {}
 
   // Mapping field keys to their label property
   const labelKeyMap = {
@@ -60,6 +64,73 @@ const SubmitApply = ({ route }) => {
     </View>
   );
 
+  const handleSubmit = async () => {
+    const payload = {
+      category: formData.categoryType || '',
+      pipelineTypeId: formData.pipelineType.toString() || '1',
+      connectionTypeId: formData.typeOfConnection.toString() || '1',
+      connectionThroughId: formData.connectionThrough.toString() || '1',
+      propertyTypeId: formData.propertyType,
+      ownershipTypeId: formData.ownerType.toString() || '1',
+      wardMstrId: formData.wardNo.toString() || '1',
+      newWardMstrId: formData.newWardNo.toString() || '1',
+      areaSqft: formData.totalArea || '',
+      address: formData.address || '',
+      landmark: formData.landmark || '',
+      pinCode: formData.pin || '',
+      holdingNo: formData.holdingNo || '',
+
+      ownerDtl: formData.applicants.map((applicant, index) => ({
+        id: applicant.id || index + 1,
+        ownerName: applicant.ownerName || '',
+        guardianName: applicant.guardianName || '',
+        dob: applicant.dob,
+        mobileNo: applicant.mobileNo || '',
+        email: applicant.email || '',
+      })),
+    };
+
+    // Insert safNo conditionally into the payload
+    if (formData.connectionThrough.toString() === '2') {
+      payload.safNo = formData.safNo;
+    }
+
+    console.log('Submitting payload:', payload);
+    try {
+      const token = await getToken();
+
+      const response = await axios.post(
+        WATER_API_ROUTES.APPLY_CONNECTION_API,
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      console.log('Submitting to:', WATER_API_ROUTES.APPLY_CONNECTION_API);
+      console.log('Payload:', payload);
+      console.log('Response Data:', response.data);
+
+      if (response.data.status) {
+        Alert.alert('Success', 'Your form has been successfully submitted!');
+      } else {
+        Alert.alert('Authentication Failed', 'Please login again.');
+      }
+    } catch (error) {
+      console.error('Full error:', error);
+
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        'An unexpected error occurred.';
+
+      Alert.alert('Submission Failed', message);
+    }
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <HeaderNavigation />
@@ -101,12 +172,13 @@ const SubmitApply = ({ route }) => {
               <RowItem label="Guardian Name" value={a.guardianName || 'N/A'} />
               <RowItem label="Mobile No" value={a.mobileNo || 'N/A'} />
               <RowItem label="Email" value={a.email || 'N/A'} />
+              <RowItem label="DOB" value={a.dob || 'N/A'} />
             </View>
           ))}
         </View>
 
         {/* Electricity Details */}
-        <View style={styles.card}>
+        {/* <View style={styles.card}>
           <Text style={styles.heading}>Electricity Details</Text>
           <RowItem
             label="K No"
@@ -124,10 +196,8 @@ const SubmitApply = ({ route }) => {
             label="Electricity Type"
             value={formData.electricityDetails?.electricityType || 'N/A'}
           />
-        </View>
-
-        {/* Final Submit Button */}
-        <TouchableOpacity style={styles.submitButton}>
+        </View> */}
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>FINAL SUBMIT</Text>
         </TouchableOpacity>
       </ScrollView>

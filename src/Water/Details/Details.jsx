@@ -6,6 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Button,
+  Modal,
 } from 'react-native';
 import Colors from '../../Constants/Colors';
 import { API_ROUTES, WORK_FLOW_PERMISSION } from '../../api/apiRoutes';
@@ -17,11 +19,16 @@ import {
   PaymentModal,
   DocumentModal,
   PaymentReceiptModal,
-} from './InboxModels';
+  RemarksModal,
+} from './Model/Model';
+
 import { useNavigation } from '@react-navigation/native';
 import { getToken } from '../../utils/auth';
+import { WATER_API_ROUTES } from '../../api/apiRoutes';
 
-const InboxDtls = ({ route }) => {
+const Details = ({ route }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [remarks, setRemarks] = useState('');
   const [showTradeLicenseModal, setShowTradeLicenseModal] = useState(false);
   const [showDemandModal, setShowDemandModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -29,14 +36,15 @@ const InboxDtls = ({ route }) => {
   const [showReceipt, setShowReceipt] = useState(false);
 
   const [receiptData, setTradPaymentRecipt] = useState(null);
-  const [tradeDue, setTradeDue] = useState(null);
+  const [waterDue, setWaterDue] = useState(null);
   const [tradeDetails, setTradeDetails] = useState(null);
   const [paymentDtl, setPaymentDtl] = useState(null);
   const [workflowData, setWorkflowData] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [levelRemarks, setLevelRemarks] = useState([]);
+  const [tradeDue, setTradeDue] = useState(null);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const id = route?.params?.id;
   const navigation = useNavigation();
@@ -51,10 +59,14 @@ const InboxDtls = ({ route }) => {
 
         // Fetch trade details first to get workflowId
         const tradeRes = await axios.post(
-          API_ROUTES.TRADE_DETAILS,
+          WATER_API_ROUTES.WATER_DETAILS_API,
           { id: Number(id) },
           { headers: { Authorization: `Bearer ${token}` } },
         );
+
+        console.log('Trade Details Response:', tradeRes?.data);
+        console.log('Payment Status:', tradeRes?.data?.paymentStatus);
+        console.log('Payment Status:', tradeRes?.data?.data?.paymentStatus); // ✅
 
         if (tradeRes?.data?.status && tradeRes.data.data) {
           setTradeDetails(tradeRes.data.data);
@@ -63,12 +75,12 @@ const InboxDtls = ({ route }) => {
         }
 
         const workflowId = tradeRes?.data?.data?.workflowId || 0;
-
+        console.log('Trade detaild ID:', tradeRes?.data?.data);
         // Run other APIs in parallel
-        const [tradeDueRes, workflowRes, paymentRes, receiptRes, documentRes] =
+        const [waterDue, workflowRes, paymentRes, receiptRes, documentRes] =
           await Promise.all([
             axios.post(
-              API_ROUTES.TRADE_DUE_DETAILS,
+              WATER_API_ROUTES.WATER_DUE_API,
               { id },
               { headers: { Authorization: `Bearer ${token}` } },
             ),
@@ -78,35 +90,30 @@ const InboxDtls = ({ route }) => {
               { headers: { Authorization: `Bearer ${token}` } },
             ),
             axios.post(
-              API_ROUTES.TRADE_PAYMENT,
+              WATER_API_ROUTES.PAYMENT_RECEIPT_API,
               {
                 id,
-                paymentType: 'FULL',
-                paymentMode: 'CASH',
-                chequeNo: '',
-                chequeDate: '',
-                bankName: '',
-                branchName: '',
               },
               { headers: { Authorization: `Bearer ${token}` } },
             ),
             axios.post(
-              API_ROUTES.TRADE_PAYMENT_RECEIPT,
+              WATER_API_ROUTES.PAY_DEMAND_API,
               { id },
               { headers: { Authorization: `Bearer ${token}` } },
             ),
             axios.post(
-              API_ROUTES.TRADE_DOCUMENT_DETAILS,
+              WATER_API_ROUTES.WATER_DOC_LIST,
               { id },
               { headers: { Authorization: `Bearer ${token}` } },
             ),
           ]);
+        console.log('Payment Receipt:', paymentRes?.data);
 
-        if (tradeDueRes?.data?.status) setTradeDue(tradeDueRes.data.data);
+        if (waterDue?.data?.status) setWaterDue(waterDue.data.data);
         if (workflowRes?.data?.status) setWorkflowData(workflowRes.data.data);
         if (paymentRes?.data?.status) setTradeDue(paymentRes.data.data);
-        if (receiptRes?.data?.status)
-          setTradPaymentRecipt(receiptRes.data.data);
+        if (paymentRes?.data?.status)
+          setTradPaymentRecipt(paymentRes.data.data);
         if (documentRes?.data?.status) setDocuments(documentRes.data.data);
       } catch (err) {
         console.log(
@@ -341,7 +348,7 @@ const InboxDtls = ({ route }) => {
             style={[styles.tradeLicenseBtn, { flex: 1 }]}
             onPress={() => setShowTradeLicenseModal(true)}
           >
-            <Text style={styles.tradeLicenseText}>View Trade License</Text>
+            <Text style={styles.tradeLicenseText}>View Water</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tradeLicenseBtn, { flex: 1 }]}
@@ -349,53 +356,76 @@ const InboxDtls = ({ route }) => {
           >
             <Text style={styles.tradeLicenseText}>View Demand</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
-            onPress={() => setShowPaymentModal(true)}
-          >
-            <Text style={styles.tradeLicenseText}>View Payment</Text>
-          </TouchableOpacity>
+          {tradeDetails?.paymentStatus === 0 && (
+            <TouchableOpacity
+              style={[styles.tradeLicenseBtn, { flex: 1 }]}
+              onPress={() => setShowPaymentModal(true)}
+            >
+              <Text style={styles.tradeLicenseText}>View Payment</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={[styles.tradeLicenseBtn, { flex: 1 }]}
             onPress={() => setShowDocumentModal(true)}
           >
             <Text style={styles.tradeLicenseText}>View Documents</Text>
           </TouchableOpacity>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.tradeLicenseBtn, { flex: 1 }]}
             onPress={() => navigation.navigate('EditTrade', { id })}
           >
             <Text style={styles.tradeLicenseText}>Edit</Text>
+          </TouchableOpacity> */}
+
+          <TouchableOpacity
+            style={[styles.tradeLicenseBtn, { flex: 1 }]}
+            onPress={() => setShowModal(true)}
+          >
+            <Text style={styles.tradeLicenseText}>Open Remarks Modal</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-
       {/* Modals */}
       <ViewTradeLicenseModal
         visible={showTradeLicenseModal}
         onClose={() => setShowTradeLicenseModal(false)}
         tradeDetails={tradeDetails}
+        id={id}
       />
       <ViewDemandModal
         visible={showDemandModal}
         onClose={() => setShowDemandModal(false)}
-        tradeDetails={tradeDue}
+        tradeDetails={waterDue}
         tradeDetails1={tradeDetails}
+        id={id}
       />
       <PaymentModal
         visible={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
-        tradeDetails={tradeDetails}
+        tradeDetails={waterDue}
+        id={id}
       />
+
       <DocumentModal
         visible={showDocumentModal}
         onClose={() => setShowDocumentModal(false)}
         documents={documents}
+        id={id}
       />
       <PaymentReceiptModal
         visible={showReceipt}
         onClose={() => setShowReceipt(false)}
         receiptData={receiptData}
+        id={id}
+      />
+
+      <RemarksModal
+        visible={showModal}
+        onClose={() => setShowModal(false)}
+        remarks={remarks}
+        setRemarks={setRemarks}
+        // onSubmit={handleSend} // pass the function
       />
     </View>
   );
@@ -515,12 +545,10 @@ const styles = StyleSheet.create({
   },
   paymentCol: { flex: 1, textAlign: 'center' },
   viewBtn: {
-    backgroundColor: '#d71717ff',
+    backgroundColor: '#0c3c78',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 4,
-    borderWidth: 2, // sets border thickness
-    borderColor: Colors.primary,
   },
   viewBtnText: { color: '#fff', fontWeight: '600' },
 
@@ -535,29 +563,28 @@ const styles = StyleSheet.create({
   },
   noDataText: {
     color: '#666',
-    fontSize: 10,
+    fontSize: 14,
     fontStyle: 'italic',
   },
 
   tradeLicenseBtn: {
     backgroundColor: '#0f3969ff',
-    marginBottom: 40,
-    borderRadius: 6,
+    height: 32, // Less height (instead of paddingVertical)
+    width: '100%', // Bigger width (adjust as needed)
+    marginBottom: 20,
+    borderRadius: 4,
     alignItems: 'center',
-    justifyContent: 'center', // centers content horizontally
-    flexDirection: 'row', // ensures content is in a row
-    // paddingHorizontal: 10, // optional, adds spacing inside the button
-    // paddingVertical: 5, // optional, adjusts height
-    borderWidth: 1, // sets border thickness
-    borderColor: 'red',
-    padding: 2,
+    justifyContent: 'center', // Center text vertically
+    paddingHorizontal: 10, // Padding for horizontal space
+    paddingVertical: 5, // Padding for vertical space
   },
+
   tradeLicenseText: {
     color: '#fff',
-    fontSize: 8,
+    fontSize: 10,
     fontWeight: 'bold',
-    marginLeft: 5, // optional, if you have an icon next to text
+    alignItems: 'center',
   },
 });
 
-export default InboxDtls;
+export default Details;

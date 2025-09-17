@@ -78,6 +78,7 @@ const LoginScreen = ({ navigation }) => {
 
     try {
       const response = await axios.post(`${BASE_URL}/api/login`, loginPayload);
+      console.log('Login response:', response);
 
       if (response?.data?.data?.token) {
         const { token, userDetails } = response.data.data;

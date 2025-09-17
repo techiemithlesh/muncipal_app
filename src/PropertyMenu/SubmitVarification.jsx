@@ -23,8 +23,18 @@ const Card = ({ title, children }) => (
 );
 
 const SubmitVarification = ({ route }) => {
-  const { submissionData, location, photo1, photo2, photo3, id } = route.params;
-  console.log('submit Varification data', submissionData);
+  // const photos = ['left', 'rignt', 'front'];
+
+  const { submissionData, location, left, right, front, id, data } =
+    route.params;
+  const { floorIds } = route.params || {};
+
+  // console.log('Floor IDs in SubmitVarification:', data);
+  const photos = [
+    { label: 'left side', ...left },
+    { label: 'right side', ...right },
+    { label: 'front side', ...front },
+  ];
 
   // convert "September 2025" → "2025-09"
   const convertMonthYear = str => {
@@ -54,26 +64,49 @@ const SubmitVarification = ({ route }) => {
       const token = await getToken();
 
       // 1️⃣ Prepare Floors
-      const preparedFloors = (submissionData?.extraFloors || []).map(floor => ({
-        safFloorDetailId: floor.safFloorDetailId || 0,
-        builtupArea: Number(floor.builtupArea ?? 0),
-        dateFrom: convertMonthYear(floor.dateFrom), // use correct key
-        dateUpto: convertMonthYear(floor.dateUpto), // add dateUpto if API expects it
-        floorMasterId:
-          floor.floorMasterId != null ? String(floor.floorMasterId) : null,
-        usageTypeMasterId:
-          floor.usageTypeMasterId != null
-            ? String(floor.usageTypeMasterId)
-            : null,
-        constructionTypeMasterId:
-          floor.constructionTypeMasterId != null
-            ? String(floor.constructionTypeMasterId)
-            : null,
-        occupancyTypeMasterId:
-          floor.occupancyTypeMasterId != null
-            ? String(floor.occupancyTypeMasterId)
-            : null,
-      }));
+      const finalFloors =
+        (submissionData?.extraFloors?.length > 0
+          ? submissionData.extraFloors.map(floor => ({
+              safFloorDetailId: floor.safFloorDetailId || 0,
+              builtupArea: Number(floor.builtupArea ?? 0),
+              dateFrom: convertMonthYear(floor.dateFrom),
+              dateUpto: convertMonthYear(floor.dateUpto),
+              floorMasterId: floor.floorMasterId
+                ? String(floor.floorMasterId)
+                : null,
+              usageTypeMasterId: floor.usageTypeMasterId
+                ? String(floor.usageTypeMasterId)
+                : null,
+              constructionTypeMasterId: floor.constructionTypeMasterId
+                ? String(floor.constructionTypeMasterId)
+                : null,
+              occupancyTypeMasterId: floor.occupancyTypeMasterId
+                ? String(floor.occupancyTypeMasterId)
+                : null,
+            }))
+          : floorIds.map(floor => ({
+              safFloorDetailId: floor.id,
+              builtupArea: Number(floor.builtupArea ?? 0),
+              carpetArea: Number(floor.carpetArea ?? 0),
+              dateFrom: floor.dateFrom,
+              dateUpto: floor.dateUpto,
+              floorMasterId: floor.floorMasterId
+                ? String(floor.floorMasterId)
+                : null,
+              usageTypeMasterId: floor.usageTypeMasterId
+                ? String(floor.usageTypeMasterId)
+                : null,
+              constructionTypeMasterId: floor.constructionTypeMasterId
+                ? String(floor.constructionTypeMasterId)
+                : null,
+              occupancyTypeMasterId: floor.occupancyTypeMasterId
+                ? String(floor.occupancyTypeMasterId)
+                : null,
+              floorName: floor.floorName || null,
+              usageType: floor.usageType || null,
+              occupancyName: floor.occupancyName || null,
+              constructionType: floor.constructionType || null,
+            }))) || [];
 
       const fieldPayload = {
         safDetailId: id,
@@ -98,7 +131,11 @@ const SubmitVarification = ({ route }) => {
             new Date().toISOString().split('T')[0]
           : null,
 
-        floorDtl: preparedFloors,
+        floorDtl: finalFloors,
+        ...((data.propertyTypeId === 4 || data.propTypeMstrId === 4) && {
+          landOccupationDate:
+            data.landOccupationDate || new Date().toISOString().split('T')[0],
+        }),
       };
 
       const response = await axios.post(
@@ -125,11 +162,9 @@ const SubmitVarification = ({ route }) => {
         ),
       );
 
-      // 3️⃣ Resize Photos
-      const photos = [photo1, photo2, photo3];
       const resizedPhotos = await Promise.all(
-        photos.map(async (photo, index) => {
-          if (!photo) return null;
+        photos.map(async photo => {
+          if (!photo.uri) return null;
           const resized = await ImageResizer.createResizedImage(
             photo.uri,
             1024,
@@ -138,9 +173,11 @@ const SubmitVarification = ({ route }) => {
             80,
           );
           return {
-            ...photo,
+            label: photo.label, // ✅ preserve label
             uri: resized.uri,
-            fileName: photo.fileName || `photo${index + 1}.jpg`,
+            fileName:
+              photo.fileName || `${photo.label.replace(/\s+/g, '_')}.jpg`,
+            type: 'image/jpeg',
           };
         }),
       );
@@ -148,11 +185,10 @@ const SubmitVarification = ({ route }) => {
       // 4️⃣ Build FormData for GeoTag + Images
       const formData = new FormData();
       formData.append('id', id);
-
-      const geoTagArray = resizedPhotos.map((photo, index) => ({
+      const geoTagArray = resizedPhotos.filter(Boolean).map(photo => ({
         latitude: location.latitude,
         longitude: location.longitude,
-        direction: photo?.direction || 'N',
+        direction: photo.label, // ✅ send "left side" | "right side" | "front side"
         document: photo,
       }));
 
@@ -168,7 +204,6 @@ const SubmitVarification = ({ route }) => {
 
       // Append geoTag with actual files
       geoTagArray.forEach((item, index) => {
-        if (!item.document) return;
         formData.append(`geoTag[${index}][latitude]`, item.latitude);
         formData.append(`geoTag[${index}][longitude]`, item.longitude);
         formData.append(`geoTag[${index}][direction]`, item.direction);
@@ -214,9 +249,9 @@ const SubmitVarification = ({ route }) => {
   useEffect(() => {
     console.log('Submission Data:', submissionData);
     console.log('Location:', location);
-    console.log('Photo 1:', photo1);
-    console.log('Photo 2:', photo2);
-    console.log('Photo 3:', photo3);
+    console.log('left 1:', left);
+    console.log('right 2:', right);
+    console.log('front 3:', front);
   }, []);
 
   return (
@@ -357,11 +392,14 @@ const SubmitVarification = ({ route }) => {
 
       {/* Photos */}
       <Text style={styles.sectionTitle}>Captured Photos</Text>
-      {[photo1, photo2, photo3].map((photo, index) =>
-        photo ? (
-          <Image key={index} source={{ uri: photo.uri }} style={styles.image} />
+      {photos.map((photo, index) =>
+        photo.uri ? (
+          <View key={index} style={{ marginBottom: 10 }}>
+            <Text style={{ fontWeight: 'bold' }}>{photo.label}</Text>
+            <Image source={{ uri: photo.uri }} style={styles.image} />
+          </View>
         ) : (
-          <Text key={index}>Photo {index + 1} not captured</Text>
+          <Text key={index}>{photo.label} not captured</Text>
         ),
       )}
 
@@ -425,9 +463,22 @@ const styles = StyleSheet.create({
     color: '#2e86de',
   },
   image: {
-    width: 150,
+    width: '100%',
     height: 150,
     marginTop: 10,
     borderRadius: 8,
+
+    // Border
+    borderWidth: 1,
+    borderColor: '#560606ff', // change to any color you like
+
+    // Shadow (iOS)
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+
+    // Shadow (Android)
+    elevation: 5,
   },
 });

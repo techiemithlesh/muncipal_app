@@ -19,9 +19,17 @@ import HeaderNavigation from '../Components/HeaderNavigation';
 
 const VerifiedStatus = ({ route }) => {
   const navigation = useNavigation();
-  const { submissionData, floorsData, hasExtraFloors, id } = route.params || {};
+  const {
+    submissionData,
+    floorsData,
+    hasExtraFloors,
+    id,
+    data,
+    floorIds = [],
+  } = route.params || {};
+  console.log('Floor IDs Data:', floorIds);
 
-  console.log('Raw floor data:', submissionData.extraFloors);
+  // console.log('Raw floor data:', submissionData.extraFloors);
   const parseDate = str => {
     if (!str) return null;
 
@@ -53,9 +61,9 @@ const VerifiedStatus = ({ route }) => {
   };
 
   console.log('Received ID:', id);
-  const [photo1, setPhoto1] = useState(null);
-  const [photo2, setPhoto2] = useState(null);
-  const [photo3, setPhoto3] = useState(null);
+  const [left, setLeft] = useState(null);
+  const [right, setRight] = useState(null);
+  const [front, setFront] = useState(null);
   const [location, setLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false); // 👈 loader state
 
@@ -124,9 +132,9 @@ const VerifiedStatus = ({ route }) => {
         launchCamera({ mediaType: 'photo' }, res => {
           if (res.didCancel || !res.assets) return;
           const photo = res.assets[0];
-          if (photoIndex === 1) setPhoto1(photo);
-          if (photoIndex === 2) setPhoto2(photo);
-          if (photoIndex === 3) setPhoto3(photo);
+          if (photoIndex === 'left') setLeft(photo);
+          if (photoIndex === 'right') setRight(photo);
+          if (photoIndex === 'front') setFront(photo);
         });
       },
       () => {
@@ -142,7 +150,11 @@ const VerifiedStatus = ({ route }) => {
 
   /* ---------------- Render Extra Floors ---------------- */
   const renderFloorData = () => {
-    if (submissionData?.extraFloors && submissionData.extraFloors.length > 0) {
+    if (
+      submissionData?.extraFloors &&
+      submissionData['Verified_PropertyType'] !== 'VACANT LAND' &&
+      submissionData.extraFloors.length > 0
+    ) {
       return submissionData.extraFloors.map((floor, floorIndex) => (
         <View
           key={floorIndex}
@@ -244,86 +256,91 @@ const VerifiedStatus = ({ route }) => {
           />
 
           {/* Parking Table */}
-          {submissionData['Property Type (Current)'] !== 'VACANT LAND' && (
-            <>
-              <SubmissionCard
-                title="Parking Details"
-                rows={[
-                  {
-                    label: 'Usage Type',
-                    value: submissionData['Usage Type (Parking Current)'],
-                    verifiedValue: submissionData['Verified_UsageParking'],
-                  },
-                  {
-                    label: 'Occupancy Type',
-                    value: submissionData['Occupancy Type (Parking Current)'],
-                    verifiedValue: submissionData['Verified_OccupancyParking'],
-                  },
-                  {
-                    label: 'Construction Type',
-                    value:
-                      submissionData['Construction Type (Parking Current)'],
-                    verifiedValue:
-                      submissionData['Verified_ConstructionParking'],
-                  },
-                  {
-                    label: 'Built-up Area',
-                    value: submissionData['Built-up Area (Parking Current)'],
-                    verifiedValue: submissionData['Verified_BuiltUpParking'],
-                  },
-                  {
-                    label: 'Date From',
-                    value: submissionData['Date From (Parking Current)'],
-                    verifiedValue: submissionData['Verified_DateFromParking'],
-                  },
-                  {
-                    label: 'Date To',
-                    value: submissionData['Date To (Parking Current)'],
-                    verifiedValue: submissionData['Verified_DateToParking'],
-                  },
-                ]}
-              />
+          {submissionData['Property Type (Current)'] !== 'VACANT LAND' &&
+            submissionData['Verified_PropertyType'] !== 'VACANT LAND' && (
+              <>
+                <SubmissionCard
+                  title="Parking Details"
+                  rows={[
+                    {
+                      label: 'Usage Type',
+                      value: submissionData['Usage Type (Parking Current)'],
+                      verifiedValue: submissionData['Verified_UsageParking'],
+                    },
+                    {
+                      label: 'Occupancy Type',
+                      value: submissionData['Occupancy Type (Parking Current)'],
+                      verifiedValue:
+                        submissionData['Verified_OccupancyParking'],
+                    },
+                    {
+                      label: 'Construction Type',
+                      value:
+                        submissionData['Construction Type (Parking Current)'],
+                      verifiedValue:
+                        submissionData['Verified_ConstructionParking'],
+                    },
+                    {
+                      label: 'Built-up Area',
+                      value: submissionData['Built-up Area (Parking Current)'],
+                      verifiedValue: submissionData['Verified_BuiltUpParking'],
+                    },
+                    {
+                      label: 'Date From',
+                      value: submissionData['Date From (Parking Current)'],
+                      verifiedValue: submissionData['Verified_DateFromParking'],
+                    },
+                    {
+                      label: 'Date To',
+                      value: submissionData['Date To (Parking Current)'],
+                      verifiedValue: submissionData['Verified_DateToParking'],
+                    },
+                  ]}
+                />
 
-              {/* Basement Table */}
-              <SubmissionCard
-                title="Basement Details"
-                rows={[
-                  {
-                    label: 'Usage Type',
-                    value: submissionData['Usage Type (Basement Current)'],
-                    verifiedValue: submissionData['Verified_UsageBasement'],
-                  },
-                  {
-                    label: 'Occupancy Type',
-                    value: submissionData['Occupancy Type (Basement Current)'],
-                    verifiedValue: submissionData['Verified_OccupancyBasement'],
-                  },
-                  {
-                    label: 'Construction Type',
-                    value:
-                      submissionData['Construction Type (Basement Current)'],
-                    verifiedValue:
-                      submissionData['Verified_ConstructionBasement'],
-                  },
-                  {
-                    label: 'Built-up Area',
-                    value: submissionData['Built-up Area (Basement Current)'],
-                    verifiedValue: submissionData['Verified_BuiltUpBasement'],
-                  },
-                  {
-                    label: 'Date From',
-                    value: submissionData['Date From (Basement Current)'],
-                    verifiedValue: submissionData['Verified_DateFromBasement'],
-                  },
-                  {
-                    label: 'Date To',
-                    value: submissionData['Date To (Basement Current)'],
-                    verifiedValue: submissionData['Verified_DateToBasement'],
-                  },
-                ]}
-              />
-            </>
-          )}
+                {/* Basement Table */}
+                <SubmissionCard
+                  title="Basement Details"
+                  rows={[
+                    {
+                      label: 'Usage Type',
+                      value: submissionData['Usage Type (Basement Current)'],
+                      verifiedValue: submissionData['Verified_UsageBasement'],
+                    },
+                    {
+                      label: 'Occupancy Type',
+                      value:
+                        submissionData['Occupancy Type (Basement Current)'],
+                      verifiedValue:
+                        submissionData['Verified_OccupancyBasement'],
+                    },
+                    {
+                      label: 'Construction Type',
+                      value:
+                        submissionData['Construction Type (Basement Current)'],
+                      verifiedValue:
+                        submissionData['Verified_ConstructionBasement'],
+                    },
+                    {
+                      label: 'Built-up Area',
+                      value: submissionData['Built-up Area (Basement Current)'],
+                      verifiedValue: submissionData['Verified_BuiltUpBasement'],
+                    },
+                    {
+                      label: 'Date From',
+                      value: submissionData['Date From (Basement Current)'],
+                      verifiedValue:
+                        submissionData['Verified_DateFromBasement'],
+                    },
+                    {
+                      label: 'Date To',
+                      value: submissionData['Date To (Basement Current)'],
+                      verifiedValue: submissionData['Verified_DateToBasement'],
+                    },
+                  ]}
+                />
+              </>
+            )}
 
           {/* Extra Floors */}
           {renderFloorData()}
@@ -354,7 +371,7 @@ const VerifiedStatus = ({ route }) => {
         {/* Location Section */}
         <View style={styles.locationSection}>
           {loadingLocation ? (
-            <ActivityIndicator size="large" color="#007AFF" /> // 👈 loader UI
+            <ActivityIndicator size="large" color="#007AFF" />
           ) : !location ? (
             <>
               <TouchableOpacity
@@ -368,19 +385,19 @@ const VerifiedStatus = ({ route }) => {
                       );
                       return;
                     }
-                    setLoadingLocation(true); // 👈 start loader
+                    setLoadingLocation(true);
                     Geolocation.getCurrentPosition(
                       pos => {
                         setLocation(pos.coords);
-                        setLoadingLocation(false); // 👈 stop loader
+                        setLoadingLocation(false);
                       },
                       () => {
-                        setLoadingLocation(false); // 👈 stop loader on error
+                        setLoadingLocation(false);
                         Alert.alert('Error', 'Unable to fetch location');
                       },
                       {
                         enableHighAccuracy: true,
-                        timeout: 60000, // wait up to 1 min  for GPS fix
+                        timeout: 60000,
                         maximumAge: 30000,
                       },
                     );
@@ -397,9 +414,7 @@ const VerifiedStatus = ({ route }) => {
             </>
           ) : (
             <View style={styles.locationInfo}>
-              <View style={styles.locationRow}>
-                <Text style={styles.locationLabel}>📍 Location Captured</Text>
-              </View>
+              <Text style={styles.locationLabel}>📍 Location Captured</Text>
               <View style={styles.coordinatesBox}>
                 <View style={styles.coordinateRow}>
                   <Text style={styles.coordinateLabel}>Latitude:</Text>
@@ -418,43 +433,91 @@ const VerifiedStatus = ({ route }) => {
           )}
         </View>
 
-        {/* Photos Section - Only show if location is captured */}
+        {/* Photos Section */}
         {location && (
           <View style={styles.photosSection}>
             <Text style={styles.photosSectionTitle}>Property Photos</Text>
             <View style={styles.photosGrid}>
-              {[1, 2, 3].map(i => {
-                const photo = i === 1 ? photo1 : i === 2 ? photo2 : photo3;
-                const setPhoto =
-                  i === 1 ? setPhoto1 : i === 2 ? setPhoto2 : setPhoto3;
-                return (
-                  <View key={i} style={styles.photoItem}>
-                    <Text style={styles.photoLabel}>Photo {i}</Text>
-                    {photo ? (
-                      <View style={styles.photoWrapper}>
-                        <Image
-                          source={{ uri: photo.uri }}
-                          style={styles.photoImage}
-                        />
-                        <TouchableOpacity
-                          style={styles.photoDeleteButton}
-                          onPress={() => setPhoto(null)}
-                        >
-                          <Text style={styles.photoDeleteText}>✕</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ) : (
-                      <TouchableOpacity
-                        style={styles.captureButton}
-                        onPress={() => capturePhoto(i)}
-                      >
-                        <Text style={styles.captureButtonIcon}>📷</Text>
-                        <Text style={styles.captureButtonText}>Capture</Text>
-                      </TouchableOpacity>
-                    )}
+              {/* Left */}
+              <View style={styles.photoItem}>
+                <Text style={styles.photoLabel}>Left</Text>
+                {left ? (
+                  <View style={styles.photoWrapper}>
+                    <Image
+                      source={{ uri: left.uri }}
+                      style={styles.photoImage}
+                    />
+                    <TouchableOpacity
+                      style={styles.photoDeleteButton}
+                      onPress={() => setLeft(null)}
+                    >
+                      <Text style={styles.photoDeleteText}>✕</Text>
+                    </TouchableOpacity>
                   </View>
-                );
-              })}
+                ) : (
+                  <TouchableOpacity
+                    style={styles.captureButton}
+                    onPress={() => capturePhoto('left')}
+                  >
+                    <Text style={styles.captureButtonIcon}>📷</Text>
+                    <Text style={styles.captureButtonText}>Capture</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Right */}
+              <View style={styles.photoItem}>
+                <Text style={styles.photoLabel}>Right</Text>
+                {right ? (
+                  <View style={styles.photoWrapper}>
+                    <Image
+                      source={{ uri: right.uri }}
+                      style={styles.photoImage}
+                    />
+                    <TouchableOpacity
+                      style={styles.photoDeleteButton}
+                      onPress={() => setRight(null)}
+                    >
+                      <Text style={styles.photoDeleteText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.captureButton}
+                    onPress={() => capturePhoto('right')}
+                  >
+                    <Text style={styles.captureButtonIcon}>📷</Text>
+                    <Text style={styles.captureButtonText}>Capture</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Front */}
+              <View style={styles.photoItem}>
+                <Text style={styles.photoLabel}>Front</Text>
+                {front ? (
+                  <View style={styles.photoWrapper}>
+                    <Image
+                      source={{ uri: front.uri }}
+                      style={styles.photoImage}
+                    />
+                    <TouchableOpacity
+                      style={styles.photoDeleteButton}
+                      onPress={() => setFront(null)}
+                    >
+                      <Text style={styles.photoDeleteText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.captureButton}
+                    onPress={() => capturePhoto('front')}
+                  >
+                    <Text style={styles.captureButtonIcon}>📷</Text>
+                    <Text style={styles.captureButtonText}>Capture</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
         )}
@@ -462,6 +525,27 @@ const VerifiedStatus = ({ route }) => {
 
       {/* Save & Next */}
       <TouchableOpacity
+        style={styles.button}
+        onPress={() =>
+          navigation.navigate('SubmitVarification', {
+            submissionData,
+            floorsData,
+            hasExtraFloors,
+            location,
+            left,
+            right,
+            front,
+            id,
+            floorIds,
+            data,
+          })
+        }
+      >
+        <Text style={styles.buttonText}>Save and Next</Text>
+      </TouchableOpacity>
+
+      {/* Save & Next */}
+      {/* <TouchableOpacity
         style={styles.button}
         onPress={() =>
           navigation.navigate('SubmitVarification', {
@@ -477,7 +561,7 @@ const VerifiedStatus = ({ route }) => {
         }
       >
         <Text style={styles.buttonText}>Save and Next</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </ScrollView>
   );
 };

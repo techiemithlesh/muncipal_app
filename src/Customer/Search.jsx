@@ -15,14 +15,13 @@ import {
   responsiveWidth,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
-import Colors from '../../Constants/Colors';
-import HeaderNavigation from '../../Components/HeaderNavigation';
+import Colors from '../Constants/Colors';
+import HeaderNavigation from '../Components/HeaderNavigation';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
-import { BASE_URL } from '../../config';
-import { API_ROUTES } from '../../api/apiRoutes';
-// import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
-import { getToken } from '../../utils/auth';
+import { API_ROUTES } from '../api/apiRoutes';
+import { getToken } from '../utils/auth';
+import { CUSTOMER_API } from '../api/apiRoutes';
 
 const Search = ({ navigation }) => {
   const [value, setValue] = useState(null); // selected ward id
@@ -94,9 +93,13 @@ const Search = ({ navigation }) => {
         wardId: value ? [value] : [],
       };
 
-      const response = await axios.post(API_ROUTES.TRADE_SEARCH, body, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.post(
+        CUSTOMER_API.CUSTOMER_SEARCH_API,
+        body,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       console.log('Search Response:', response?.data);
       if (response.data?.status) {
         const results = response.data.data?.data ?? [];
@@ -114,7 +117,7 @@ const Search = ({ navigation }) => {
   };
 
   const handleViewPress = item => {
-    navigation.navigate('TradeDetails', { id: item.id });
+    navigation.navigate('CustomerDetails', { id: item.id });
   };
 
   const renderItem = ({ item, index }) => (
@@ -138,8 +141,7 @@ const Search = ({ navigation }) => {
         🆕 New Ward No: <Text style={styles.value}>{item.newWardNo}</Text>
       </Text>
       <Text style={styles.label}>
-        📄 Application No:{' '}
-        <Text style={styles.value}>{item.applicationNo}</Text>
+        📄 consumerNo No: <Text style={styles.value}>{item.consumerNo}</Text>
       </Text>
       <Text style={styles.label}>
         🏢 firmName Type: <Text style={styles.value}>{item.firmName}</Text>

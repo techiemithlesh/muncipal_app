@@ -48,6 +48,7 @@ const TradeDetails = ({ route }) => {
 
       try {
         const token = await getToken();
+        console.log('token', token);
 
         // Fetch trade details first to get workflowId
         const tradeRes = await axios.post(
@@ -104,7 +105,10 @@ const TradeDetails = ({ route }) => {
 
         if (tradeDueRes?.data?.status) setTradeDue(tradeDueRes.data.data);
         if (workflowRes?.data?.status) setWorkflowData(workflowRes.data.data);
-        if (paymentRes?.data?.status) setTradeDue(paymentRes.data.data);
+        // if (paymentRes?.data?.status) setTradeDue(paymentRes.data.data);
+        // console.log('trade due fhfhdhdfhdf', tradeDue);
+        // console.log('trade due second', tradeDueRes.data);
+
         if (receiptRes?.data?.status)
           setTradPaymentRecipt(receiptRes.data.data);
         if (documentRes?.data?.status) setDocuments(documentRes.data.data);
@@ -361,12 +365,6 @@ const TradeDetails = ({ route }) => {
           >
             <Text style={styles.tradeLicenseText}>View Documents</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
-            onPress={() => navigation.navigate('EditTrade', { id })}
-          >
-            <Text style={styles.tradeLicenseText}>Edit</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -379,12 +377,14 @@ const TradeDetails = ({ route }) => {
       <ViewDemandModal
         visible={showDemandModal}
         onClose={() => setShowDemandModal(false)}
-        tradeDetails={tradeDue}
+        demandDetails={tradeDue}
         tradeDetails1={tradeDetails}
       />
+
       <PaymentModal
         visible={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
+        demandDetails={tradeDue}
         tradeDetails={tradeDetails}
       />
       <DocumentModal
@@ -539,13 +539,23 @@ const styles = StyleSheet.create({
 
   tradeLicenseBtn: {
     backgroundColor: '#0f3969ff',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    marginBottom: 20,
+    marginBottom: 40,
     borderRadius: 6,
     alignItems: 'center',
+    justifyContent: 'center', // centers content horizontally
+    flexDirection: 'row', // ensures content is in a row
+    // paddingHorizontal: 10, // optional, adds spacing inside the button
+    // paddingVertical: 5, // optional, adjusts height
+    borderWidth: 1, // sets border thickness
+    borderColor: 'red',
+    padding: 2,
   },
-  tradeLicenseText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
+  tradeLicenseText: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: 'bold',
+    marginLeft: 5, // optional, if you have an icon next to text
+  },
 });
 
 export default TradeDetails;

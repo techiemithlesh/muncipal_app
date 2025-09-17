@@ -16,6 +16,7 @@ import {
   Modal,
   KeyboardAvoidingView,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 
 import { Dropdown } from 'react-native-element-dropdown';
@@ -135,12 +136,93 @@ const SurveyPage = ({ route, navigation }) => {
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
   const [previewData, setPreviewData] = useState({});
 
+  const [floorIds, setFloorIds] = useState([]);
+
   const showFromPicker = () => setFromPickerVisible(true);
   const hideFromPicker = () => setFromPickerVisible(false);
   const handleFromConfirm = date => {
     setFromDate(date);
     hideFromPicker();
   };
+
+  const getLabelFromOptions = (options, value) => {
+    const found = options?.find(item => item.value === value);
+    return found?.label || value || 'N/A';
+  };
+
+  const getPreviewValue = (
+    original,
+    dropdownValue,
+    verification,
+    options,
+    inputValue = null,
+  ) => {
+    if (verification === 'Correct') return original;
+    if (inputValue) return inputValue;
+    if (dropdownValue instanceof Date) {
+      return formatDate(dropdownValue);
+    }
+    return getLabelFromOptions(options, dropdownValue);
+  };
+
+  // const validatePreviewData = () => {
+  //   const errors = [];
+
+  //   if (!wardVerification && !wardDropdown) {
+  //     errors.push('Please verify/select Ward No');
+  //   }
+
+  //   if (!newWardVerification && !newWardDropdown) {
+  //     errors.push('Please verify/select New Ward No');
+  //   }
+
+  //   if (!zoneVerification && !zoneDropdown) {
+  //     errors.push('Please verify/select Zone');
+  //   }
+
+  //   if (!propertyVerification && !propertyDropdown) {
+  //     errors.push('Please verify/select Property Type');
+  //   }
+
+  //   const selectedPropertyLabel =
+  //     propertyDropdownOptions?.find(
+  //       opt => String(opt.value) === String(propertyDropdown),
+  //     )?.label || '';
+
+  //   const shouldShowSections =
+  //     data?.propertyType?.toUpperCase() !== 'VACANT LAND' ||
+  //     (data?.propertyType?.toUpperCase() === 'VACANT LAND' &&
+  //       selectedPropertyLabel.toUpperCase() !== 'VACANT LAND' &&
+  //       selectedPropertyLabel !== '');
+
+  //   if (
+  //     shouldShowSections &&
+  //     selectedPropertyLabel.toUpperCase() !== 'VACANT LAND'
+  //   ) {
+  //     floorIds.forEach((floor, index) => {
+  //       if (!floor.usageType) {
+  //         errors.push(`Please select Usage Type (${floor.floorName})`);
+  //       }
+  //       if (!floor.occupancyType) {
+  //         errors.push(`Please select Occupancy Type (${floor.floorName})`);
+  //       }
+  //       if (!floor.constructionType) {
+  //         errors.push(`Please select Construction Type (${floor.floorName})`);
+  //       }
+  //       if (!floor.builtupArea) {
+  //         errors.push(`Please enter Built-up Area (${floor.floorName})`);
+  //       }
+  //       if (!floor.fromDate) {
+  //         errors.push(`Please select Date From (${floor.floorName})`);
+  //       }
+  //       if (!floor.toDate) {
+  //         errors.push(`Please select Date To (${floor.floorName})`);
+  //       }
+  //     });
+  //   }
+  //   // Return only first error (or null if no errors)
+  //   return errors.length > 0 ? errors[0] : null;
+  // };
 
   const handleSubmitPreview = () => {
     // Get the verified IDs based on selection
@@ -153,55 +235,99 @@ const SurveyPage = ({ route, navigation }) => {
     };
 
     // Prepare parking floor data with IDs
-    const parkingFloorData = parkingFloor ? {
-      safFloorDetailId: parkingFloor?.id || parkingFloor?.safFloorDetailId || null,
-      builtupArea: buildupArea === 'Incorrect' && builtupAreaIput 
-        ? Number(builtupAreaIput) 
-        : Number(parkingFloor?.builtupArea || 0),
-      dateFrom: dateFromParking === 'Incorrect' && dateFromParkingDropdown
-        ? formatDate(dateFromParkingDropdown)
-        : parkingFloor?.dateFrom,
-      dateUpto: dateToParking === 'Incorrect' && dateToParkingDropdown
-        ? formatDate(dateToParkingDropdown)
-        : parkingFloor?.dateUpto,
-      floorMasterId: parkingFloor?.floorMasterId || "1", // Parking floor ID
-      usageTypeMasterId: getVerifiedId(usageType, parkingFloor?.usageTypeMasterId, usageTypeDropdown),
-      constructionTypeMasterId: getVerifiedId(constructionType, parkingFloor?.constructionTypeMasterId, constructionTypeDropdown),
-      occupancyTypeMasterId: getVerifiedId(occupancyType, parkingFloor?.occupancyTypeMasterId, occupancyTypeDropdown),
-    } : null;
+    const parkingFloorData = parkingFloor
+      ? {
+          safFloorDetailId:
+            parkingFloor?.id || parkingFloor?.safFloorDetailId || null,
+          builtupArea:
+            buildupArea === 'Incorrect' && builtupAreaIput
+              ? Number(builtupAreaIput)
+              : Number(parkingFloor?.builtupArea || 0),
+          dateFrom:
+            dateFromParking === 'Incorrect' && dateFromParkingDropdown
+              ? formatDate(dateFromParkingDropdown)
+              : parkingFloor?.dateFrom,
+          dateUpto:
+            dateToParking === 'Incorrect' && dateToParkingDropdown
+              ? formatDate(dateToParkingDropdown)
+              : parkingFloor?.dateUpto,
+          floorMasterId: parkingFloor?.floorMasterId || '1', // Parking floor ID
+          usageTypeMasterId: getVerifiedId(
+            usageType,
+            parkingFloor?.usageTypeMasterId,
+            usageTypeDropdown,
+          ),
+          constructionTypeMasterId: getVerifiedId(
+            constructionType,
+            parkingFloor?.constructionTypeMasterId,
+            constructionTypeDropdown,
+          ),
+          occupancyTypeMasterId: getVerifiedId(
+            occupancyType,
+            parkingFloor?.occupancyTypeMasterId,
+            occupancyTypeDropdown,
+          ),
+        }
+      : null;
 
     // Prepare basement floor data with IDs
-    const basementFloorData = basementFloor ? {
-      safFloorDetailId: basementFloor?.id || basementFloor?.safFloorDetailId || null,
-      builtupArea: buildupAreaBasement === 'Incorrect' && builtupAreaInputBasement
-        ? Number(builtupAreaInputBasement)
-        : Number(basementFloor?.builtupArea || 0),
-      dateFrom: dateFromBasement === 'Incorrect' && dateFromBasementDropdown
-        ? formatDate(dateFromBasementDropdown)
-        : basementFloor?.dateFrom,
-      dateUpto: dateToBasement === 'Incorrect' && dateToBasementDropdown
-        ? formatDate(dateToBasementDropdown)
-        : basementFloor?.dateUpto,
-      floorMasterId: basementFloor?.floorMasterId || "2", // Basement floor ID
-      usageTypeMasterId: usageTypeBasement === 'Incorrect' && usageTypeInputBasement
-        ? usageTypeInputBasement
-        : basementFloor?.usageTypeMasterId,
-      constructionTypeMasterId: constructionTypeBasement === 'Incorrect' && constructionTypeInputBasement
-        ? constructionTypeInputBasement
-        : basementFloor?.constructionTypeMasterId,
-      occupancyTypeMasterId: occupancyTypeBasement === 'Incorrect' && occupancyTypeInputBasement
-        ? occupancyTypeInputBasement
-        : basementFloor?.occupancyTypeMasterId,
-    } : null;
+    const basementFloorData = basementFloor
+      ? {
+          safFloorDetailId:
+            basementFloor?.id || basementFloor?.safFloorDetailId || null,
+          builtupArea:
+            buildupAreaBasement === 'Incorrect' && builtupAreaInputBasement
+              ? Number(builtupAreaInputBasement)
+              : Number(basementFloor?.builtupArea || 0),
+          dateFrom:
+            dateFromBasement === 'Incorrect' && dateFromBasementDropdown
+              ? formatDate(dateFromBasementDropdown)
+              : basementFloor?.dateFrom,
+          dateUpto:
+            dateToBasement === 'Incorrect' && dateToBasementDropdown
+              ? formatDate(dateToBasementDropdown)
+              : basementFloor?.dateUpto,
+          floorMasterId: basementFloor?.floorMasterId || '2', // Basement floor ID
+          usageTypeMasterId:
+            usageTypeBasement === 'Incorrect' && usageTypeInputBasement
+              ? usageTypeInputBasement
+              : basementFloor?.usageTypeMasterId,
+          constructionTypeMasterId:
+            constructionTypeBasement === 'Incorrect' &&
+            constructionTypeInputBasement
+              ? constructionTypeInputBasement
+              : basementFloor?.constructionTypeMasterId,
+          occupancyTypeMasterId:
+            occupancyTypeBasement === 'Incorrect' && occupancyTypeInputBasement
+              ? occupancyTypeInputBasement
+              : basementFloor?.occupancyTypeMasterId,
+        }
+      : null;
 
     const submissionData = {
       ...previewData,
       // Main property IDs
       safDetailId: id,
-      wardMstrId: getVerifiedId(wardVerification, data?.wardMstrId, wardDropdown),
-      newWardMstrId: getVerifiedId(newWardVerification, data?.newWardMstrId, newWardDropdown),
-      propTypeMstrId: getVerifiedId(propertyVerification, data?.propTypeMstrId, propertyDropdown),
-      zoneMstrId: getVerifiedId(zoneVerification, data?.zoneMstrId, zoneDropdown),
+      wardMstrId: getVerifiedId(
+        wardVerification,
+        data?.wardMstrId,
+        wardDropdown,
+      ),
+      newWardMstrId: getVerifiedId(
+        newWardVerification,
+        data?.newWardMstrId,
+        newWardDropdown,
+      ),
+      propTypeMstrId: getVerifiedId(
+        propertyVerification,
+        data?.propTypeMstrId,
+        propertyDropdown,
+      ),
+      zoneMstrId: getVerifiedId(
+        zoneVerification,
+        data?.zoneMstrId,
+        zoneDropdown,
+      ),
       roadWidth: data?.roadWidth || 20,
       areaOfPlot: data?.areaOfPlot || 80,
       isMobileTower: data?.isMobileTower || false,
@@ -209,11 +335,11 @@ const SurveyPage = ({ route, navigation }) => {
       isPetrolPump: data?.isPetrolPump || false,
       isWaterHarvesting: data?.isWaterHarvesting || false,
       remarks: remarks || '',
-      
+
       // Floor details
       parkingFloor: parkingFloorData,
       basementFloor: basementFloorData,
-      
+
       // Extra floors with IDs
       extraFloors: addExtraFloor
         ? floors?.map((floor, index) => ({
@@ -248,7 +374,12 @@ const SurveyPage = ({ route, navigation }) => {
     console.log('Submitted Data with IDs:', submissionData);
 
     // Navigate and optionally pass data
-    navigation.navigate('VerifiedStatus', { submissionData, id });
+    navigation.navigate('VerifiedStatus', {
+      submissionData,
+      id,
+      floorIds,
+      data,
+    });
   };
 
   const showToPicker = () => setToPickerVisible(true);
@@ -293,11 +424,15 @@ const SurveyPage = ({ route, navigation }) => {
             },
           },
         );
-
+        console.log('field Virification data', response.data.data);
         setMasterData(response1.data.data);
         setData(response.data.data);
-        console.log('API Response Data:', response.data.data);
-        console.log('Master Data:', response1.data.data);
+
+        const floors = response.data.data.floor || [];
+        setFloorIds(floors);
+
+        console.log('All Floor IDs:', floors);
+        // console.log('data', data);
       } catch (error) {
         console.error('Fetch error:', error);
       } finally {
@@ -319,6 +454,19 @@ const SurveyPage = ({ route, navigation }) => {
       value: item.id,
     }),
   );
+
+  const selectedPropertyLabel =
+    propertyDropdownOptions.find(
+      opt => String(opt.value) === String(propertyDropdown),
+    )?.label ||
+    data?.propertyType ||
+    '';
+  const isNotVacantLand = selectedPropertyLabel.toUpperCase() !== 'VACANT LAND';
+  const shouldShowSections =
+    data?.propertyType?.toUpperCase() !== 'VACANT LAND' || // API value not vacant land
+    (data?.propertyType?.toUpperCase() === 'VACANT LAND' &&
+      selectedPropertyLabel.toUpperCase() !== 'VACANT LAND' &&
+      selectedPropertyLabel !== '');
   const zoneDropdownOptions = [
     { label: 'Zone 1', value: 'zone1' },
     { label: 'Zone 2', value: 'zone2' },
@@ -458,403 +606,392 @@ const SurveyPage = ({ route, navigation }) => {
           dropdownValue={propertyDropdown}
           setDropdownValue={setPropertyDropdown}
         />
-        {data?.propertyType !== 'VACANT LAND' && (
-          <>
-            {/* #################### Parking ############# */}
-            <LinearGradient
-              colors={['#B6D9E0', '#2C5364']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.gradientContainer}
-            >
-              <Text
-                style={{
-                  marginTop: 10,
-                  marginBottom: 5,
-                  marginLeft: 15,
-                  marginRight: 8,
-                  color: 'red', // white text to contrast background
-                  fontWeight: 'bold',
-                  fontSize: 16,
-                }}
+        {shouldShowSections &&
+          selectedPropertyLabel.toUpperCase() !== 'VACANT LAND' && (
+            <>
+              {/* #################### Parking ############# */}
+              <LinearGradient
+                colors={['#B6D9E0', '#2C5364']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientContainer}
               >
-                PARKING
-              </Text>
-              <VerificationCard
-                label="Usage-Type"
-                value={parkingFloor?.usageType || ''}
-                dropdownOptions={usageTypeDropdownOptions || []}
-                selectedVerification={usageType}
-                setSelectedVerification={setUsageType}
-                dropdownValue={usageTypeDropdown}
-                setDropdownValue={setUsageTypeDropdown}
-              />
-              <VerificationCard
-                label="occupancy-Type"
-                value={parkingFloor?.occupancyName || ''}
-                dropdownOptions={occupancyTypeDropdownOptions || []}
-                selectedVerification={occupancyType}
-                setSelectedVerification={setOccupancyType}
-                dropdownValue={occupancyTypeDropdown}
-                setDropdownValue={setOccupancyTypeDropdown}
-              />
-              <VerificationCard
-                label="construction-Type"
-                value={parkingFloor?.constructionType || ''}
-                dropdownOptions={constructionTypeDropdownOptions || []}
-                selectedVerification={constructionType}
-                setSelectedVerification={setConstructionType}
-                dropdownValue={constructionTypeDropdown}
-                setDropdownValue={setConstructionTypeDropdown}
-              />
-              <VerificationCard
-                label="buildup-Area"
-                value={parkingFloor?.builtupArea || ''}
-                dropdownOptions={buildupAreaDropdownOptions || []}
-                selectedVerification={buildupArea}
-                setSelectedVerification={setBuildupArea}
-                dropdownValue={buildupAreaDropdown}
-                setDropdownValue={setBuildupAreaDropdown}
-                showInputOnIncorrect={true}
-                inputValue={builtupAreaIput}
-                setInputValue={setBuiltupAreaInput}
-                inputLabel="Enter new builtup area:"
-                inputPlaceholder="Enter new builtup area"
-              />
-              <VerificationCard
-                label="date-From-Parking"
-                value={parkingFloor?.dateFrom || ''}
-                selectedVerification={dateFromParking}
-                setSelectedVerification={setDateFromParking}
-                showCalendarOnIncorrect={true}
-                calendarValue={dateFromParkingDropdown}
-                setCalendarValue={setDateFromParkingDropdown}
-                onCalendarPress={() => setShowDateFromParkingPicker(true)}
-              />
-              <VerificationCard
-                label="date-To-Parking"
-                value={parkingFloor?.dateUpto || ''}
-                selectedVerification={dateToParking}
-                setSelectedVerification={setDateToParking}
-                showCalendarOnIncorrect={true}
-                calendarValue={dateToParkingDropdown}
-                setCalendarValue={setDateToParkingDropdown}
-                onCalendarPress={() => setShowDateToParkingPicker(true)}
-              />
-            </LinearGradient>
-            <LinearGradient
-              colors={['#B6D9E0', '#2C5364']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.gradientContainer} // use your own style
-            >
-              <Text
-                style={{
-                  marginTop: 10,
-                  marginBottom: 5,
-                  marginLeft: 15,
-                  marginRight: 8,
-                  color: 'red', // white text to contrast background
-                  fontWeight: 'bold',
-                  fontSize: 16,
-                }}
+                {floorIds.map((floor, index) => (
+                  <View key={floor.id} style={{ marginBottom: 20 }}>
+                    <Text
+                      style={{
+                        marginTop: 10,
+                        marginBottom: 5,
+                        marginLeft: 15,
+                        marginRight: 8,
+                        color: 'red',
+                        fontWeight: 'bold',
+                        fontSize: 16,
+                      }}
+                    >
+                      {floor.floorName.toUpperCase()}
+                    </Text>
+
+                    <VerificationCard
+                      label="Usage-Type"
+                      value={floor.usageType || ''}
+                      dropdownOptions={usageTypeDropdownOptions || []}
+                      selectedVerification={usageType}
+                      setSelectedVerification={setUsageType}
+                      dropdownValue={usageTypeDropdown}
+                      setDropdownValue={setUsageTypeDropdown}
+                    />
+                    <VerificationCard
+                      label="Occupancy-Type"
+                      value={floor.occupancyName || ''}
+                      dropdownOptions={occupancyTypeDropdownOptions || []}
+                      selectedVerification={occupancyType}
+                      setSelectedVerification={setOccupancyType}
+                      dropdownValue={occupancyTypeDropdown}
+                      setDropdownValue={setOccupancyTypeDropdown}
+                    />
+                    <VerificationCard
+                      label="Construction-Type"
+                      value={floor.constructionType || ''}
+                      dropdownOptions={constructionTypeDropdownOptions || []}
+                      selectedVerification={constructionType}
+                      setSelectedVerification={setConstructionType}
+                      dropdownValue={constructionTypeDropdown}
+                      setDropdownValue={setConstructionTypeDropdown}
+                    />
+                    <VerificationCard
+                      label="Builtup-Area"
+                      value={floor.builtupArea || ''}
+                      dropdownOptions={buildupAreaDropdownOptions || []}
+                      selectedVerification={buildupArea}
+                      setSelectedVerification={setBuildupArea}
+                      dropdownValue={buildupAreaDropdown}
+                      setDropdownValue={setBuildupAreaDropdown}
+                      showInputOnIncorrect={true}
+                      inputValue={builtupAreaIput}
+                      setInputValue={setBuiltupAreaInput}
+                      inputLabel="Enter new builtup area:"
+                      inputPlaceholder="Enter new builtup area"
+                    />
+                    <VerificationCard
+                      label="Date From"
+                      value={floor.dateFrom || ''}
+                      selectedVerification={dateFromParking}
+                      setSelectedVerification={setDateFromParking}
+                      showCalendarOnIncorrect={true}
+                      calendarValue={dateFromParkingDropdown}
+                      setCalendarValue={setDateFromParkingDropdown}
+                      onCalendarPress={() => setShowDateFromParkingPicker(true)}
+                    />
+                    <VerificationCard
+                      label="Date To"
+                      value={floor.dateUpto || ''}
+                      selectedVerification={dateToParking}
+                      setSelectedVerification={setDateToParking}
+                      showCalendarOnIncorrect={true}
+                      calendarValue={dateToParkingDropdown}
+                      setCalendarValue={setDateToParkingDropdown}
+                      onCalendarPress={() => setShowDateToParkingPicker(true)}
+                    />
+                  </View>
+                ))}
+              </LinearGradient>
+
+              {/* <LinearGradient
+                colors={['#B6D9E0', '#2C5364']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientContainer} // use your own style
               >
-                BASEMENT
-              </Text>
-
-              <VerificationCard
-                label="Usage-Type (Basement)"
-                value={basementFloor?.usageType || ''}
-                selectedVerification={usageTypeBasement}
-                setSelectedVerification={setUsageTypeBasement}
-                showInputOnIncorrect={true}
-                inputValue={usageTypeInputBasement}
-                setInputValue={setUsageTypeInputBasement}
-                inputLabel="Enter new usage type (Basement):"
-                inputPlaceholder="Enter new usage type (Basement)"
-              />
-
-              <VerificationCard
-                label="Occupancy-Type (Basement)"
-                value={basementFloor?.occupancyName || ''}
-                selectedVerification={occupancyTypeBasement}
-                setSelectedVerification={setOccupancyTypeBasement}
-                showInputOnIncorrect={true}
-                inputValue={occupancyTypeInputBasement}
-                setInputValue={setOccupancyTypeInputBasement}
-                inputLabel="Enter new occupancy type (Basement):"
-                inputPlaceholder="Enter new occupancy type (Basement)"
-              />
-
-              <VerificationCard
-                label="Construction-Type (Basement)"
-                value={basementFloor?.constructionType || ''}
-                selectedVerification={constructionTypeBasement}
-                setSelectedVerification={setConstructionTypeBasement}
-                showInputOnIncorrect={true}
-                inputValue={constructionTypeInputBasement}
-                setInputValue={setConstructionTypeInputBasement}
-                inputLabel="Enter new construction type (Basement):"
-                inputPlaceholder="Enter new construction type (Basement)"
-              />
-
-              <VerificationCard
-                label="buildup-Area (Basement)"
-                value={basementFloor?.builtupArea || ''}
-                dropdownOptions={buildupAreaDropdownOptions || []}
-                selectedVerification={buildupAreaBasement}
-                setSelectedVerification={setBuildupAreaBasement}
-                dropdownValue={buildupAreaDropdownBasement}
-                setDropdownValue={setBuildupAreaDropdownBasement}
-                showInputOnIncorrect={true}
-                inputValue={builtupAreaInputBasement}
-                setInputValue={setBuiltupAreaInputBasement}
-                inputLabel="Enter new builtup area (Basement):"
-                inputPlaceholder="Enter new builtup area (Basement)"
-              />
-
-              <VerificationCard
-                label="date-From-Basement"
-                value={basementFloor?.dateFrom || ''}
-                selectedVerification={dateFromBasement}
-                setSelectedVerification={setDateFromBasement}
-                showCalendarOnIncorrect={true}
-                calendarValue={dateFromBasementDropdown}
-                setCalendarValue={setDateFromBasementDropdown}
-                onCalendarPress={() => setShowDateFromBasementPicker(true)}
-              />
-
-              <VerificationCard
-                label="date-To-Basement"
-                value={basementFloor?.dateUpto || ''}
-                selectedVerification={dateToBasement}
-                setSelectedVerification={setDateToBasement}
-                showCalendarOnIncorrect={true}
-                calendarValue={dateToBasementDropdown}
-                setCalendarValue={setDateToBasementDropdown}
-                onCalendarPress={() => setShowDateToBasementPicker(true)}
-              />
-            </LinearGradient>
-            <View style={styles.extraFloorContainer}>
-              <View style={styles.row}>
-                <Text style={styles.labelCheckbox}>
-                  Do You Want To Add Extra Floor?
-                </Text>
-                <TouchableOpacity
-                  style={styles.checkbox}
-                  onPress={() => {
-                    setAddExtraFloor(!addExtraFloor);
-                    if (!addExtraFloor && floors.length === 0) {
-                      setFloors([1]); // add first floor when checked
-                    } else if (addExtraFloor) {
-                      setFloors([]); // reset on uncheck
-                    }
+                <Text
+                  style={{
+                    marginTop: 10,
+                    marginBottom: 5,
+                    marginLeft: 15,
+                    marginRight: 8,
+                    color: 'red', // white text to contrast background
+                    fontWeight: 'bold',
+                    fontSize: 16,
                   }}
                 >
-                  <View
-                    style={
-                      addExtraFloor ? styles.checkedBox : styles.uncheckedBox
-                    }
-                  />
-                </TouchableOpacity>
+                  BASEMENT
+                </Text>
+                <VerificationCard
+                  label="Usage-Type (Basement)"
+                  value={basementFloor?.usageType || ''}
+                  selectedVerification={usageTypeBasement}
+                  setSelectedVerification={setUsageTypeBasement}
+                  showDropdown={true} // new prop to show dropdown instead of input
+                  dropdownOptions={usageTypeDropdownOptions} // pass your dropdown options
+                  dropdownValue={usageTypeInputBasement} // selected dropdown value
+                  setDropdownValue={setUsageTypeInputBasement} // setter for dropdown
+                />
+                <VerificationCard
+                  label="Occupancy-Type (Basement)"
+                  value={basementFloor?.occupancyName || ''}
+                  selectedVerification={occupancyTypeBasement}
+                  setSelectedVerification={setOccupancyTypeBasement}
+                  showDropdown={true} // new prop to show dropdown
+                  dropdownOptions={occupancyTypeDropdownOptions} // your dropdown options
+                  dropdownValue={occupancyTypeInputBasement} // selected value
+                  setDropdownValue={setOccupancyTypeInputBasement} // setter for selected value
+                />
+                <VerificationCard
+                  label="Construction-Type (Basement)"
+                  value={basementFloor?.constructionType || ''}
+                  selectedVerification={constructionTypeBasement}
+                  setSelectedVerification={setConstructionTypeBasement}
+                  showDropdown={true} // show dropdown instead of input
+                  dropdownOptions={constructionTypeDropdownOptions} // your dropdown options
+                  dropdownValue={constructionTypeInputBasement} // selected value
+                  setDropdownValue={setConstructionTypeInputBasement} // setter for selected value
+                />
+                <VerificationCard
+                  label="buildup-Area (Basement)"
+                  value={basementFloor?.builtupArea || ''}
+                  dropdownOptions={buildupAreaDropdownOptions || []}
+                  selectedVerification={buildupAreaBasement}
+                  setSelectedVerification={setBuildupAreaBasement}
+                  dropdownValue={buildupAreaDropdownBasement}
+                  setDropdownValue={setBuildupAreaDropdownBasement}
+                  showInputOnIncorrect={true}
+                  inputValue={builtupAreaInputBasement}
+                  setInputValue={setBuiltupAreaInputBasement}
+                  inputLabel="Enter new builtup area (Basement):"
+                  inputPlaceholder="Enter new builtup area (Basement)"
+                />
+                <VerificationCard
+                  label="date-From-Basement"
+                  value={basementFloor?.dateFrom || ''}
+                  selectedVerification={dateFromBasement}
+                  setSelectedVerification={setDateFromBasement}
+                  showCalendarOnIncorrect={true}
+                  calendarValue={dateFromBasementDropdown}
+                  setCalendarValue={setDateFromBasementDropdown}
+                  onCalendarPress={() => setShowDateFromBasementPicker(true)}
+                />
+                <VerificationCard
+                  label="date-To-Basement"
+                  value={basementFloor?.dateUpto || ''}
+                  selectedVerification={dateToBasement}
+                  setSelectedVerification={setDateToBasement}
+                  showCalendarOnIncorrect={true}
+                  calendarValue={dateToBasementDropdown}
+                  setCalendarValue={setDateToBasementDropdown}
+                  onCalendarPress={() => setShowDateToBasementPicker(true)}
+                />
+              </LinearGradient> */}
+              <View style={styles.extraFloorContainer}>
+                <View style={styles.row}>
+                  <Text style={styles.labelCheckbox}>
+                    Do You Want To Add Extra Floor?
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.checkbox}
+                    onPress={() => {
+                      setAddExtraFloor(!addExtraFloor);
+                      if (!addExtraFloor && floors.length === 0) {
+                        setFloors([1]); // add first floor when checked
+                      } else if (addExtraFloor) {
+                        setFloors([]); // reset on uncheck
+                      }
+                    }}
+                  >
+                    <View
+                      style={
+                        addExtraFloor ? styles.checkedBox : styles.uncheckedBox
+                      }
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                {addExtraFloor && (
+                  <>
+                    {floors.map((floor, index) => (
+                      <LinearGradient
+                        key={index}
+                        colors={['#ececf2ff', '#eee7e7ff']}
+                        style={styles.card}
+                      >
+                        <View style={styles.rowlabel}>
+                          <Text style={{ color: 'white' }}>
+                            Extra Floor {index + 1}
+                          </Text>
+                        </View>
+                        <View>
+                          <Text style={styles.label}>Floor Name</Text>
+                          <Dropdown
+                            style={styles.dropdown}
+                            placeholderStyle={styles.placeholder}
+                            selectedTextStyle={styles.selectedText}
+                            data={floorNameDropdownOptions}
+                            labelField="label"
+                            valueField="value"
+                            placeholder="Select"
+                            value={floor.floorName}
+                            onChange={item =>
+                              updateFloor(index, 'floorName', item.value)
+                            }
+                          />
+
+                          <Text style={styles.label}>Construction Type</Text>
+                          <Dropdown
+                            style={styles.dropdown}
+                            placeholderStyle={styles.placeholder}
+                            selectedTextStyle={styles.selectedText}
+                            data={constructionTypeDropdownOptions}
+                            labelField="label"
+                            valueField="value"
+                            placeholder="Select"
+                            value={floor.constructionType}
+                            onChange={item =>
+                              updateFloor(index, 'constructionType', item.value)
+                            }
+                          />
+
+                          <Text style={styles.label}>Occupancy Type</Text>
+                          <Dropdown
+                            style={styles.dropdown}
+                            placeholderStyle={styles.placeholder}
+                            selectedTextStyle={styles.selectedText}
+                            data={occupancyTypeDropdownOptions}
+                            labelField="label"
+                            valueField="value"
+                            placeholder="Select"
+                            value={floor.occupancyType}
+                            onChange={item =>
+                              updateFloor(index, 'occupancyType', item.value)
+                            }
+                          />
+
+                          <Text style={styles.label}>Usage Type</Text>
+                          <Dropdown
+                            style={styles.dropdown}
+                            placeholderStyle={styles.placeholder}
+                            selectedTextStyle={styles.selectedText}
+                            data={usageTypeDropdownOptions}
+                            labelField="label"
+                            valueField="value"
+                            placeholder="Select"
+                            value={floor.usageType}
+                            onChange={item =>
+                              updateFloor(index, 'usageType', item.value)
+                            }
+                          />
+
+                          <Text style={styles.label}>Built-up Area</Text>
+                          <TextInput
+                            style={styles.input}
+                            placeholder="Enter built-up area"
+                            value={floor.builtupArea}
+                            onChangeText={text =>
+                              updateFloor(index, 'builtupArea', text)
+                            }
+                            keyboardType="numeric"
+                          />
+                        </View>
+
+                        <Text style={styles.label}>Date From</Text>
+                        <TouchableOpacity
+                          style={styles.dateBox}
+                          onPress={() =>
+                            updateFloor(index, 'showFromPicker', true)
+                          }
+                        >
+                          <Text style={styles.dateText}>
+                            {floor.fromDate
+                              ? formatDate(floor.fromDate)
+                              : 'Select Date'}
+                          </Text>
+                        </TouchableOpacity>
+                        {floor.showFromPicker && (
+                          <MonthYearPicker
+                            onChange={(event, newDate) => {
+                              updateFloor(index, 'showFromPicker', false);
+                              if (newDate) {
+                                updateFloor(index, 'fromDate', newDate);
+                              }
+                            }}
+                            value={floor.fromDate || new Date()}
+                          />
+                        )}
+
+                        <Text style={styles.label}>Date Upto</Text>
+                        <TouchableOpacity
+                          style={styles.dateBox}
+                          onPress={() =>
+                            updateFloor(index, 'showToPicker', true)
+                          }
+                        >
+                          <Text style={styles.dateText}>
+                            {floor.toDate
+                              ? formatDate(floor.toDate)
+                              : 'Select Date'}
+                          </Text>
+                        </TouchableOpacity>
+                        {floor.showToPicker && (
+                          <MonthYearPicker
+                            onChange={(event, newDate) => {
+                              updateFloor(index, 'showToPicker', false);
+                              if (newDate) {
+                                updateFloor(index, 'toDate', newDate);
+                              }
+                            }}
+                            value={floor.toDate || new Date()}
+                          />
+                        )}
+
+                        <Text style={styles.cardText}></Text>
+                      </LinearGradient>
+                    ))}
+
+                    <View style={styles.buttonRow}>
+                      <TouchableOpacity
+                        onPress={addFloor}
+                        style={styles.addButton}
+                      >
+                        <Text style={styles.buttonText}>Add Floor</Text>
+                      </TouchableOpacity>
+                      {floors.length > 0 && (
+                        <TouchableOpacity
+                          onPress={removeFloor}
+                          style={styles.removeButton}
+                        >
+                          <Text style={styles.buttonText}>Remove Floor</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </>
+                )}
               </View>
 
-              {addExtraFloor && (
-                <>
-                  {floors.map((floor, index) => (
-                    <LinearGradient
-                      key={index}
-                      colors={['#ececf2ff', '#eee7e7ff']}
-                      style={styles.card}
-                    >
-                      <View style={styles.rowlabel}>
-                        <Text style={{ color: 'white' }}>
-                          Extra Floor {index + 1}
-                        </Text>
-                      </View>
-                      <View>
-                        <Text style={styles.label}>Floor Name</Text>
-                        <Dropdown
-                          style={styles.dropdown}
-                          placeholderStyle={styles.placeholder}
-                          selectedTextStyle={styles.selectedText}
-                          data={floorNameDropdownOptions}
-                          labelField="label"
-                          valueField="value"
-                          placeholder="Select"
-                          value={floor.floorName}
-                          onChange={item =>
-                            updateFloor(index, 'floorName', item.value)
-                          }
-                        />
-
-                        <Text style={styles.label}>Construction Type</Text>
-                        <Dropdown
-                          style={styles.dropdown}
-                          placeholderStyle={styles.placeholder}
-                          selectedTextStyle={styles.selectedText}
-                          data={constructionTypeDropdownOptions}
-                          labelField="label"
-                          valueField="value"
-                          placeholder="Select"
-                          value={floor.constructionType}
-                          onChange={item =>
-                            updateFloor(index, 'constructionType', item.value)
-                          }
-                        />
-
-                        <Text style={styles.label}>Occupancy Type</Text>
-                        <Dropdown
-                          style={styles.dropdown}
-                          placeholderStyle={styles.placeholder}
-                          selectedTextStyle={styles.selectedText}
-                          data={occupancyTypeDropdownOptions}
-                          labelField="label"
-                          valueField="value"
-                          placeholder="Select"
-                          value={floor.occupancyType}
-                          onChange={item =>
-                            updateFloor(index, 'occupancyType', item.value)
-                          }
-                        />
-
-                        <Text style={styles.label}>Usage Type</Text>
-                        <Dropdown
-                          style={styles.dropdown}
-                          placeholderStyle={styles.placeholder}
-                          selectedTextStyle={styles.selectedText}
-                          data={usageTypeDropdownOptions}
-                          labelField="label"
-                          valueField="value"
-                          placeholder="Select"
-                          value={floor.usageType}
-                          onChange={item =>
-                            updateFloor(index, 'usageType', item.value)
-                          }
-                        />
-
-                        <Text style={styles.label}>Built-up Area</Text>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="Enter built-up area"
-                          value={floor.builtupArea}
-                          onChangeText={text =>
-                            updateFloor(index, 'builtupArea', text)
-                          }
-                          keyboardType="numeric"
-                        />
-                      </View>
-
-                      <Text style={styles.label}>Date From</Text>
-                      <TouchableOpacity
-                        style={styles.dateBox}
-                        onPress={() =>
-                          updateFloor(index, 'showFromPicker', true)
-                        }
-                      >
-                        <Text style={styles.dateText}>
-                          {floor.fromDate
-                            ? formatDate(floor.fromDate)
-                            : 'Select Date'}
-                        </Text>
-                      </TouchableOpacity>
-                      {floor.showFromPicker && (
-                        <MonthYearPicker
-                          onChange={(event, newDate) => {
-                            updateFloor(index, 'showFromPicker', false);
-                            if (newDate) {
-                              updateFloor(index, 'fromDate', newDate);
-                            }
-                          }}
-                          value={floor.fromDate || new Date()}
-                        />
-                      )}
-
-                      <Text style={styles.label}>Date Upto</Text>
-                      <TouchableOpacity
-                        style={styles.dateBox}
-                        onPress={() => updateFloor(index, 'showToPicker', true)}
-                      >
-                        <Text style={styles.dateText}>
-                          {floor.toDate
-                            ? formatDate(floor.toDate)
-                            : 'Select Date'}
-                        </Text>
-                      </TouchableOpacity>
-                      {floor.showToPicker && (
-                        <MonthYearPicker
-                          onChange={(event, newDate) => {
-                            updateFloor(index, 'showToPicker', false);
-                            if (newDate) {
-                              updateFloor(index, 'toDate', newDate);
-                            }
-                          }}
-                          value={floor.toDate || new Date()}
-                        />
-                      )}
-
-                      <Text style={styles.cardText}></Text>
-                    </LinearGradient>
-                  ))}
-
-                  <View style={styles.buttonRow}>
-                    <TouchableOpacity
-                      onPress={addFloor}
-                      style={styles.addButton}
-                    >
-                      <Text style={styles.buttonText}>Add Floor</Text>
-                    </TouchableOpacity>
-                    {floors.length > 0 && (
-                      <TouchableOpacity
-                        onPress={removeFloor}
-                        style={styles.removeButton}
-                      >
-                        <Text style={styles.buttonText}>Remove Floor</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </>
-              )}
-            </View>
-
-            {/* Remarks Section */}
-            <View style={styles.remarksContainer}>
-              <Text style={styles.remarksLabel}>Remarks</Text>
-              <TextInput
-                style={styles.remarksInput}
-                placeholder="Enter your remarks here..."
-                placeholderTextColor="#999"
-                multiline
-                numberOfLines={4}
-                value={remarks}
-                onChangeText={setRemarks}
-                textAlignVertical="top"
-              />
-            </View>
-          </>
-        )}
+              {/* Remarks Section */}
+              <View style={styles.remarksContainer}>
+                <Text style={styles.remarksLabel}>Remarks</Text>
+                <TextInput
+                  style={styles.remarksInput}
+                  placeholder="Enter your remarks here..."
+                  placeholderTextColor="#999"
+                  multiline
+                  numberOfLines={4}
+                  value={remarks}
+                  onChangeText={setRemarks}
+                  textAlignVertical="top"
+                />
+              </View>
+            </>
+          )}
         <TouchableOpacity
           style={styles.previewButton}
           onPress={() => {
-            const getLabelFromOptions = (options, value) => {
-              const found = options?.find(item => item.value === value);
-              return found?.label || value || 'N/A';
-            };
+            // const errors = validatePreviewData(); // 👈 call validation function
 
-            const getPreviewValue = (
-              original,
-              dropdownValue,
-              verification,
-              options,
-              inputValue = null,
-            ) => {
-              if (verification === 'Correct') return original;
-              if (inputValue) return inputValue;
-              if (dropdownValue instanceof Date) {
-                return formatDate(dropdownValue);
-              }
-              return getLabelFromOptions(options, dropdownValue);
-            };
+            // const error = validatePreviewData();
+            // if (error) {
+            //   Alert.alert('Validation Error', error);
+            //   return;
+            // }
+            getPreviewValue();
 
             const generatedPreview = {
               'Ward No': data?.wardNo,
@@ -1086,267 +1223,300 @@ const SurveyPage = ({ route, navigation }) => {
                   </View>
                 </View>
 
-                {data?.propertyType !== 'VACANT LAND' && (
-                  <>
-                    {/* Parking Details Table */}
-                    <View style={styles.tableContainer}>
-                      <Text style={styles.tableTitle}>Parking Details</Text>
-                      <View style={styles.table}>
-                        <View style={styles.tableHeader}>
-                          <Text style={styles.tableHeaderText}>Field</Text>
-                          <Text style={styles.tableHeaderText}>
-                            Current Value
-                          </Text>
-                          <Text style={styles.tableHeaderText}>
-                            Verified Value
-                          </Text>
-                        </View>
-                        <View style={styles.tableRow}>
-                          <Text style={styles.tableCellLabel}>Usage Type</Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Usage Type (Parking Current)'] ||
-                              'N/A'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Verified_UsageParking'] || 'N/A'}
-                          </Text>
-                        </View>
-                        <View
-                          style={[styles.tableRow, styles.tableRowAlternate]}
-                        >
-                          <Text style={styles.tableCellLabel}>
-                            Occupancy Type
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Occupancy Type (Parking Current)'] ||
-                              'N/A'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Verified_OccupancyParking'] || 'N/A'}
-                          </Text>
-                        </View>
-                        <View style={styles.tableRow}>
-                          <Text style={styles.tableCellLabel}>
-                            Construction Type
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData[
-                              'Construction Type (Parking Current)'
-                            ] || 'N/A'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Verified_ConstructionParking'] ||
-                              'N/A'}
-                          </Text>
-                        </View>
-                        <View
-                          style={[styles.tableRow, styles.tableRowAlternate]}
-                        >
-                          <Text style={styles.tableCellLabel}>
-                            Built-up Area
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Built-up Area (Parking Current)'] ||
-                              'N/A'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Verified_BuiltUpParking'] || 'N/A'}
-                          </Text>
-                        </View>
-                        <View style={styles.tableRow}>
-                          <Text style={styles.tableCellLabel}>Date From</Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Date From (Parking Current)'] ||
-                              'N/A'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Verified_DateFromParking'] || 'N/A'}
-                          </Text>
-                        </View>
-                        <View
-                          style={[styles.tableRow, styles.tableRowAlternate]}
-                        >
-                          <Text style={styles.tableCellLabel}>Date To</Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Date To (Parking Current)'] || 'N/A'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Verified_DateToParking'] || 'N/A'}
-                          </Text>
+                {/* Apply same condition as shouldShowSections */}
+                {(() => {
+                  const currentPropertyLabel =
+                    propertyDropdownOptions?.find(
+                      opt => String(opt.value) === String(propertyDropdown),
+                    )?.label ||
+                    data?.propertyType ||
+                    '';
+
+                  const shouldShowPreviewSections =
+                    data?.propertyType?.toUpperCase() !== 'VACANT LAND' ||
+                    (data?.propertyType?.toUpperCase() === 'VACANT LAND' &&
+                      currentPropertyLabel.toUpperCase() !== 'VACANT LAND' &&
+                      currentPropertyLabel !== '');
+
+                  return shouldShowPreviewSections &&
+                    currentPropertyLabel.toUpperCase() !== 'VACANT LAND' ? (
+                    <>
+                      {/* Parking Details Table */}
+                      <View style={styles.tableContainer}>
+                        <Text style={styles.tableTitle}>Parking Details</Text>
+                        <View style={styles.table}>
+                          <View style={styles.tableHeader}>
+                            <Text style={styles.tableHeaderText}>Field</Text>
+                            <Text style={styles.tableHeaderText}>
+                              Current Value
+                            </Text>
+                            <Text style={styles.tableHeaderText}>
+                              Verified Value
+                            </Text>
+                          </View>
+                          <View style={styles.tableRow}>
+                            <Text style={styles.tableCellLabel}>
+                              Usage Type
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Usage Type (Parking Current)'] ||
+                                'N/A'}
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Verified_UsageParking'] || 'N/A'}
+                            </Text>
+                          </View>
+                          <View
+                            style={[styles.tableRow, styles.tableRowAlternate]}
+                          >
+                            <Text style={styles.tableCellLabel}>
+                              Occupancy Type
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData[
+                                'Occupancy Type (Parking Current)'
+                              ] || 'N/A'}
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Verified_OccupancyParking'] ||
+                                'N/A'}
+                            </Text>
+                          </View>
+                          <View style={styles.tableRow}>
+                            <Text style={styles.tableCellLabel}>
+                              Construction Type
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData[
+                                'Construction Type (Parking Current)'
+                              ] || 'N/A'}
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Verified_ConstructionParking'] ||
+                                'N/A'}
+                            </Text>
+                          </View>
+                          <View
+                            style={[styles.tableRow, styles.tableRowAlternate]}
+                          >
+                            <Text style={styles.tableCellLabel}>
+                              Built-up Area
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Built-up Area (Parking Current)'] ||
+                                'N/A'}
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Verified_BuiltUpParking'] || 'N/A'}
+                            </Text>
+                          </View>
+                          <View style={styles.tableRow}>
+                            <Text style={styles.tableCellLabel}>Date From</Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Date From (Parking Current)'] ||
+                                'N/A'}
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Verified_DateFromParking'] || 'N/A'}
+                            </Text>
+                          </View>
+                          <View
+                            style={[styles.tableRow, styles.tableRowAlternate]}
+                          >
+                            <Text style={styles.tableCellLabel}>Date To</Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Date To (Parking Current)'] ||
+                                'N/A'}
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Verified_DateToParking'] || 'N/A'}
+                            </Text>
+                          </View>
                         </View>
                       </View>
-                    </View>
 
-                    {/* Basement Details Table */}
-                    <View style={styles.tableContainer}>
-                      <Text style={styles.tableTitle}>Basement Details</Text>
-                      <View style={styles.table}>
-                        <View style={styles.tableHeader}>
-                          <Text style={styles.tableHeaderText}>Field</Text>
-                          <Text style={styles.tableHeaderText}>
-                            Current Value
-                          </Text>
-                          <Text style={styles.tableHeaderText}>
-                            Verified Value
-                          </Text>
-                        </View>
-                        <View style={styles.tableRow}>
-                          <Text style={styles.tableCellLabel}>Usage Type</Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Usage Type (Basement Current)'] ||
-                              'N/A'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Verified_UsageBasement'] || 'N/A'}
-                          </Text>
-                        </View>
-                        <View
-                          style={[styles.tableRow, styles.tableRowAlternate]}
-                        >
-                          <Text style={styles.tableCellLabel}>
-                            Occupancy Type
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Occupancy Type (Basement Current)'] ||
-                              'N/A'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Verified_OccupancyBasement'] || 'N/A'}
-                          </Text>
-                        </View>
-                        <View style={styles.tableRow}>
-                          <Text style={styles.tableCellLabel}>
-                            Construction Type
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData[
-                              'Construction Type (Basement Current)'
-                            ] || 'N/A'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Verified_ConstructionBasement'] ||
-                              'N/A'}
-                          </Text>
-                        </View>
-                        <View
-                          style={[styles.tableRow, styles.tableRowAlternate]}
-                        >
-                          <Text style={styles.tableCellLabel}>
-                            Built-up Area
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Built-up Area (Basement Current)'] ||
-                              'N/A'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Verified_BuiltUpBasement'] || 'N/A'}
-                          </Text>
-                        </View>
-                        <View style={styles.tableRow}>
-                          <Text style={styles.tableCellLabel}>Date From</Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Date From (Basement Current)'] ||
-                              'N/A'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Verified_DateFromBasement'] || 'N/A'}
-                          </Text>
-                        </View>
-                        <View
-                          style={[styles.tableRow, styles.tableRowAlternate]}
-                        >
-                          <Text style={styles.tableCellLabel}>Date To</Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Date To (Basement Current)'] || 'N/A'}
-                          </Text>
-                          <Text style={styles.tableCell}>
-                            {previewData['Verified_DateToBasement'] || 'N/A'}
-                          </Text>
+                      {/* Basement Details Table */}
+                      <View style={styles.tableContainer}>
+                        <Text style={styles.tableTitle}>Basement Details</Text>
+                        <View style={styles.table}>
+                          <View style={styles.tableHeader}>
+                            <Text style={styles.tableHeaderText}>Field</Text>
+                            <Text style={styles.tableHeaderText}>
+                              Current Value
+                            </Text>
+                            <Text style={styles.tableHeaderText}>
+                              Verified Value
+                            </Text>
+                          </View>
+                          <View style={styles.tableRow}>
+                            <Text style={styles.tableCellLabel}>
+                              Usage Type
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Usage Type (Basement Current)'] ||
+                                'N/A'}
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Verified_UsageBasement'] || 'N/A'}
+                            </Text>
+                          </View>
+                          <View
+                            style={[styles.tableRow, styles.tableRowAlternate]}
+                          >
+                            <Text style={styles.tableCellLabel}>
+                              Occupancy Type
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData[
+                                'Occupancy Type (Basement Current)'
+                              ] || 'N/A'}
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Verified_OccupancyBasement'] ||
+                                'N/A'}
+                            </Text>
+                          </View>
+                          <View style={styles.tableRow}>
+                            <Text style={styles.tableCellLabel}>
+                              Construction Type
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData[
+                                'Construction Type (Basement Current)'
+                              ] || 'N/A'}
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Verified_ConstructionBasement'] ||
+                                'N/A'}
+                            </Text>
+                          </View>
+                          <View
+                            style={[styles.tableRow, styles.tableRowAlternate]}
+                          >
+                            <Text style={styles.tableCellLabel}>
+                              Built-up Area
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData[
+                                'Built-up Area (Basement Current)'
+                              ] || 'N/A'}
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Verified_BuiltUpBasement'] || 'N/A'}
+                            </Text>
+                          </View>
+                          <View style={styles.tableRow}>
+                            <Text style={styles.tableCellLabel}>Date From</Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Date From (Basement Current)'] ||
+                                'N/A'}
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Verified_DateFromBasement'] ||
+                                'N/A'}
+                            </Text>
+                          </View>
+                          <View
+                            style={[styles.tableRow, styles.tableRowAlternate]}
+                          >
+                            <Text style={styles.tableCellLabel}>Date To</Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Date To (Basement Current)'] ||
+                                'N/A'}
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {previewData['Verified_DateToBasement'] || 'N/A'}
+                            </Text>
+                          </View>
                         </View>
                       </View>
-                    </View>
-                    {/* Extra Floor Details Cards */}
-                    {addExtraFloor &&
-                      floors.length > 0 &&
-                      floors.map((floor, floorIndex) => (
-                        <View key={floorIndex} style={styles.cardContainer}>
-                          <Text style={styles.cardTitle}>
-                            Extra Floor {floorIndex + 1} Details
-                          </Text>
+                      {/* Extra Floor Details Cards */}
+                      {addExtraFloor &&
+                        floors.length > 0 &&
+                        floors.map((floor, floorIndex) => (
+                          <View key={floorIndex} style={styles.cardContainer}>
+                            <Text style={styles.cardTitle}>
+                              Extra Floor {floorIndex + 1} Details
+                            </Text>
 
-                          {[
-                            {
-                              label: 'Floor Type',
-                              value:
-                                getLabelByValue(
-                                  floorNameDropdownOptions,
-                                  floor.floorName,
-                                ) || 'N/A',
-                            },
-                            {
-                              label: 'Construction Type',
-                              value:
-                                getLabelByValue(
-                                  constructionTypeDropdownOptions,
-                                  floor.constructionType,
-                                ) || 'N/A',
-                            },
-                            {
-                              label: 'Occupancy Type',
-                              value:
-                                getLabelByValue(
-                                  occupancyTypeDropdownOptions,
-                                  floor.occupancyType,
-                                ) || 'N/A',
-                            },
-                            {
-                              label: 'Usage Type',
-                              value:
-                                getLabelByValue(
-                                  usageTypeDropdownOptions,
-                                  floor.usageType,
-                                ) || 'N/A',
-                            },
-                            {
-                              label: 'Built-up Area',
-                              value: floor.builtupArea || 'N/A',
-                            },
-                            {
-                              label: 'Date From',
-                              value: floor.fromDate
-                                ? formatDate(floor.fromDate)
-                                : 'N/A',
-                            },
-                            {
-                              label: 'Date To',
-                              value: floor.toDate
-                                ? formatDate(floor.toDate)
-                                : 'N/A',
-                            },
-                          ].map((item, idx) => (
-                            <View key={idx} style={styles.cardRow}>
-                              <Text style={styles.cardLabel}>{item.label}</Text>
-                              <Text style={styles.cardValue}>{item.value}</Text>
-                            </View>
-                          ))}
-                        </View>
-                      ))}
+                            {[
+                              {
+                                label: 'Floor Type',
+                                value:
+                                  getLabelByValue(
+                                    floorNameDropdownOptions,
+                                    floor.floorName,
+                                  ) || 'N/A',
+                              },
+                              {
+                                label: 'Construction Type',
+                                value:
+                                  getLabelByValue(
+                                    constructionTypeDropdownOptions,
+                                    floor.constructionType,
+                                  ) || 'N/A',
+                              },
+                              {
+                                label: 'Occupancy Type',
+                                value:
+                                  getLabelByValue(
+                                    occupancyTypeDropdownOptions,
+                                    floor.occupancyType,
+                                  ) || 'N/A',
+                              },
+                              {
+                                label: 'Usage Type',
+                                value:
+                                  getLabelByValue(
+                                    usageTypeDropdownOptions,
+                                    floor.usageType,
+                                  ) || 'N/A',
+                              },
+                              {
+                                label: 'Built-up Area',
+                                value: floor.builtupArea || 'N/A',
+                              },
+                              {
+                                label: 'Date From',
+                                value: floor.fromDate
+                                  ? formatDate(floor.fromDate)
+                                  : 'N/A',
+                              },
+                              {
+                                label: 'Date To',
+                                value: floor.toDate
+                                  ? formatDate(floor.toDate)
+                                  : 'N/A',
+                              },
+                            ].map((item, idx) => (
+                              <View key={idx} style={styles.cardRow}>
+                                <Text style={styles.cardLabel}>
+                                  {item.label}
+                                </Text>
+                                <Text style={styles.cardValue}>
+                                  {item.value}
+                                </Text>
+                              </View>
+                            ))}
+                          </View>
+                        ))}
 
-                    {/* Remarks Section */}
-                    {(remarks || previewData['Remarks (Preview)']) && (
-                      <View style={styles.remarksContainer}>
-                        <Text style={styles.tableTitle}>Remarks</Text>
-                        <View style={styles.remarksBox}>
-                          <Text style={styles.remarksText}>
-                            {remarks ||
-                              previewData['Remarks (Preview)'] ||
-                              'No remarks'}
-                          </Text>
+                      {/* Remarks Section */}
+                      {(remarks || previewData['Remarks (Preview)']) && (
+                        <View style={styles.remarksContainer}>
+                          <Text style={styles.tableTitle}>Remarks</Text>
+                          <View style={styles.remarksBox}>
+                            <Text style={styles.remarksText}>
+                              {remarks ||
+                                previewData['Remarks (Preview)'] ||
+                                'No remarks'}
+                            </Text>
+                          </View>
                         </View>
-                      </View>
-                    )}
-                  </>
-                )}
+                      )}
+                    </>
+                  ) : null;
+                })()}
               </ScrollView>
 
               <View style={styles.modalButtonContainer}>

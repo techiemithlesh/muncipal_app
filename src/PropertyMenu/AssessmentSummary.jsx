@@ -87,7 +87,7 @@ const AssessmentSummary = ({ route, navigation }) => {
       const payload = {
         assessmentType: 'New Assessment',
         zoneMstrId: data.zoneId || 1,
-        wardMstrId: Number(data.oldWard || 1),
+        wardMstrId: String(data.oldWard || 1),
         newWardMstrId: data.newWard || 1,
         ownershipTypeMstrId: data.ownershipTypeId || data.ownershipType || 1,
         propTypeMstrId: data.propertyTypeId || data.propertyType || 1,
@@ -173,9 +173,10 @@ const AssessmentSummary = ({ route, navigation }) => {
                 },
               ],
       };
+
       console.log('Final payload:', JSON.stringify(payload, null, 2));
       // console.log('floor data', data.floors);
-      console.log('payload', payload);
+      // console.log('payload', payload);
       const response = await axios.post(SAF_API_ROUTES.APPLY_SAF, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -183,6 +184,7 @@ const AssessmentSummary = ({ route, navigation }) => {
       });
 
       setLoading(false);
+      console.log('statue', response.data.status);
 
       if (response.data.success) {
         Alert.alert('Success', 'Assessment submitted successfully');
