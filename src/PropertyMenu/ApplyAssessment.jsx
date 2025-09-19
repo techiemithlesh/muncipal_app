@@ -23,7 +23,8 @@ import ExtraChargesSection from './components/ExtraChargesSection';
 import FloorDetailsSection from './components/FloorDetailsSection';
 import PropertyDetails from './components/PropertyDetails';
 import { handleValidation, scrollToInput } from './AssessmentValidation';
-
+import { getToken } from '../utils/auth';
+import { PROPERTY_API } from '../api/apiRoutes';
 const ApplyAssessment = ({ navigation, route }) => {
   // Get data from route params if it's a reassessment or mutation
   const {
@@ -110,6 +111,17 @@ const ApplyAssessment = ({ navigation, route }) => {
   const [guardianName, setGuardianName] = useState('');
   const [error, setError] = useState({});
 
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const [apartmentList, setApartmentList] = useState([]); // dropdown data
+  const [apartmentDetail, setApartmentDetail] = useState(null);
+  const [loadingApartments, setLoadingApartments] = useState(false);
+
+  const apartmentDropdownOptions = [
+    { label: 'Apartment A', value: 'A' },
+    { label: 'Apartment B', value: 'B' },
+  ];
+
   // Create refs for all form fields
   const scrollViewRef = useRef(null);
   const oldWardRef = useRef(null);
@@ -178,7 +190,12 @@ const ApplyAssessment = ({ navigation, route }) => {
     updated[index][field] = value;
     setFloorDetails(updated);
   };
-
+  const handleDateChange1 = (event, date) => {
+    setShowDatePicker(false);
+    if (date) {
+      setSelectedDate(date);
+    }
+  };
   const handleDateChange = (event, selectedDate) => {
     if (event.type === 'set' && selectedDate) {
       const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
@@ -214,122 +231,57 @@ const ApplyAssessment = ({ navigation, route }) => {
     }
   };
 
+  // 🔹 Fetch Apartments from API when Flats is selected
+  useEffect(() => {
+    if (propertyTypeLabel === 'FLATS / UNIT IN MULTI STORIED BUILDING') {
+      fetchApartments();
+    }
+  }, [propertyTypeLabel]);
+
+  const fetchApartments = async () => {
+    try {
+      setLoadingApartments(true);
+      const token = await getToken();
+      const body = oldWard ? { oldWardId: oldWard } : {};
+      console.log('tooek', body);
+
+      const response = await axios.post(PROPERTY_API.APARTMENT_API, body, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('responmse', response);
+      if (response.data?.status) {
+        const formatted = response.data.data.map(item => ({
+          label: `${item.apartmentName} (${item.aptCode})`, // 👈 show name + code in dropdown
+          value: item.id, // 👈 use id as valu
+        }));
+
+        setApartmentList(formatted);
+        console.log('Formatted apartments:', formatted);
+      }
+    } catch (error) {
+      console.error('Error fetching apartments:', error);
+    } finally {
+      setLoadingApartments(false);
+    }
+  };
+
+  const Validate = () => {
+    if (!oldWard) {
+      setError(prev => ({
+        ...prev,
+        oldWard: 'old ward is empty ',
+      }));
+    }
+  };
   const handleSubmit = async () => {
-    // Validate form data before submission
-    const isValid = handleValidation({
-      // Assessment Type
-      oldWard,
-      newWard,
-      ownershipType,
-      propertyType,
-      zone,
+    console.log(error);
 
-      // Owner Details
-      ownerName,
-      gender,
-      dob,
-      guardianName,
-      relation,
-      mobile,
-      aadhaar,
-      pan,
-      email,
-      armedForces,
-      speciallyAbled,
-
-      // Electricity Details
-      kno,
-      accNo,
-      bindBookNo,
-      electricityCategory,
-
-      // Property Details
-      khataNo,
-      plotNo,
-      villageName,
-      plotArea,
-      roadWidth,
-
-      // Property Address
-      propertyAddress,
-      city,
-      district,
-      state,
-      pincode,
-
-      // Corresponding Address
-      isChecked,
-      correspondingAddress,
-      correspondingCity,
-      correspondingDistrict,
-      correspondingState,
-      correspondingPincode,
-
-      // Extra Charges
-      mobileTower,
-      towerArea,
-      installationDate,
-      hoarding,
-      hoardingArea,
-      hoardingInstallationDate,
-      petrolPump,
-      pumpArea,
-      pumpInstallationDate,
-      rainHarvesting,
-      completionDate,
-
-      // Floor Details
-      propertyTypeLabel,
-      floorDetails,
-
-      // Refs
-      oldWardRef,
-      newWardRef,
-      ownershipTypeRef,
-      propertyTypeRef,
-      zoneRef,
-      ownerNameRef,
-      genderRef,
-      guardianNameRef,
-      relationRef,
-      mobileRef,
-      aadhaarRef,
-      panRef,
-      emailRef,
-      armedForcesRef,
-      speciallyAbledRef,
-      knoRef,
-      accNoRef,
-      bindBookNoRef,
-      electricityCategoryRef,
-      khataNoRef,
-      plotNoRef,
-      villageNameRef,
-      plotAreaRef,
-      roadWidthRef,
-      noRoadRef,
-      propertyAddressRef,
-      cityRef,
-      districtRef,
-      stateRef,
-      pincodeRef,
-      correspondingAddressRef,
-      correspondingCityRef,
-      correspondingDistrictRef,
-      correspondingStateRef,
-      correspondingPincodeRef,
-      mobileTowerRef,
-      towerAreaRef,
-      hoardingRef,
-      hoardingAreaRef,
-      petrolPumpRef,
-      pumpAreaRef,
-      rainHarvestingRef,
-      floorRefs,
-      scrollViewRef,
-      setError,
-    });
-    if (!isValid) {
+    Validate();
+    if (!oldWard || !newWard) {
+      // Alert.alert('old ward is empty');
       return;
     }
 
@@ -385,6 +337,10 @@ const ApplyAssessment = ({ navigation, route }) => {
       pumpInstallationDate,
       rainHarvesting,
       completionDate: completionDate ? completionDate.toISOString() : '',
+      apartmentDetail,
+      selectedDate: selectedDate
+        ? selectedDate.toISOString().split('T')[0]
+        : '', // YYYY-MM-DD
     };
     console.log('Foe,dnmg', formData);
 
@@ -807,6 +763,66 @@ const ApplyAssessment = ({ navigation, route }) => {
               <Text style={styles.errorText}>{error.propertyType}</Text>
             )}
 
+            {propertyTypeLabel === 'FLATS / UNIT IN MULTI STORIED BUILDING' && (
+              <View>
+                {/* Date Picker */}
+                <Text
+                  style={[
+                    styles.label,
+                    error.ownershipType && styles.errorLabel,
+                  ]}
+                >
+                  Select Date *
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    borderWidth: 1,
+                    padding: 10,
+                    marginBottom: 10,
+                    borderRadius: 5,
+                  }}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text>
+                    {selectedDate
+                      ? selectedDate.toISOString().split('T')[0] // Y-M-D format
+                      : 'Select Date'}
+                  </Text>
+                </TouchableOpacity>
+
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={selectedDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleDateChange1}
+                  />
+                )}
+
+                {/* Apartment Details Dropdown */}
+                <Text
+                  style={[
+                    styles.label,
+                    error.ownershipType && styles.errorLabel,
+                  ]}
+                >
+                  Appartment Datails *
+                </Text>
+                <Dropdown
+                  style={[
+                    styles.dropdown,
+                    error.propertyType && styles.errorInput,
+                  ]}
+                  data={apartmentList}
+                  labelField="label"
+                  valueField="value"
+                  placeholder="Select Apartment"
+                  value={apartmentDetail}
+                  onChange={item => setApartmentDetail(item.value)}
+                />
+              </View>
+            )}
+
             <Text style={[styles.label, error.zone && styles.errorLabel]}>
               Zone *
             </Text>
@@ -814,8 +830,8 @@ const ApplyAssessment = ({ navigation, route }) => {
               ref={zoneRef}
               style={[styles.dropdown, error.zone && styles.errorInput]}
               data={[
-                { label: 'Zone 1', value: 'Zone1' },
-                { label: 'Zone 2', value: 'Zone2' },
+                { label: 'Zone 1', value: '1' },
+                { label: 'Zone 2', value: '2' },
               ]}
               labelField="label"
               valueField="value"

@@ -19,15 +19,9 @@ import HeaderNavigation from '../Components/HeaderNavigation';
 
 const VerifiedStatus = ({ route }) => {
   const navigation = useNavigation();
-  const {
-    submissionData,
-    floorsData,
-    hasExtraFloors,
-    id,
-    data,
-    floorIds = [],
-  } = route.params || {};
-  console.log('Floor IDs Data:', floorIds);
+  const { submissionData, floorsData, hasExtraFloors, id, data, floorIds } =
+    route.params || {};
+  console.log('Floor IDs Data:', data);
 
   // console.log('Raw floor data:', submissionData.extraFloors);
   const parseDate = str => {
@@ -254,97 +248,59 @@ const VerifiedStatus = ({ route }) => {
               },
             ]}
           />
+          {floorIds.map((floor, index) => {
+            // Skip non-relevant floor types (e.g., Floor type 4 = "1st Floor", 1 = "Parking")
+            // if (floor.floorName !== 'PARKING' && floor.floorName !== 'BASEMENT')
+            //   return null;
 
-          {/* Parking Table */}
-          {submissionData['Property Type (Current)'] !== 'VACANT LAND' &&
-            submissionData['Verified_PropertyType'] !== 'VACANT LAND' && (
-              <>
-                <SubmissionCard
-                  title="Parking Details"
-                  rows={[
-                    {
-                      label: 'Usage Type',
-                      value: submissionData['Usage Type (Parking Current)'],
-                      verifiedValue: submissionData['Verified_UsageParking'],
-                    },
-                    {
-                      label: 'Occupancy Type',
-                      value: submissionData['Occupancy Type (Parking Current)'],
-                      verifiedValue:
-                        submissionData['Verified_OccupancyParking'],
-                    },
-                    {
-                      label: 'Construction Type',
-                      value:
-                        submissionData['Construction Type (Parking Current)'],
-                      verifiedValue:
-                        submissionData['Verified_ConstructionParking'],
-                    },
-                    {
-                      label: 'Built-up Area',
-                      value: submissionData['Built-up Area (Parking Current)'],
-                      verifiedValue: submissionData['Verified_BuiltUpParking'],
-                    },
-                    {
-                      label: 'Date From',
-                      value: submissionData['Date From (Parking Current)'],
-                      verifiedValue: submissionData['Verified_DateFromParking'],
-                    },
-                    {
-                      label: 'Date To',
-                      value: submissionData['Date To (Parking Current)'],
-                      verifiedValue: submissionData['Verified_DateToParking'],
-                    },
-                  ]}
-                />
-
-                {/* Basement Table */}
-                <SubmissionCard
-                  title="Basement Details"
-                  rows={[
-                    {
-                      label: 'Usage Type',
-                      value: submissionData['Usage Type (Basement Current)'],
-                      verifiedValue: submissionData['Verified_UsageBasement'],
-                    },
-                    {
-                      label: 'Occupancy Type',
-                      value:
-                        submissionData['Occupancy Type (Basement Current)'],
-                      verifiedValue:
-                        submissionData['Verified_OccupancyBasement'],
-                    },
-                    {
-                      label: 'Construction Type',
-                      value:
-                        submissionData['Construction Type (Basement Current)'],
-                      verifiedValue:
-                        submissionData['Verified_ConstructionBasement'],
-                    },
-                    {
-                      label: 'Built-up Area',
-                      value: submissionData['Built-up Area (Basement Current)'],
-                      verifiedValue: submissionData['Verified_BuiltUpBasement'],
-                    },
-                    {
-                      label: 'Date From',
-                      value: submissionData['Date From (Basement Current)'],
-                      verifiedValue:
-                        submissionData['Verified_DateFromBasement'],
-                    },
-                    {
-                      label: 'Date To',
-                      value: submissionData['Date To (Basement Current)'],
-                      verifiedValue: submissionData['Verified_DateToBasement'],
-                    },
-                  ]}
-                />
-              </>
-            )}
+            return (
+              <SubmissionCard
+                key={index}
+                title={`${floor.floorName} Details`}
+                rows={[
+                  {
+                    label: 'Usage Type',
+                    value: floor.usageType,
+                    verifiedValue:
+                      submissionData[`Verified_Usage${floor.floorName}`],
+                  },
+                  {
+                    label: 'Occupancy Type',
+                    value: floor.occupancyName,
+                    verifiedValue:
+                      submissionData[`Verified_Occupancy${floor.floorName}`],
+                  },
+                  {
+                    label: 'Construction Type',
+                    value: floor.constructionType,
+                    verifiedValue:
+                      submissionData[`Verified_Construction${floor.floorName}`],
+                  },
+                  {
+                    label: 'Built-up Area',
+                    value: floor.builtupArea,
+                    verifiedValue:
+                      submissionData[`Verified_BuiltUp${floor.floorName}`],
+                  },
+                  {
+                    label: 'Date From',
+                    value: floor.dateFrom,
+                    verifiedValue:
+                      submissionData[`Verified_DateFrom${floor.floorName}`],
+                  },
+                  {
+                    label: 'Date To',
+                    value: floor.dateUpto || '-',
+                    verifiedValue:
+                      submissionData[`Verified_DateTo${floor.floorName}`],
+                  },
+                ]}
+              />
+            );
+          })}
 
           {/* Extra Floors */}
           {renderFloorData()}
-
           {/* Remarks */}
           {(submissionData['Remarks'] ||
             submissionData['Remarks (Preview)']) && (
@@ -543,25 +499,6 @@ const VerifiedStatus = ({ route }) => {
       >
         <Text style={styles.buttonText}>Save and Next</Text>
       </TouchableOpacity>
-
-      {/* Save & Next */}
-      {/* <TouchableOpacity
-        style={styles.button}
-        onPress={() =>
-          navigation.navigate('SubmitVarification', {
-            submissionData,
-            floorsData,
-            hasExtraFloors,
-            location,
-            photo1,
-            photo2,
-            photo3,
-            id,
-          })
-        }
-      >
-        <Text style={styles.buttonText}>Save and Next</Text>
-      </TouchableOpacity> */}
     </ScrollView>
   );
 };

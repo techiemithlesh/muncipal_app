@@ -49,6 +49,7 @@ import MyInput from './src/Water/ApplyWater/MyInput';
 import SearchCustomer from './src/Customer/Search';
 
 import CustomerDetails from './src/Customer/Details';
+import SubmitSummaryPage from './src/PropertyMenu/SubmitData/Verification/SubmitSummaryPage';
 
 const Stack = createNativeStackNavigator();
 
@@ -259,6 +260,12 @@ const App = () => {
               <Stack.Screen
                 name="CustomerDetails"
                 component={CustomerDetails}
+                options={{ headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="SubmitSummaryPage"
+                component={SubmitSummaryPage}
                 options={{ headerShown: false }}
               />
             </Stack.Navigator>

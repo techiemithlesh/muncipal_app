@@ -9,10 +9,10 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Colors from '../Constants/Colors';
-import Header from '../Screen/Header';
 import axios from 'axios';
 import { SAF_API_ROUTES } from '../api/apiRoutes'; // make sure this is your API route
 import { getToken } from '../utils/auth';
+import { showToast } from '../utils/toast';
 
 const Row = ({ label, value }) => (
   <View style={styles.row}>
@@ -86,12 +86,12 @@ const AssessmentSummary = ({ route, navigation }) => {
       // Map data to API structure
       const payload = {
         assessmentType: 'New Assessment',
-        zoneMstrId: data.zoneId || 1,
+        zoneMstrId: data.zone || 1,
         wardMstrId: String(data.oldWard || 1),
         newWardMstrId: data.newWard || 1,
         ownershipTypeMstrId: data.ownershipTypeId || data.ownershipType || 1,
         propTypeMstrId: data.propertyTypeId || data.propertyType || 1,
-        appartmentDetailsId: '',
+        appartmentDetailsId: data.apartmentDetail,
         flatRegistryDate: '2024-01-01',
         roadWidth: String(data.roadWidth || '40'),
         khataNo: data.khataNo || 'a',
@@ -108,24 +108,25 @@ const AssessmentSummary = ({ route, navigation }) => {
           data.mobileTower === 'yes' ? parseInt(data.towerArea || 50) : 50,
         towerInstallationDate:
           data.mobileTower === 'yes'
-            ? formatDate(data.installationDate)
+            ? formatDate1(data.installationDate)
             : '2024-01-01',
         isHoardingBoard: data.hoarding === 'yes' ? 1 : 0,
         hoardingArea:
           data.hoarding === 'yes' ? String(data.hoardingArea || '50') : '50',
         hoardingInstallationDate:
           data.hoarding === 'yes'
-            ? formatDate(data.hoardingInstallationDate)
+            ? formatDate1(data.hoardingInstallationDate)
             : '2016-04-17',
         isPetrolPump: data.petrolPump === 'yes' ? 1 : 0,
         underGroundArea:
           data.petrolPump === 'yes' ? String(data.pumpArea || '25') : '25',
         petrolPumpCompletionDate:
           data.petrolPump === 'yes'
-            ? formatDate(data.pumpInstallationDate)
+            ? formatDate1(data.pumpInstallationDate)
             : '2020-04-10',
         landOccupationDate: '2021-02-03',
         isWaterHarvesting: data.rainHarvesting === 'yes' ? 1 : 0,
+
         ownerDtl: [
           {
             ownerName: data.ownerName || '10',
@@ -136,7 +137,7 @@ const AssessmentSummary = ({ route, navigation }) => {
                 : data.gender === 'female'
                 ? 'Female'
                 : 'Male',
-            dob: formatDate1(data.dob) || '2019-02-14',
+            dob: formatDate1(data.dob),
             isArmedForce:
               data.armedForces === 'yes'
                 ? 1
@@ -156,10 +157,10 @@ const AssessmentSummary = ({ route, navigation }) => {
                 dateUpto1:
                   convertToYearMonth(floor.uptoDate.replace('/', '-')) ||
                   '2012-04',
-                floorMasterId: String(floor.floorNameId || '2'),
-                usageTypeMasterId: String(floor.usageTypeId || '1'),
-                constructionTypeMasterId: floor.constructionTypeId || 1,
-                occupancyTypeMasterId: floor.occupancyTypeId || 1,
+                floorMasterId: String(floor.floorName || '2'),
+                usageTypeMasterId: String(floor.usageType || '1'),
+                constructionTypeMasterId: floor.constructionType || 1,
+                occupancyTypeMasterId: floor.occupancyType || 1,
               }))
             : [
                 {
@@ -175,8 +176,6 @@ const AssessmentSummary = ({ route, navigation }) => {
       };
 
       console.log('Final payload:', JSON.stringify(payload, null, 2));
-      // console.log('floor data', data.floors);
-      // console.log('payload', payload);
       const response = await axios.post(SAF_API_ROUTES.APPLY_SAF, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -184,11 +183,12 @@ const AssessmentSummary = ({ route, navigation }) => {
       });
 
       setLoading(false);
-      console.log('statue', response.data.status);
+      console.log('Full Response:', response.data);
 
-      if (response.data.success) {
-        Alert.alert('Success', 'Assessment submitted successfully');
-        navigation.goBack();
+      if (response.data.message) {
+        // Alert.alert('Success', response.data.message);
+        showToast('success', response.data.message);
+        // navigation.goBack();
       } else {
         Alert.alert('Error', response.data.message || 'Something went wrong');
       }

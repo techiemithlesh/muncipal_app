@@ -1,5 +1,5 @@
 // screens/SubmitSummaryScreen.js
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,16 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  Modal,
+  TextInput,
 } from 'react-native';
 import HeaderNavigation from '../Components/HeaderNavigation';
 import axios from 'axios';
 import { PROPERTY_API } from '../api/apiRoutes';
 import { getToken } from '../utils/auth';
 import ImageResizer from 'react-native-image-resizer';
+import { useNavigation } from '@react-navigation/native';
+import { SAF_API_ROUTES } from '../api/apiRoutes';
 
 const Card = ({ title, children }) => (
   <View style={styles.card}>
@@ -23,13 +27,15 @@ const Card = ({ title, children }) => (
 );
 
 const SubmitVarification = ({ route }) => {
-  // const photos = ['left', 'rignt', 'front'];
-
+  const navigation = useNavigation();
   const { submissionData, location, left, right, front, id, data } =
     route.params;
   const { floorIds } = route.params || {};
+  console.log('Submit Veificartii', data);
 
-  // console.log('Floor IDs in SubmitVarification:', data);
+  const [showModal, setShowModal] = useState(false);
+  const [remarks, setRemarks] = useState('');
+
   const photos = [
     { label: 'left side', ...left },
     { label: 'right side', ...right },
@@ -53,7 +59,6 @@ const SubmitVarification = ({ route }) => {
       november: '11',
       december: '12',
     };
-
     const [monthName, year] = str.split(' ');
     const month = months[monthName.toLowerCase()];
     return month && year ? `${year}-${month}` : null;
@@ -121,8 +126,6 @@ const SubmitVarification = ({ route }) => {
         isHoardingBoard: submissionData?.isHoardingBoard,
         isPetrolPump: submissionData?.isPetrolPump,
         isWaterHarvesting: submissionData?.isWaterHarvesting,
-
-        // ✅ Hoarding details (only if true)
         hoardingArea: submissionData?.isHoardingBoard
           ? Number(submissionData?.hoardingArea || 0.1)
           : null,
@@ -130,12 +133,12 @@ const SubmitVarification = ({ route }) => {
           ? submissionData?.hoardingInstallationDate ||
             new Date().toISOString().split('T')[0]
           : null,
-
+        landOccupationDate:
+          submissionData?.['Property Type (Current)'] === 'VACANT LAND' ||
+          submissionData?.Verified_PropertyType === 'VACANT LAND'
+            ? data?.landOccupationDate || new Date().toISOString().split('T')[0]
+            : null,
         floorDtl: finalFloors,
-        ...((data.propertyTypeId === 4 || data.propTypeMstrId === 4) && {
-          landOccupationDate:
-            data.landOccupationDate || new Date().toISOString().split('T')[0],
-        }),
       };
 
       const response = await axios.post(
@@ -149,99 +152,55 @@ const SubmitVarification = ({ route }) => {
           timeout: 15000,
         },
       );
+
       console.log('Field Verification Response:', response.data);
-      Alert.alert('Success', 'Field Verification Data submitted successfully!');
-      console.log(
-        JSON.stringify(
+      Alert.alert(
+        'Success',
+        'Data submitted successfully',
+        [
           {
-            message: 'Field Verification Data submitted',
-            payload: fieldPayload,
+            text: 'OK',
+            onPress: () => setShowModal(true), // open modal after OK
           },
-          null,
-          2,
-        ),
+        ],
+        { cancelable: false },
       );
-
-      const resizedPhotos = await Promise.all(
-        photos.map(async photo => {
-          if (!photo.uri) return null;
-          const resized = await ImageResizer.createResizedImage(
-            photo.uri,
-            1024,
-            1024,
-            'JPEG',
-            80,
-          );
-          return {
-            label: photo.label, // ✅ preserve label
-            uri: resized.uri,
-            fileName:
-              photo.fileName || `${photo.label.replace(/\s+/g, '_')}.jpg`,
-            type: 'image/jpeg',
-          };
-        }),
-      );
-
-      // 4️⃣ Build FormData for GeoTag + Images
-      const formData = new FormData();
-      formData.append('id', id);
-      const geoTagArray = resizedPhotos.filter(Boolean).map(photo => ({
-        latitude: location.latitude,
-        longitude: location.longitude,
-        direction: photo.label, // ✅ send "left side" | "right side" | "front side"
-        document: photo,
-      }));
-
-      // Ensure at least 3 items
-      while (geoTagArray.length < 3) {
-        geoTagArray.push({
-          latitude: location.latitude,
-          longitude: location.longitude,
-          direction: 'N',
-          document: resizedPhotos[0] || null,
-        });
-      }
-
-      // Append geoTag with actual files
-      geoTagArray.forEach((item, index) => {
-        formData.append(`geoTag[${index}][latitude]`, item.latitude);
-        formData.append(`geoTag[${index}][longitude]`, item.longitude);
-        formData.append(`geoTag[${index}][direction]`, item.direction);
-        formData.append(`geoTag[${index}][document]`, {
-          uri: item.document.uri,
-          type: item.document.type || 'image/jpeg',
-          name: item.document.fileName,
-        });
-      });
-
-      // Append images separately if backend expects it
-      resizedPhotos.forEach((photo, index) => {
-        if (!photo) return;
-        formData.append('images', {
-          uri: photo.uri,
-          type: photo.type || 'image/jpeg',
-          name: photo.fileName,
-        });
-      });
-
-      // 5️⃣ Submit GeoTag + Images
-      const geoRes = await axios.post(
-        PROPERTY_API.GEOTAGING_IMAGE_API,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`,
-          },
-          timeout: 20000,
-        },
-      );
-
-      Alert.alert('Success', 'Data & Images submitted successfully!');
-      console.log('Geo-Tagging Success:', geoRes.data);
     } catch (error) {
       console.error('Submission Error:', error.response?.data || error.message);
       Alert.alert('Error', 'Submission failed. Please try again.');
+    }
+  };
+
+  const handleSendToLevel = async () => {
+    try {
+      const token = await getToken();
+      const payload = {
+        id: id,
+        remarks: remarks,
+        status: 'FORWARD',
+      };
+
+      console.log('SendToLevel Payload:', payload);
+
+      const res = await axios.post(SAF_API_ROUTES.SEND_TO_LEVEL_API, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log('Send to Level Success:', res.data);
+
+      setShowModal(false);
+
+      // Navigate to another page to show all submitted data
+      navigation.navigate('SubmitSummaryPage', {
+        submissionData,
+        location,
+        photos,
+        remarks,
+        id,
+      });
+    } catch (err) {
+      console.error('Send to Level Error:', err.response?.data || err.message);
+      Alert.alert('Error', 'Failed to send to level.');
     }
   };
 
@@ -255,161 +214,149 @@ const SubmitVarification = ({ route }) => {
   }, []);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <HeaderNavigation />
-      <Text style={styles.title}>Submitted Data</Text>
+    <>
+      <ScrollView contentContainerStyle={styles.container}>
+        <HeaderNavigation />
+        <Text style={styles.title}>Submitted Data</Text>
 
-      {/* Property Details */}
-      <Card title="Property Details">
-        <Text>
-          <Text style={{ fontWeight: 'bold' }}>Ward No:</Text>{' '}
-          {submissionData?.['Ward No']}
-        </Text>
-        <Text>
-          <Text style={{ fontWeight: 'bold' }}>Verified:</Text>{' '}
-          {submissionData?.['Verified_Ward']}
-        </Text>
-        <Text>
-          <Text style={{ fontWeight: 'bold' }}>New Ward No:</Text>{' '}
-          {submissionData?.['New Ward No (Current)']}
-        </Text>
-        <Text>
-          <Text style={{ fontWeight: 'bold' }}>Verified:</Text>{' '}
-          {submissionData?.['Verified_NewWard']}
-        </Text>
-        <Text>
-          <Text style={{ fontWeight: 'bold' }}>Zone:</Text>{' '}
-          {submissionData?.['Zone (Current)']}
-        </Text>
-        <Text>
-          <Text style={{ fontWeight: 'bold' }}>Verified:</Text>{' '}
-          {submissionData?.['Verified_Zone']}
-        </Text>
-        <Text>
-          <Text style={{ fontWeight: 'bold' }}>Property Type:</Text>{' '}
-          {submissionData?.['Property Type (Current)']}
-        </Text>
-        <Text>
-          <Text style={{ fontWeight: 'bold' }}>Verified:</Text>{' '}
-          {submissionData?.['Verified_PropertyType']}
-        </Text>
-      </Card>
-
-      {/* Parking Details */}
-      {(submissionData?.['Usage Type (Parking Current)'] ||
-        submissionData?.['Occupancy Type (Parking Current)'] ||
-        submissionData?.['Construction Type (Parking Current)'] ||
-        submissionData?.['Built-up Area (Parking Current)']) && (
-        <Card title="Parking Details">
+        {/* Property Details */}
+        <Card title="Property Details">
           <Text>
-            <Text style={{ fontWeight: 'bold' }}>Usage Type:</Text>{' '}
-            {submissionData?.['Usage Type (Parking Current)']}
+            <Text style={{ fontWeight: 'bold' }}>Ward No:</Text>{' '}
+            {submissionData?.['Ward No']}
           </Text>
           <Text>
-            <Text style={{ fontWeight: 'bold' }}>Occupancy Type:</Text>{' '}
-            {submissionData?.['Occupancy Type (Parking Current)']}
+            <Text style={{ fontWeight: 'bold' }}>Verified:</Text>{' '}
+            {submissionData?.['Verified_Ward']}
           </Text>
           <Text>
-            <Text style={{ fontWeight: 'bold' }}>Construction Type:</Text>{' '}
-            {submissionData?.['Construction Type (Parking Current)']}
+            <Text style={{ fontWeight: 'bold' }}>New Ward No:</Text>{' '}
+            {submissionData?.['New Ward No (Current)']}
           </Text>
           <Text>
-            <Text style={{ fontWeight: 'bold' }}>Built-up Area:</Text>{' '}
-            {submissionData?.['Built-up Area (Parking Current)']}
+            <Text style={{ fontWeight: 'bold' }}>Verified:</Text>{' '}
+            {submissionData?.['Verified_NewWard']}
           </Text>
           <Text>
-            <Text style={{ fontWeight: 'bold' }}>Date From:</Text>{' '}
-            {submissionData?.['Date From (Parking Current)']}
+            <Text style={{ fontWeight: 'bold' }}>Zone:</Text>{' '}
+            {submissionData?.['Zone (Current)']}
           </Text>
           <Text>
-            <Text style={{ fontWeight: 'bold' }}>Date To:</Text>{' '}
-            {submissionData?.['Date To (Parking Current)']}
+            <Text style={{ fontWeight: 'bold' }}>Verified:</Text>{' '}
+            {submissionData?.['Verified_Zone']}
+          </Text>
+          <Text>
+            <Text style={{ fontWeight: 'bold' }}>Property Type:</Text>{' '}
+            {submissionData?.['Property Type (Current)']}
+          </Text>
+          <Text>
+            <Text style={{ fontWeight: 'bold' }}>Verified:</Text>{' '}
+            {submissionData?.['Verified_PropertyType']}
           </Text>
         </Card>
-      )}
 
-      {/* Basement Details */}
-      {(submissionData?.['Usage Type (Basement Current)'] ||
-        submissionData?.['Occupancy Type (Basement Current)'] ||
-        submissionData?.['Construction Type (Basement Current)'] ||
-        submissionData?.['Built-up Area (Basement Current)']) && (
-        <Card title="Basement Details">
-          <Text>
-            <Text style={{ fontWeight: 'bold' }}>Usage Type:</Text>{' '}
-            {submissionData?.['Usage Type (Basement Current)']}
-          </Text>
-          <Text>
-            <Text style={{ fontWeight: 'bold' }}>Occupancy Type:</Text>{' '}
-            {submissionData?.['Occupancy Type (Basement Current)']}
-          </Text>
-          <Text>
-            <Text style={{ fontWeight: 'bold' }}>Construction Type:</Text>{' '}
-            {submissionData?.['Construction Type (Basement Current)']}
-          </Text>
-          <Text>
-            <Text style={{ fontWeight: 'bold' }}>Built-up Area:</Text>{' '}
-            {submissionData?.['Built-up Area (Basement Current)']}
-          </Text>
-          <Text>
-            <Text style={{ fontWeight: 'bold' }}>Date From:</Text>{' '}
-            {submissionData?.['Date From (Basement Current)']}
-          </Text>
-          <Text>
-            <Text style={{ fontWeight: 'bold' }}>Date To:</Text>{' '}
-            {submissionData?.['Date To (Basement Current)']}
-          </Text>
-        </Card>
-      )}
+        {/* Floor Details */}
+        {floorIds?.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Floor Details</Text>
+            {floorIds.map((floor, index) => (
+              <View key={index} style={styles.card}>
+                <Text style={styles.cardTitle}>
+                  {floor.floorName || `Floor ${index + 1}`} Details
+                </Text>
+                <Text>Floor Name: {floor.floorName || '-'}</Text>
+                <Text>Construction Type: {floor.constructionType || '-'}</Text>
+                <Text>Occupancy Type: {floor.occupancyName || '-'}</Text>
+                <Text>Usage Type: {floor.usageType || '-'}</Text>
+                <Text>Built-up Area: {floor.builtupArea || '-'}</Text>
+                <Text>Carpet Area: {floor.carpetArea || '-'}</Text>
+                <Text>Date From: {floor.dateFrom || '-'}</Text>
+                <Text>Date To: {floor.dateUpto || '-'}</Text>
+              </View>
+            ))}
+          </>
+        )}
 
-      {/* Extra Floors */}
-      {submissionData?.extraFloors?.length > 0 && (
-        <>
-          <Text style={styles.sectionTitle}>Extra Floors</Text>
-          {submissionData.extraFloors.map((floor, index) => (
-            <View key={index} style={styles.card}>
-              <Text style={styles.cardTitle}>Floor {index + 1}</Text>
-              <Text>Floor Name: {floor.floorName}</Text>
-              <Text>Construction Type: {floor.constructionType}</Text>
-              <Text>Occupancy Type: {floor.occupancyType}</Text>
-              <Text>Usage Type: {floor.usageType}</Text>
-              <Text>From Date: {floor.fromDate}</Text>
-              <Text>To Date: {floor.toDate}</Text>
-            </View>
-          ))}
-        </>
-      )}
+        {/* Extra Floors */}
+        {submissionData?.extraFloors?.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Extra Floors</Text>
+            {submissionData.extraFloors.map((floor, index) => (
+              <View key={index} style={styles.card}>
+                <Text style={styles.cardTitle}>Floor {index + 1}</Text>
+                <Text>Floor Name: {floor.floorName}</Text>
+                <Text>Construction Type: {floor.constructionType}</Text>
+                <Text>Occupancy Type: {floor.occupancyType}</Text>
+                <Text>Usage Type: {floor.usageType}</Text>
+                <Text>From Date: {floor.fromDate}</Text>
+                <Text>To Date: {floor.toDate}</Text>
+              </View>
+            ))}
+          </>
+        )}
 
-      {/* Location */}
-      <Text style={styles.sectionTitle}>Location</Text>
-      {location ? (
-        <View>
-          <Text>Latitude: {location.latitude}</Text>
-          <Text>Longitude: {location.longitude}</Text>
-        </View>
-      ) : (
-        <Text>No location data</Text>
-      )}
-
-      {/* Photos */}
-      <Text style={styles.sectionTitle}>Captured Photos</Text>
-      {photos.map((photo, index) =>
-        photo.uri ? (
-          <View key={index} style={{ marginBottom: 10 }}>
-            <Text style={{ fontWeight: 'bold' }}>{photo.label}</Text>
-            <Image source={{ uri: photo.uri }} style={styles.image} />
+        {/* Location */}
+        <Text style={styles.sectionTitle}>Location</Text>
+        {location ? (
+          <View>
+            <Text>Latitude: {location.latitude}</Text>
+            <Text>Longitude: {location.longitude}</Text>
           </View>
         ) : (
-          <Text key={index}>{photo.label} not captured</Text>
-        ),
-      )}
+          <Text>No location data</Text>
+        )}
 
-      {/* Submit Button */}
-      <View style={styles.submitButtonContainer}>
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Submit</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+        {/* Photos */}
+        <Text style={styles.sectionTitle}>Captured Photos</Text>
+        {photos.map((photo, index) =>
+          photo.uri ? (
+            <View key={index} style={{ marginBottom: 10 }}>
+              <Text style={{ fontWeight: 'bold' }}>{photo.label}</Text>
+              <Image source={{ uri: photo.uri }} style={styles.image} />
+            </View>
+          ) : (
+            <Text key={index}>{photo.label} not captured</Text>
+          ),
+        )}
+
+        {/* Submit Button */}
+        <View style={styles.submitButtonContainer}>
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <Text style={styles.submitButtonText}>Submit</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      {/* ✅ Modal for Remarks + Send to Level */}
+      <Modal visible={showModal} transparent animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            {/* Close Button */}
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowModal(false)}
+            >
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.modalTitle}>Remarks</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your remarks"
+              value={remarks}
+              onChangeText={setRemarks}
+              multiline
+            />
+            <TouchableOpacity
+              style={styles.sendButton}
+              onPress={handleSendToLevel}
+            >
+              <Text style={styles.sendButtonText}>Send to Level</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 };
 
@@ -467,18 +414,62 @@ const styles = StyleSheet.create({
     height: 150,
     marginTop: 10,
     borderRadius: 8,
-
-    // Border
     borderWidth: 1,
-    borderColor: '#560606ff', // change to any color you like
-
-    // Shadow (iOS)
+    borderColor: '#560606ff',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-
-    // Shadow (Android)
     elevation: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    width: '80%',
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 10,
+    height: 100,
+    textAlignVertical: 'top',
+    marginBottom: 15,
+  },
+  sendButton: {
+    backgroundColor: '#27ae60',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  sendButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
+    padding: 5,
+  },
+  closeButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
   },
 });
