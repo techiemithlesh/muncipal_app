@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,30 +10,44 @@ import {
   Platform,
   StyleSheet,
   Linking,
-  ActivityIndicator, // 👈 Added for loader
+  ActivityIndicator,
 } from 'react-native';
 import { launchCamera } from 'react-native-image-picker';
 import Geolocation from '@react-native-community/geolocation';
 import { useNavigation } from '@react-navigation/native';
 import HeaderNavigation from '../Components/HeaderNavigation';
+import { getUserDetails } from '../utils/auth';
 
 const VerifiedStatus = ({ route }) => {
+  const [isULBUser, setIsULBUser] = useState(false);
+  const [left, setLeft] = useState(null);
+  const [right, setRight] = useState(null);
+  const [front, setFront] = useState(null);
+  const [location, setLocation] = useState(null);
+  const [loadingLocation, setLoadingLocation] = useState(false);
+
   const navigation = useNavigation();
   const { submissionData, floorsData, hasExtraFloors, id, data, floorIds } =
     route.params || {};
-  console.log('Floor IDs Data:', data);
 
-  // console.log('Raw floor data:', submissionData.extraFloors);
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await getUserDetails();
+        if (user?.userFor === 'ULB') setIsULBUser(true);
+      } catch (err) {
+        console.log('Error fetching user:', err);
+      }
+    };
+    fetchUser();
+  }, []);
+
   const parseDate = str => {
     if (!str) return null;
-
-    // Case 1: MM/YYYY (e.g., "09/2025")
     if (str.includes('/')) {
       const [month, year] = str.split('/');
       return `${year}-${month.padStart(2, '0')}`;
     }
-
-    // Case 2: "September 2025"
     const months = {
       january: '01',
       february: '02',
@@ -48,20 +62,11 @@ const VerifiedStatus = ({ route }) => {
       november: '11',
       december: '12',
     };
-
     const [monthName, year] = str.split(' ');
     const month = months[monthName.toLowerCase()];
     return month && year ? `${year}-${month}` : null;
   };
 
-  console.log('Received ID:', id);
-  const [left, setLeft] = useState(null);
-  const [right, setRight] = useState(null);
-  const [front, setFront] = useState(null);
-  const [location, setLocation] = useState(null);
-  const [loadingLocation, setLoadingLocation] = useState(false); // 👈 loader state
-
-  /* ---------------- Permissions ---------------- */
   const getCameraPermission = async () => {
     if (Platform.OS === 'android') {
       const granted = await PermissionsAndroid.request(
@@ -90,7 +95,6 @@ const VerifiedStatus = ({ route }) => {
     }
   };
 
-  /* ---------------- Capture Photo ---------------- */
   const capturePhoto = async photoIndex => {
     const locationPermission = await getLocationPermission();
     if (!locationPermission) {
@@ -142,77 +146,35 @@ const VerifiedStatus = ({ route }) => {
     );
   };
 
-  /* ---------------- Render Extra Floors ---------------- */
   const renderFloorData = () => {
-    if (
-      submissionData?.extraFloors &&
-      submissionData['Verified_PropertyType'] !== 'VACANT LAND' &&
-      submissionData.extraFloors.length > 0
-    ) {
-      return submissionData.extraFloors.map((floor, floorIndex) => (
-        <View
-          key={floorIndex}
-          style={{
-            backgroundColor: '#fff',
-            padding: 15,
-            marginVertical: 8,
-            borderRadius: 10,
-            shadowColor: '#000',
-            shadowOpacity: 0.1,
-            shadowOffset: { width: 0, height: 2 },
-            shadowRadius: 4,
-            elevation: 3,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 16,
-              fontWeight: 'bold',
-              marginBottom: 10,
-              color: '#0f3969',
-            }}
-          >
-            Extra Floor {floorIndex + 1} Details
-          </Text>
-
-          {/* Fields in card format */}
-          <View style={{ marginBottom: 6 }}>
-            <Text style={{ fontWeight: '600' }}>Floor Type:</Text>
-            <Text>{floor.floorName || 'N/A'}</Text>
+    if (!submissionData?.extraFloors) return null;
+    return submissionData.extraFloors.map((floor, idx) => (
+      <View key={idx} style={styles.extraFloorCard}>
+        <Text style={styles.extraFloorTitle}>
+          Extra Floor {idx + 1} Details
+        </Text>
+        {[
+          'floorName',
+          'constructionType',
+          'occupancyType',
+          'usageType',
+          'builtupArea',
+          'fromDate',
+          'toDate',
+        ].map(field => (
+          <View style={styles.floorRow} key={field}>
+            <Text style={styles.floorLabel}>
+              {field.replace(/([A-Z])/g, ' $1')}:
+            </Text>
+            <Text>
+              {field.includes('Date')
+                ? parseDate(floor[field])
+                : floor[field] || 'N/A'}
+            </Text>
           </View>
-
-          <View style={{ marginBottom: 6 }}>
-            <Text style={{ fontWeight: '600' }}>Construction Type:</Text>
-            <Text>{floor.constructionType || 'N/A'}</Text>
-          </View>
-
-          <View style={{ marginBottom: 6 }}>
-            <Text style={{ fontWeight: '600' }}>Occupancy Type:</Text>
-            <Text>{floor.occupancyType || 'N/A'}</Text>
-          </View>
-
-          <View style={{ marginBottom: 6 }}>
-            <Text style={{ fontWeight: '600' }}>Usage Type:</Text>
-            <Text>{floor.usageType || 'N/A'}</Text>
-          </View>
-
-          <View style={{ marginBottom: 6 }}>
-            <Text style={{ fontWeight: '600' }}>Built-up Area:</Text>
-            <Text>{floor.builtupArea || 'N/A'}</Text>
-          </View>
-          <View style={{ marginBottom: 6 }}>
-            <Text style={{ fontWeight: '600' }}>Date From:</Text>
-            <Text>{parseDate(floor.fromDate)}</Text>
-          </View>
-
-          <View>
-            <Text style={{ fontWeight: '600' }}>Date To:</Text>
-            <Text>{parseDate(floor.toDate)}</Text>
-          </View>
-        </View>
-      ));
-    }
-    return null;
+        ))}
+      </View>
+    ));
   };
 
   return (
@@ -222,7 +184,7 @@ const VerifiedStatus = ({ route }) => {
 
       {submissionData ? (
         <>
-          {/* Property Table */}
+          {/* Property Details */}
           <SubmissionCard
             title="Property Details"
             rows={[
@@ -246,240 +208,207 @@ const VerifiedStatus = ({ route }) => {
                 value: submissionData['Property Type (Current)'],
                 verifiedValue: submissionData['Verified_PropertyType'],
               },
+              ...(submissionData['Property Type (Current)'] ===
+              'FLATS / UNIT IN MULTI STORIED BUILDING'
+                ? [
+                    {
+                      label: 'Selected Date',
+                      value: submissionData['selectedDate'],
+                    },
+                    {
+                      label: 'Apartment Detail Type',
+                      value: submissionData['apartmentDetail'],
+                    },
+                  ]
+                : []),
             ]}
           />
-          {floorIds.map((floor, index) => {
-            // Skip non-relevant floor types (e.g., Floor type 4 = "1st Floor", 1 = "Parking")
-            // if (floor.floorName !== 'PARKING' && floor.floorName !== 'BASEMENT')
-            //   return null;
+          {floorIds.map((floor, index) => (
+            <SubmissionCard
+              key={index}
+              title={`${floor.floorName} Details`}
+              rows={[
+                {
+                  label: 'Usage Type',
+                  value: floor.usageType,
+                  verifiedValue:
+                    submissionData[`Verified_Usage${floor.floorName}`],
+                },
+                {
+                  label: 'Occupancy Type',
+                  value: floor.occupancyName,
+                  verifiedValue:
+                    submissionData[`Verified_Occupancy${floor.floorName}`],
+                },
+                {
+                  label: 'Construction Type',
+                  value: floor.constructionType,
+                  verifiedValue:
+                    submissionData[`Verified_Construction${floor.floorName}`],
+                },
+                {
+                  label: 'Built-up Area',
+                  value: floor.builtupArea,
+                  verifiedValue:
+                    submissionData[`Verified_BuiltUp${floor.floorName}`],
+                },
+                {
+                  label: 'Date From',
+                  value: floor.dateFrom,
+                  verifiedValue:
+                    submissionData[`Verified_DateFrom${floor.floorName}`],
+                },
+                {
+                  label: 'Date To',
+                  value: floor.dateUpto || '-',
+                  verifiedValue:
+                    submissionData[`Verified_DateTo${floor.floorName}`],
+                },
+              ]}
+            />
+          ))}
 
-            return (
-              <SubmissionCard
-                key={index}
-                title={`${floor.floorName} Details`}
-                rows={[
-                  {
-                    label: 'Usage Type',
-                    value: floor.usageType,
-                    verifiedValue:
-                      submissionData[`Verified_Usage${floor.floorName}`],
-                  },
-                  {
-                    label: 'Occupancy Type',
-                    value: floor.occupancyName,
-                    verifiedValue:
-                      submissionData[`Verified_Occupancy${floor.floorName}`],
-                  },
-                  {
-                    label: 'Construction Type',
-                    value: floor.constructionType,
-                    verifiedValue:
-                      submissionData[`Verified_Construction${floor.floorName}`],
-                  },
-                  {
-                    label: 'Built-up Area',
-                    value: floor.builtupArea,
-                    verifiedValue:
-                      submissionData[`Verified_BuiltUp${floor.floorName}`],
-                  },
-                  {
-                    label: 'Date From',
-                    value: floor.dateFrom,
-                    verifiedValue:
-                      submissionData[`Verified_DateFrom${floor.floorName}`],
-                  },
-                  {
-                    label: 'Date To',
-                    value: floor.dateUpto || '-',
-                    verifiedValue:
-                      submissionData[`Verified_DateTo${floor.floorName}`],
-                  },
-                ]}
-              />
-            );
-          })}
+          {/* Floors & Remarks */}
+          {!isULBUser && (
+            <>
+              {renderFloorData()}
 
-          {/* Extra Floors */}
-          {renderFloorData()}
-          {/* Remarks */}
-          {(submissionData['Remarks'] ||
-            submissionData['Remarks (Preview)']) && (
-            <View style={styles.remarksContainer}>
-              <Text style={styles.remarksTitle}>Remarks</Text>
-              <View style={styles.remarksBox}>
-                <Text style={styles.remarksText}>
-                  {submissionData['Remarks'] ||
-                    submissionData['Remarks (Preview)'] ||
-                    'No remarks'}
-                </Text>
+              {(submissionData['Remarks'] ||
+                submissionData['Remarks (Preview)']) && (
+                <View style={styles.remarksContainer}>
+                  <Text style={styles.remarksTitle}>Remarks</Text>
+                  <View style={styles.remarksBox}>
+                    <Text style={styles.remarksText}>
+                      {submissionData['Remarks'] ||
+                        submissionData['Remarks (Preview)'] ||
+                        'No remarks'}
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Location & Photos */}
+              <View style={styles.locationPhotoCard}>
+                <Text style={styles.locationPhotoTitle}>Photo & Location</Text>
+                {loadingLocation ? (
+                  <ActivityIndicator size="large" color="#007AFF" />
+                ) : !location ? (
+                  <>
+                    <TouchableOpacity
+                      style={styles.getLocationButton}
+                      onPress={() => {
+                        getLocationPermission().then(granted => {
+                          if (!granted) {
+                            Alert.alert(
+                              'Location Required',
+                              'Please enable location services.',
+                            );
+                            return;
+                          }
+                          setLoadingLocation(true);
+                          Geolocation.getCurrentPosition(
+                            pos => {
+                              setLocation(pos.coords);
+                              setLoadingLocation(false);
+                            },
+                            () => {
+                              setLoadingLocation(false);
+                              Alert.alert('Error', 'Unable to fetch location');
+                            },
+                            {
+                              enableHighAccuracy: true,
+                              timeout: 60000,
+                              maximumAge: 30000,
+                            },
+                          );
+                        });
+                      }}
+                    >
+                      <Text style={styles.getLocationButtonText}>
+                        📍 Get Current Location
+                      </Text>
+                    </TouchableOpacity>
+                    <Text style={styles.locationHelpText}>
+                      * Location is required before capturing photos
+                    </Text>
+                  </>
+                ) : (
+                  <View style={styles.locationInfo}>
+                    <Text style={styles.locationLabel}>
+                      📍 Location Captured
+                    </Text>
+                    <View style={styles.coordinatesBox}>
+                      <View style={styles.coordinateRow}>
+                        <Text style={styles.coordinateLabel}>Latitude:</Text>
+                        <Text style={styles.coordinateValue}>
+                          {location.latitude.toFixed(6)}
+                        </Text>
+                      </View>
+                      <View style={styles.coordinateRow}>
+                        <Text style={styles.coordinateLabel}>Longitude:</Text>
+                        <Text style={styles.coordinateValue}>
+                          {location.longitude.toFixed(6)}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.photosGrid}>
+                      {['left', 'right', 'front'].map(side => {
+                        const photo =
+                          side === 'left'
+                            ? left
+                            : side === 'right'
+                            ? right
+                            : front;
+                        const setPhoto =
+                          side === 'left'
+                            ? setLeft
+                            : side === 'right'
+                            ? setRight
+                            : setFront;
+                        return (
+                          <View key={side} style={styles.photoItem}>
+                            <Text style={styles.photoLabel}>
+                              {side.charAt(0).toUpperCase() + side.slice(1)}
+                            </Text>
+                            {photo ? (
+                              <View style={styles.photoWrapper}>
+                                <Image
+                                  source={{ uri: photo.uri }}
+                                  style={styles.photoImage}
+                                />
+                                <TouchableOpacity
+                                  style={styles.photoDeleteButton}
+                                  onPress={() => setPhoto(null)}
+                                >
+                                  <Text style={styles.photoDeleteText}>✕</Text>
+                                </TouchableOpacity>
+                              </View>
+                            ) : (
+                              <TouchableOpacity
+                                style={styles.captureButton}
+                                onPress={() => capturePhoto(side)}
+                              >
+                                <Text style={styles.captureButtonIcon}>📷</Text>
+                                <Text style={styles.captureButtonText}>
+                                  Capture
+                                </Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+                )}
               </View>
-            </View>
+            </>
           )}
         </>
       ) : (
         <Text>No submission data.</Text>
       )}
 
-      {/* Location & Photos */}
-      <View style={styles.locationPhotoCard}>
-        <Text style={styles.locationPhotoTitle}>Photo & Location</Text>
-
-        {/* Location Section */}
-        <View style={styles.locationSection}>
-          {loadingLocation ? (
-            <ActivityIndicator size="large" color="#007AFF" />
-          ) : !location ? (
-            <>
-              <TouchableOpacity
-                style={styles.getLocationButton}
-                onPress={() => {
-                  getLocationPermission().then(granted => {
-                    if (!granted) {
-                      Alert.alert(
-                        'Location Required',
-                        'Please enable location services.',
-                      );
-                      return;
-                    }
-                    setLoadingLocation(true);
-                    Geolocation.getCurrentPosition(
-                      pos => {
-                        setLocation(pos.coords);
-                        setLoadingLocation(false);
-                      },
-                      () => {
-                        setLoadingLocation(false);
-                        Alert.alert('Error', 'Unable to fetch location');
-                      },
-                      {
-                        enableHighAccuracy: true,
-                        timeout: 60000,
-                        maximumAge: 30000,
-                      },
-                    );
-                  });
-                }}
-              >
-                <Text style={styles.getLocationButtonText}>
-                  📍 Get Current Location
-                </Text>
-              </TouchableOpacity>
-              <Text style={styles.locationHelpText}>
-                * Location is required before capturing photos
-              </Text>
-            </>
-          ) : (
-            <View style={styles.locationInfo}>
-              <Text style={styles.locationLabel}>📍 Location Captured</Text>
-              <View style={styles.coordinatesBox}>
-                <View style={styles.coordinateRow}>
-                  <Text style={styles.coordinateLabel}>Latitude:</Text>
-                  <Text style={styles.coordinateValue}>
-                    {location.latitude.toFixed(6)}
-                  </Text>
-                </View>
-                <View style={styles.coordinateRow}>
-                  <Text style={styles.coordinateLabel}>Longitude:</Text>
-                  <Text style={styles.coordinateValue}>
-                    {location.longitude.toFixed(6)}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          )}
-        </View>
-
-        {/* Photos Section */}
-        {location && (
-          <View style={styles.photosSection}>
-            <Text style={styles.photosSectionTitle}>Property Photos</Text>
-            <View style={styles.photosGrid}>
-              {/* Left */}
-              <View style={styles.photoItem}>
-                <Text style={styles.photoLabel}>Left</Text>
-                {left ? (
-                  <View style={styles.photoWrapper}>
-                    <Image
-                      source={{ uri: left.uri }}
-                      style={styles.photoImage}
-                    />
-                    <TouchableOpacity
-                      style={styles.photoDeleteButton}
-                      onPress={() => setLeft(null)}
-                    >
-                      <Text style={styles.photoDeleteText}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.captureButton}
-                    onPress={() => capturePhoto('left')}
-                  >
-                    <Text style={styles.captureButtonIcon}>📷</Text>
-                    <Text style={styles.captureButtonText}>Capture</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              {/* Right */}
-              <View style={styles.photoItem}>
-                <Text style={styles.photoLabel}>Right</Text>
-                {right ? (
-                  <View style={styles.photoWrapper}>
-                    <Image
-                      source={{ uri: right.uri }}
-                      style={styles.photoImage}
-                    />
-                    <TouchableOpacity
-                      style={styles.photoDeleteButton}
-                      onPress={() => setRight(null)}
-                    >
-                      <Text style={styles.photoDeleteText}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.captureButton}
-                    onPress={() => capturePhoto('right')}
-                  >
-                    <Text style={styles.captureButtonIcon}>📷</Text>
-                    <Text style={styles.captureButtonText}>Capture</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              {/* Front */}
-              <View style={styles.photoItem}>
-                <Text style={styles.photoLabel}>Front</Text>
-                {front ? (
-                  <View style={styles.photoWrapper}>
-                    <Image
-                      source={{ uri: front.uri }}
-                      style={styles.photoImage}
-                    />
-                    <TouchableOpacity
-                      style={styles.photoDeleteButton}
-                      onPress={() => setFront(null)}
-                    >
-                      <Text style={styles.photoDeleteText}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.captureButton}
-                    onPress={() => capturePhoto('front')}
-                  >
-                    <Text style={styles.captureButtonIcon}>📷</Text>
-                    <Text style={styles.captureButtonText}>Capture</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-          </View>
-        )}
-      </View>
-
-      {/* Save & Next */}
       <TouchableOpacity
         style={styles.button}
         onPress={() =>
@@ -503,11 +432,9 @@ const VerifiedStatus = ({ route }) => {
   );
 };
 
-/* ---------------- Tabular Component ---------------- */
 const SubmissionCard = ({ title, rows }) => (
   <View style={styles.tableCard}>
     <Text style={styles.tableTitle}>{title}</Text>
-    {/* Header */}
     <View style={[styles.tableRow, styles.tableHeader]}>
       <Text style={[styles.tableCellLabel, styles.tableHeaderText]}>Field</Text>
       <Text style={[styles.tableCellValue, styles.tableHeaderText]}>
@@ -517,7 +444,6 @@ const SubmissionCard = ({ title, rows }) => (
         Verified Value
       </Text>
     </View>
-    {/* Rows */}
     {rows.map((row, index) => (
       <View
         key={index}
@@ -536,9 +462,6 @@ const SubmissionCard = ({ title, rows }) => (
   </View>
 );
 
-export default VerifiedStatus;
-
-/* ---------------- Styles ---------------- */
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: '#fff' },
   title: {
@@ -548,7 +471,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  /* Table */
   tableCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -580,7 +502,6 @@ const styles = StyleSheet.create({
   tableCellLabel: { flex: 1, fontSize: 14, fontWeight: '600', color: '#333' },
   tableCellValue: { flex: 1, fontSize: 14, color: '#000', textAlign: 'right' },
 
-  /* Remarks Section */
   remarksContainer: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -607,13 +528,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e0e0e0',
   },
-  remarksText: {
-    fontSize: 14,
-    color: '#333',
-    lineHeight: 20,
-  },
+  remarksText: { fontSize: 14, color: '#333', lineHeight: 20 },
 
-  /* Location & Photo Card */
   locationPhotoCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -633,29 +549,16 @@ const styles = StyleSheet.create({
     color: '#111',
     textAlign: 'center',
   },
-
-  /* Location Section */
-  locationSection: { marginBottom: 20 },
   getLocationButton: {
     backgroundColor: '#007AFF',
     padding: 14,
     borderRadius: 8,
     alignItems: 'center',
+    marginBottom: 8,
   },
   getLocationButtonText: { color: '#fff', fontWeight: 'bold' },
-  locationHelpText: {
-    fontSize: 12,
-    color: 'gray',
-    textAlign: 'center',
-    marginTop: 6,
-  },
+  locationHelpText: { fontSize: 12, color: 'gray', textAlign: 'center' },
   locationInfo: { marginTop: 10 },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    justifyContent: 'center',
-  },
   locationLabel: { fontWeight: '600', fontSize: 14 },
   coordinatesBox: { padding: 10, backgroundColor: '#f5f5f5', borderRadius: 8 },
   coordinateRow: {
@@ -666,24 +569,13 @@ const styles = StyleSheet.create({
   coordinateLabel: { fontWeight: '600' },
   coordinateValue: { fontWeight: '400', color: '#333' },
 
-  /* Photos Section */
-  photosSection: { marginTop: 20 },
-  photosSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
   photosGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
+    marginTop: 10,
   },
-  photoItem: {
-    width: '30%',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
+  photoItem: { width: '30%', alignItems: 'center', marginBottom: 12 },
   photoLabel: { fontSize: 12, fontWeight: '600', marginBottom: 6 },
   photoWrapper: { position: 'relative' },
   photoImage: {
@@ -697,25 +589,19 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     right: -8,
-    backgroundColor: 'rgba(255, 0, 0, 0.8)',
+    backgroundColor: '#ff4444',
     borderRadius: 12,
-    padding: 4,
+    paddingHorizontal: 4,
   },
-  photoDeleteText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
+  photoDeleteText: { color: '#fff', fontWeight: 'bold' },
   captureButton: {
-    width: 100,
-    height: 100,
+    backgroundColor: '#eff7feff',
+    padding: 6,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f1f1f1',
   },
-  captureButtonIcon: { fontSize: 24, marginBottom: 4 },
-  captureButtonText: { fontSize: 12, fontWeight: '600' },
-
-  /* Save Button */
+  captureButtonIcon: { color: '#fff', fontSize: 20 },
+  captureButtonText: { color: '#fff', fontSize: 12 },
   button: {
     backgroundColor: '#007AFF',
     padding: 16,
@@ -723,5 +609,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 20,
   },
-  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+
+  extraFloorCard: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  extraFloorTitle: { fontWeight: '700', fontSize: 16, marginBottom: 8 },
+  floorRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  floorLabel: { fontWeight: '600' },
 });
+
+export default VerifiedStatus;

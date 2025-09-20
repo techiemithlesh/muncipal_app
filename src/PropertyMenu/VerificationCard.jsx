@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,7 @@ import {
   responsiveHeight,
   responsiveWidth,
 } from 'react-native-responsive-dimensions';
-import MonthPicker from 'react-native-month-year-picker';
 import moment from 'moment';
-import { useNavigation } from '@react-navigation/native';
 
 const VerificationCard = ({
   label,
@@ -27,15 +25,15 @@ const VerificationCard = ({
   showInputOnIncorrect = false,
   inputValue = '',
   setInputValue = () => {},
-  inputLabel = 'Enter New Ward No.:',
-  inputPlaceholder = 'Enter new ward number',
+  inputLabel = 'Enter New Value:',
+  inputPlaceholder = 'Enter new value',
   showCalendarOnIncorrect = false,
   calendarValue = new Date(),
   setCalendarValue = () => {},
   onCalendarPress,
+  hideCorrectOption = false, // 👈 NEW PROP
 }) => {
   const isSelectionRequired = selectedVerification === null;
-  const navigation = useNavigation();
 
   const handleVerificationChange = status => {
     setSelectedVerification(status);
@@ -45,6 +43,9 @@ const VerificationCard = ({
       setCalendarValue && setCalendarValue(new Date());
     }
   };
+
+  // Build radio options dynamically
+  const options = hideCorrectOption ? ['Incorrect'] : ['Correct', 'Incorrect'];
 
   return (
     <View style={styles.card}>
@@ -58,21 +59,14 @@ const VerificationCard = ({
         <Text style={styles.value}>{value}</Text>
       </View>
 
-      {isSelectionRequired && (
-        <View style={styles.promptContainer}>
-          {/* <Text style={styles.promptText}>
-            Please select verification status:
-          </Text> */}
-        </View>
-      )}
-
+      {/* Correct / Incorrect radio buttons */}
       <View
         style={[
           styles.radioGroup,
           isSelectionRequired && styles.radioGroupRequired,
         ]}
       >
-        {['Correct', 'Incorrect'].map(option => (
+        {options.map(option => (
           <TouchableOpacity
             key={option}
             style={styles.radioOption}
@@ -91,34 +85,35 @@ const VerificationCard = ({
 
       <View style={styles.divider} />
 
-      {/* If Correct, show value as plain text. If Incorrect, show dropdown/input/calendar. */}
+      {/* If Correct, show value as plain text */}
       {selectedVerification === 'Correct' && (
         <View style={styles.staticValueContainer}>
-          {/* <Text style={styles.staticValueLabel}>Selected Value: </Text> */}
           <Text style={styles.staticValue}>{value}</Text>
         </View>
       )}
 
+      {/* If Incorrect + calendar */}
       {selectedVerification === 'Incorrect' && showCalendarOnIncorrect && (
         <View style={styles.inputContainer}>
           <Text style={styles.staticValueLabel}>Select Date:</Text>
           <TouchableOpacity
             style={styles.input}
-            onPress={typeof onCalendarPress === 'function' ? onCalendarPress : undefined}
+            onPress={
+              typeof onCalendarPress === 'function'
+                ? onCalendarPress
+                : undefined
+            }
           >
             <Text style={{ color: calendarValue ? '#333' : '#aaa' }}>
               {calendarValue && !isNaN(new Date(calendarValue))
-                ? (typeof calendarValue === 'string' || typeof calendarValue === 'number')
-                  ? moment(calendarValue).format('MMMM YYYY')
-                  : moment(calendarValue).isValid()
-                    ? moment(calendarValue).format('MMMM YYYY')
-                    : 'Select Date'
+                ? moment(calendarValue).format('MMMM YYYY')
                 : 'Select Date'}
             </Text>
           </TouchableOpacity>
         </View>
       )}
 
+      {/* If Incorrect + text input */}
       {selectedVerification === 'Incorrect' &&
         showInputOnIncorrect &&
         !showCalendarOnIncorrect && (
@@ -134,6 +129,7 @@ const VerificationCard = ({
           </View>
         )}
 
+      {/* If Incorrect + dropdown */}
       {selectedVerification === 'Incorrect' &&
         !showInputOnIncorrect &&
         !showCalendarOnIncorrect && (
@@ -148,17 +144,6 @@ const VerificationCard = ({
               onChange={item => setDropdownValue(item.value)}
               disable={false}
             />
-            {dropdownValue && (
-              <View style={styles.staticValueContainer}>
-                {/* <Text style={styles.staticValueLabel}>Selected: </Text>
-                <Text style={styles.staticValueError}>
-                  {
-                    dropdownOptions.find(item => item.value === dropdownValue)
-                      ?.label
-                  }
-                </Text> */}
-              </View>
-            )}
           </>
         )}
     </View>
@@ -170,8 +155,8 @@ export default VerificationCard;
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
-    padding: responsiveWidth(2), // reduced from 4
-    marginVertical: responsiveHeight(0.5), // adjusted
+    padding: responsiveWidth(2),
+    marginVertical: responsiveHeight(0.5),
     marginHorizontal: responsiveWidth(3),
     borderRadius: 8,
     borderColor: '#ccc',
@@ -203,12 +188,6 @@ const styles = StyleSheet.create({
     padding: 5,
     paddingLeft: 15,
     backgroundColor: 'rgba(13, 148, 136, 1)',
-  },
-  promptContainer: {},
-  promptText: {
-    fontSize: responsiveFontSize(1.6),
-    color: 'black',
-    fontWeight: '500',
   },
   radioGroup: {
     flexDirection: 'row',
@@ -252,23 +231,16 @@ const styles = StyleSheet.create({
     borderColor: '#aaa',
     borderRadius: 8,
     padding: 10,
-    // marginTop: 2,
-    // marginBottom: 2,
-    // marginTop: 10,
-    // marginBottom: 10,
     marginHorizontal: responsiveWidth(2),
   },
   divider: {
     height: 1,
     backgroundColor: '#e0e0e0',
-    // marginVertical: 10,
-    // marginHorizontal: responsiveWidth(4),
   },
   staticValueContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: responsiveWidth(4),
-    // marginBottom: 10,
   },
   staticValueLabel: {
     fontSize: responsiveFontSize(1.8),
@@ -280,14 +252,8 @@ const styles = StyleSheet.create({
     color: '#007BFF',
     fontWeight: 'bold',
   },
-  staticValueError: {
-    fontSize: responsiveFontSize(1.8),
-    color: '#dc3545',
-    fontWeight: 'bold',
-  },
   inputContainer: {
     paddingHorizontal: responsiveWidth(4),
-    // marginBottom: 10,
   },
   input: {
     borderWidth: 1,

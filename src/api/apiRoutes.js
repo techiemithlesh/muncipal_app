@@ -15,6 +15,10 @@ export const API_ROUTES = {
   TRADE_REVIEW_INBOX:`${BASE_URL}/api/trade/inbox`,
   TRADE_APPLY:`${BASE_URL}/api/trade/apply`,
 };
+
+export const WARD_API ={
+  OLD_WARD_API : `${BASE_URL}/api/property/get-new-ward-by-old`,
+}
 export const SAF_API_ROUTES = {
   SAF_VARIFICATION_MODEL: `${BASE_URL}/api/property/field-verification-dtl`,
   APPLY_SAF: `${BASE_URL}/api/property/saf-apply`,

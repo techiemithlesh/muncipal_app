@@ -13,11 +13,12 @@ import {
 } from 'react-native';
 import HeaderNavigation from '../Components/HeaderNavigation';
 import axios from 'axios';
-import { PROPERTY_API } from '../api/apiRoutes';
-import { getToken } from '../utils/auth';
-import ImageResizer from 'react-native-image-resizer';
+import { PROPERTY_API, SAF_API_ROUTES } from '../api/apiRoutes';
+import { getToken, getUserDetails } from '../utils/auth';
 import { useNavigation } from '@react-navigation/native';
-import { SAF_API_ROUTES } from '../api/apiRoutes';
+import { showToast } from '../utils/toast';
+import moment from 'moment';
+import ImageResizer from 'react-native-image-resizer';
 
 const Card = ({ title, children }) => (
   <View style={styles.card}>
@@ -28,21 +29,31 @@ const Card = ({ title, children }) => (
 
 const SubmitVarification = ({ route }) => {
   const navigation = useNavigation();
-  const { submissionData, location, left, right, front, id, data } =
+  const { submissionData, location, left, right, front, id, data, floorIds } =
     route.params;
-  const { floorIds } = route.params || {};
-  console.log('Submit Veificartii', data);
 
   const [showModal, setShowModal] = useState(false);
   const [remarks, setRemarks] = useState('');
+  const [isULBUser, setIsULBUser] = useState(false);
 
   const photos = [
-    { label: 'left side', ...left },
-    { label: 'right side', ...right },
-    { label: 'front side', ...front },
+    { label: 'left side', direction: 'West', ...left },
+    { label: 'right side', direction: 'East', ...right },
+    { label: 'front side', direction: 'North', ...front },
   ];
+  // Detect if the user is a ULB user
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await getUserDetails();
+        if (user?.userFor === 'ULB') setIsULBUser(true);
+      } catch (err) {
+        console.log('Error fetching user:', err);
+      }
+    };
+    fetchUser();
+  }, []);
 
-  // convert "September 2025" → "2025-09"
   const convertMonthYear = str => {
     if (!str) return null;
     const months = {
@@ -63,12 +74,17 @@ const SubmitVarification = ({ route }) => {
     const month = months[monthName.toLowerCase()];
     return month && year ? `${year}-${month}` : null;
   };
-
+  const formatDateForAPI = date => {
+    if (!date) return null;
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
   const handleSubmit = async () => {
+    const token = await getToken();
     try {
-      const token = await getToken();
-
-      // 1️⃣ Prepare Floors
       const finalFloors =
         (submissionData?.extraFloors?.length > 0
           ? submissionData.extraFloors.map(floor => ({
@@ -89,7 +105,7 @@ const SubmitVarification = ({ route }) => {
                 ? String(floor.occupancyTypeMasterId)
                 : null,
             }))
-          : floorIds.map(floor => ({
+          : floorIds?.map(floor => ({
               safFloorDetailId: floor.id,
               builtupArea: Number(floor.builtupArea ?? 0),
               carpetArea: Number(floor.carpetArea ?? 0),
@@ -114,6 +130,52 @@ const SubmitVarification = ({ route }) => {
             }))) || [];
 
       const fieldPayload = {
+        // Mobile Tower
+        isMobileTower: submissionData?.isMobileTower === true, // ensure boolean
+        towerArea: submissionData?.isMobileTower
+          ? parseFloat(submissionData?.towerArea) || 0
+          : null,
+        towerInstallationDate:
+          submissionData?.isMobileTower && submissionData?.installationDate
+            ? moment(submissionData.installationDate).format('YYYY-MM-DD')
+            : null,
+
+        // ✅ Hoarding
+        isHoardingBoard: submissionData?.isHoardingBoard === true,
+        hoardingArea: submissionData?.isHoardingBoard
+          ? parseFloat(submissionData?.hoardingArea) || 0
+          : null,
+        // Backend requires YYYY-MM-DD for validation
+        hoardingInstallationDate: submissionData.isHoardingBoard
+          ? formatDateForAPI(submissionData.hoardingInstallationDate)
+          : null,
+        hoardingInstallationDateTime: submissionData.isHoardingBoard
+          ? submissionData.hoardingInstallationDate
+          : null,
+
+        // ✅ Petrol Pump
+        isPetrolPump: submissionData?.isPetrolPump === true,
+        pumpArea: submissionData?.isPetrolPump
+          ? parseFloat(submissionData?.pumpArea) || 0
+          : null,
+        pumpInstallationDate:
+          submissionData?.isPetrolPump && submissionData?.pumpInstallationDate
+            ? moment(submissionData.pumpInstallationDate).format('YYYY-MM-DD')
+            : null,
+        underGroundArea: submissionData?.isPetrolPump
+          ? parseFloat(submissionData?.underGroundArea) || 0.1
+          : null,
+        petrolPumpCompletionDate:
+          submissionData?.isPetrolPump && submissionData?.pumpInstallationDate
+            ? moment(submissionData.pumpInstallationDate).format('YYYY-MM-DD')
+            : null,
+
+        // ✅ Rainwater Harvesting
+        isWaterHarvesting: submissionData?.isWaterHarvesting === true,
+        waterHarvestingDate:
+          submissionData?.isWaterHarvesting && submissionData?.completionDate
+            ? moment(submissionData.completionDate).format('YYYY-MM-DD')
+            : null,
         safDetailId: id,
         wardMstrId: submissionData?.wardMstrId,
         newWardMstrId: submissionData?.newWardMstrId,
@@ -122,17 +184,6 @@ const SubmitVarification = ({ route }) => {
         zoneMstrId: submissionData?.zoneMstrId,
         roadWidth: submissionData?.roadWidth,
         areaOfPlot: submissionData?.areaOfPlot,
-        isMobileTower: submissionData?.isMobileTower,
-        isHoardingBoard: submissionData?.isHoardingBoard,
-        isPetrolPump: submissionData?.isPetrolPump,
-        isWaterHarvesting: submissionData?.isWaterHarvesting,
-        hoardingArea: submissionData?.isHoardingBoard
-          ? Number(submissionData?.hoardingArea || 0.1)
-          : null,
-        hoardingInstallationDate: submissionData?.isHoardingBoard
-          ? submissionData?.hoardingInstallationDate ||
-            new Date().toISOString().split('T')[0]
-          : null,
         landOccupationDate:
           submissionData?.['Property Type (Current)'] === 'VACANT LAND' ||
           submissionData?.Verified_PropertyType === 'VACANT LAND'
@@ -140,7 +191,7 @@ const SubmitVarification = ({ route }) => {
             : null,
         floorDtl: finalFloors,
       };
-
+      console.log('fieldPayload', JSON.stringify(fieldPayload, null, 2));
       const response = await axios.post(
         PROPERTY_API.FIELD_VARIFICATION_API,
         fieldPayload,
@@ -152,19 +203,104 @@ const SubmitVarification = ({ route }) => {
           timeout: 15000,
         },
       );
+      console.log(response.data);
 
-      console.log('Field Verification Response:', response.data);
-      Alert.alert(
-        'Success',
-        'Data submitted successfully',
-        [
-          {
-            text: 'OK',
-            onPress: () => setShowModal(true), // open modal after OK
+      if (response.status === 200) {
+        // or any condition for success
+        showToast('success', response.data.message); // show success toast
+        setShowModal(true); // open the modal
+      }
+    } catch (error) {
+      console.error('Submission Error:', error.response?.data || error.message);
+      Alert.alert('Error', 'Submission failed. Please try again.');
+    }
+
+    const resizedPhotos = await Promise.all(
+      photos.map(async (photo, index) => {
+        if (!photo?.uri) return null;
+        const resized = await ImageResizer.createResizedImage(
+          photo.uri,
+          1024,
+          1024,
+          'JPEG',
+          80,
+        );
+        return {
+          ...photo,
+          uri: resized.uri,
+          fileName: photo.fileName || `${photo.label.replace(' ', '_')}.jpg`,
+        };
+      }),
+    );
+
+    // 5️⃣ Build FormData
+    const formData = new FormData();
+    formData.append('id', id);
+
+    const geoTagArray = resizedPhotos.map((photo, index) => ({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      direction: photo.label,
+      label: photo.label,
+      document: photo,
+    }));
+
+    // Ensure at least 3 items
+    while (geoTagArray.length < 3) {
+      geoTagArray.push({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        direction: 'N',
+        label: `extra-${geoTagArray.length + 1}`,
+        document: resizedPhotos[0] || null,
+      });
+    }
+
+    // Append geoTag with files
+    geoTagArray.forEach((item, index) => {
+      if (!item.document) return;
+      formData.append(`geoTag[${index}][latitude]`, item.latitude);
+      formData.append(`geoTag[${index}][longitude]`, item.longitude);
+      formData.append(`geoTag[${index}][direction]`, item.direction);
+      formData.append(`geoTag[${index}][label]`, item.label);
+      formData.append(`geoTag[${index}][document]`, {
+        uri: item.document.uri,
+        type: item.document.type || 'image/jpeg',
+        name: item.document.fileName,
+      });
+    });
+
+    // If backend still expects plain `images`
+    resizedPhotos.forEach(photo => {
+      if (!photo) return;
+      formData.append('images', {
+        uri: photo.uri,
+        type: photo.type || 'image/jpeg',
+        name: photo.fileName,
+      });
+    });
+
+    // 6️⃣ Submit
+    try {
+      const geoRes = await axios.post(
+        PROPERTY_API.GEOTAGING_IMAGE_API,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
           },
-        ],
-        { cancelable: false },
+          timeout: 20000,
+        },
       );
+
+      // ✅ Full response log
+      console.log('GeoTagging Response:', geoRes);
+
+      // ✅ If you only want the data
+      console.log('GeoTagging Response Data:', geoRes.data);
+
+      Alert.alert('Success', 'Data & Images submitted successfully!');
     } catch (error) {
       console.error('Submission Error:', error.response?.data || error.message);
       Alert.alert('Error', 'Submission failed. Please try again.');
@@ -180,18 +316,13 @@ const SubmitVarification = ({ route }) => {
         status: 'FORWARD',
       };
 
-      console.log('SendToLevel Payload:', payload);
-
-      const res = await axios.post(SAF_API_ROUTES.SEND_TO_LEVEL_API, payload, {
+      await axios.post(SAF_API_ROUTES.SEND_TO_LEVEL_API, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log('Send to Level Success:', res.data);
-
       setShowModal(false);
 
-      // Navigate to another page to show all submitted data
-      navigation.navigate('SubmitSummaryPage', {
+      navigation.navigate('FieldVarification', {
         submissionData,
         location,
         photos,
@@ -203,15 +334,6 @@ const SubmitVarification = ({ route }) => {
       Alert.alert('Error', 'Failed to send to level.');
     }
   };
-
-  // Debugging on mount
-  useEffect(() => {
-    console.log('Submission Data:', submissionData);
-    console.log('Location:', location);
-    console.log('left 1:', left);
-    console.log('right 2:', right);
-    console.log('front 3:', front);
-  }, []);
 
   return (
     <>
@@ -255,7 +377,6 @@ const SubmitVarification = ({ route }) => {
           </Text>
         </Card>
 
-        {/* Floor Details */}
         {floorIds?.length > 0 && (
           <>
             <Text style={styles.sectionTitle}>Floor Details</Text>
@@ -277,49 +398,57 @@ const SubmitVarification = ({ route }) => {
           </>
         )}
 
-        {/* Extra Floors */}
-        {submissionData?.extraFloors?.length > 0 && (
+        {/* ✅ Floor, Extra Floors, Location, Photos only for non-ULB users */}
+        {!isULBUser && (
           <>
-            <Text style={styles.sectionTitle}>Extra Floors</Text>
-            {submissionData.extraFloors.map((floor, index) => (
-              <View key={index} style={styles.card}>
-                <Text style={styles.cardTitle}>Floor {index + 1}</Text>
-                <Text>Floor Name: {floor.floorName}</Text>
-                <Text>Construction Type: {floor.constructionType}</Text>
-                <Text>Occupancy Type: {floor.occupancyType}</Text>
-                <Text>Usage Type: {floor.usageType}</Text>
-                <Text>From Date: {floor.fromDate}</Text>
-                <Text>To Date: {floor.toDate}</Text>
+            {/* Floor Details */}
+
+            {/* Extra Floors */}
+            {submissionData?.extraFloors?.length > 0 && (
+              <>
+                <Text style={styles.sectionTitle}>Extra Floors</Text>
+                {submissionData.extraFloors.map((floor, index) => (
+                  <View key={index} style={styles.card}>
+                    <Text style={styles.cardTitle}>Floor {index + 1}</Text>
+                    <Text>Floor Name: {floor.floorName}</Text>
+                    <Text>Construction Type: {floor.constructionType}</Text>
+                    <Text>Occupancy Type: {floor.occupancyType}</Text>
+                    <Text>Usage Type: {floor.usageType}</Text>
+                    <Text>From Date: {floor.fromDate}</Text>
+                    <Text>To Date: {floor.toDate}</Text>
+                  </View>
+                ))}
+              </>
+            )}
+
+            {/* Location */}
+            <Text style={styles.sectionTitle}>Location</Text>
+            {location ? (
+              <View>
+                <Text>Latitude: {location.latitude}</Text>
+                <Text>Longitude: {location.longitude}</Text>
               </View>
-            ))}
+            ) : (
+              <Text>No location data</Text>
+            )}
+
+            {/* Photos */}
+            <Text style={styles.sectionTitle}>Captured Photos</Text>
+            {photos.map((photo, index) =>
+              photo.uri ? (
+                <View key={index} style={{ marginBottom: 10 }}>
+                  <Text style={{ fontWeight: 'bold' }}>{photo.label}</Text>
+                  <Image source={{ uri: photo.uri }} style={styles.image} />
+                </View>
+              ) : (
+                <Text key={index}>{photo.label} not captured</Text>
+              ),
+            )}
           </>
         )}
 
-        {/* Location */}
-        <Text style={styles.sectionTitle}>Location</Text>
-        {location ? (
-          <View>
-            <Text>Latitude: {location.latitude}</Text>
-            <Text>Longitude: {location.longitude}</Text>
-          </View>
-        ) : (
-          <Text>No location data</Text>
-        )}
-
-        {/* Photos */}
-        <Text style={styles.sectionTitle}>Captured Photos</Text>
-        {photos.map((photo, index) =>
-          photo.uri ? (
-            <View key={index} style={{ marginBottom: 10 }}>
-              <Text style={{ fontWeight: 'bold' }}>{photo.label}</Text>
-              <Image source={{ uri: photo.uri }} style={styles.image} />
-            </View>
-          ) : (
-            <Text key={index}>{photo.label} not captured</Text>
-          ),
-        )}
-
         {/* Submit Button */}
+
         <View style={styles.submitButtonContainer}>
           <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
             <Text style={styles.submitButtonText}>Submit</Text>
@@ -327,11 +456,10 @@ const SubmitVarification = ({ route }) => {
         </View>
       </ScrollView>
 
-      {/* ✅ Modal for Remarks + Send to Level */}
+      {/* Modal for Remarks + Send to Level */}
       <Modal visible={showModal} transparent animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            {/* Close Button */}
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowModal(false)}

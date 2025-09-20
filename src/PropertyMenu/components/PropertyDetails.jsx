@@ -2,12 +2,148 @@ import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 
 // Error Display Component
-const ErrorText = ({ error, styles }) => {
+const ErrorText = ({ error }) => {
   if (!error) return null;
   return <Text style={styles.errorText}>{error}</Text>;
 };
 
-const defaultStyles = StyleSheet.create({
+const PropertyDetails = ({
+  khataNo,
+  setKhataNo,
+  plotNo,
+  setPlotNo,
+  villageName,
+  setVillageName,
+  plotArea,
+  setPlotArea,
+  roadWidth,
+  setRoadWidth,
+  showFieldAlert = () => {},
+  isEditable,
+  errors = {},
+  setErrors = () => {},
+  khataNoRef,
+  plotNoRef,
+  villageNameRef,
+  plotAreaRef,
+  roadWidthRef,
+}) => {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.label}>Property Details</Text>
+
+      {/* Khata No */}
+      <Text style={styles.label}>Khata No. *</Text>
+      <TextInput
+        ref={khataNoRef}
+        style={[styles.input, errors.khataNo && styles.inputError]}
+        placeholder="khata no"
+        placeholderTextColor="#000"
+        value={khataNo}
+        onChangeText={text => {
+          setKhataNo(text);
+          const error = text.trim() ? '' : 'Khata No is required';
+          setErrors(prev => ({ ...prev, khataNo: error }));
+        }}
+        onFocus={() => showFieldAlert('Khata No.')}
+        editable={isEditable}
+      />
+      <ErrorText error={errors.khataNo} />
+
+      {/* Plot No */}
+      <Text style={styles.label}>Plot No. *</Text>
+      <TextInput
+        ref={plotNoRef}
+        style={[styles.input, errors.plotNo && styles.inputError]}
+        placeholder="Plot no"
+        placeholderTextColor="#000"
+        value={plotNo}
+        onChangeText={text => {
+          setPlotNo(text);
+          const error = text.trim() ? '' : 'Plot No is required';
+          setErrors(prev => ({ ...prev, plotNo: error }));
+        }}
+        onFocus={() => showFieldAlert('Plot No.')}
+        editable={isEditable}
+      />
+      <ErrorText error={errors.plotNo} />
+
+      {/* Village Name */}
+      <Text style={styles.label}>Village/Mauja Name *</Text>
+      <TextInput
+        ref={villageNameRef}
+        style={[styles.input, errors.villageName && styles.inputError]}
+        placeholder="Village Name"
+        placeholderTextColor="#000"
+        value={villageName}
+        onChangeText={text => {
+          setVillageName(text);
+          const error = text.trim() ? '' : 'Village Name is required';
+          setErrors(prev => ({ ...prev, villageName: error }));
+        }}
+        onFocus={() => showFieldAlert('Village/Mauja Name')}
+        editable={isEditable}
+      />
+      <ErrorText error={errors.villageName} />
+
+      {/* Plot Area */}
+      <Text style={styles.label}>Area of Plot (in Decimal) *</Text>
+      <TextInput
+        ref={plotAreaRef}
+        style={[styles.input, errors.plotArea && styles.inputError]}
+        placeholder="100.00"
+        placeholderTextColor="#000"
+        value={plotArea}
+        onChangeText={text => {
+          setPlotArea(text);
+          const error = !text
+            ? 'Plot Area is required'
+            : isNaN(text) || parseFloat(text) <= 0
+            ? 'Plot Area must be a positive number'
+            : '';
+          setErrors(prev => ({ ...prev, plotArea: error }));
+        }}
+        keyboardType="numeric"
+        onFocus={() => showFieldAlert('Area of Plot')}
+        editable={isEditable}
+      />
+      <ErrorText error={errors.plotArea} />
+
+      {/* Road Width */}
+      <Text style={styles.label}>Road Width (in ft) *</Text>
+      <TextInput
+        ref={roadWidthRef}
+        style={[styles.input, errors.roadWidth && styles.inputError]}
+        placeholder="Road Width"
+        placeholderTextColor="#000"
+        value={roadWidth}
+        onChangeText={text => {
+          setRoadWidth(text);
+          const error = !text
+            ? 'Road Width is required'
+            : isNaN(text) || parseFloat(text) < 0
+            ? 'Road Width must be a positive number or 0'
+            : '';
+          setErrors(prev => ({ ...prev, roadWidth: error }));
+        }}
+        keyboardType="numeric"
+        onFocus={() => showFieldAlert('Road Width')}
+        editable={isEditable}
+      />
+      <ErrorText error={errors.roadWidth} />
+
+      <Text style={styles.label}>
+        In Case of No Road Enter "0" (For Vacant Land Only)
+      </Text>
+      <ErrorText error={errors.noRoad} />
+    </View>
+  );
+};
+
+export default PropertyDetails;
+
+// ---------------- Styles ----------------
+const styles = StyleSheet.create({
   section: {
     marginBottom: 20,
   },
@@ -40,132 +176,3 @@ const defaultStyles = StyleSheet.create({
     fontWeight: '400',
   },
 });
-
-const PropertyDetails = ({
-  khataNo,
-  setKhataNo,
-  plotNo,
-  setPlotNo,
-  villageName,
-  setVillageName,
-  plotArea,
-  setPlotArea,
-  roadWidth,
-  setRoadWidth,
-  // noRoad,
-  // setNoRoad,
-  showFieldAlert = () => {},
-  styles,
-  isEditable,
-  errors = {},
-  setErrors = () => {},
-  khataNoRef,
-  plotNoRef,
-  villageNameRef,
-  plotAreaRef,
-  roadWidthRef,
-}) => {
-  const s = styles || defaultStyles;
-  return (
-    <View style={s.section}>
-      <Text style={s.label}>Property Details</Text>
-      <Text style={s.label}>Khata No. *</Text>
-      <TextInput
-        ref={khataNoRef}
-        style={[s.input, errors.khataNo && s.inputError]}
-        placeholder="khata no"
-        placeholderTextColor="#000"
-        value={khataNo}
-        onChangeText={text => {
-          setKhataNo(text);
-          const error = text.trim() ? '' : 'Khata No is required';
-          setErrors(prev => ({ ...prev, khataNo: error }));
-        }}
-        onFocus={() => showFieldAlert('Khata No.')}
-        editable={isEditable}
-      />
-      <ErrorText error={errors.khataNo} styles={s} />
-      <Text style={s.label}>Plot No. *</Text>
-      <TextInput
-        ref={plotNoRef}
-        style={[s.input, errors.plotNo && s.inputError]}
-        placeholder="Plot no"
-        placeholderTextColor="#000"
-        value={plotNo}
-        onChangeText={text => {
-          setPlotNo(text);
-          const error = text.trim() ? '' : 'Plot No is required';
-          setErrors(prev => ({ ...prev, plotNo: error }));
-        }}
-        onFocus={() => showFieldAlert('Plot No.')}
-        editable={isEditable}
-      />
-      <ErrorText error={errors.plotNo} styles={s} />
-      <Text style={s.label}>Village/Mauja Name *</Text>
-      <TextInput
-        ref={villageNameRef}
-        style={[s.input, errors.villageName && s.inputError]}
-        placeholder="Village Name"
-        placeholderTextColor="#000"
-        value={villageName}
-        onChangeText={text => {
-          setVillageName(text);
-          const error = text.trim() ? '' : 'Village Name is required';
-          setErrors(prev => ({ ...prev, villageName: error }));
-        }}
-        onFocus={() => showFieldAlert('Village/Mauja Name')}
-        editable={isEditable}
-      />
-      <ErrorText error={errors.villageName} styles={s} />
-      <Text style={s.label}>Area of Plot (in Decimal) *</Text>
-      <TextInput
-        ref={plotAreaRef}
-        style={[s.input, errors.plotArea && s.inputError]}
-        placeholder="100.00"
-        placeholderTextColor="#000"
-        value={plotArea}
-        onChangeText={text => {
-          setPlotArea(text);
-          const error = !text
-            ? 'Plot Area is required'
-            : isNaN(text) || parseFloat(text) <= 0
-            ? 'Plot Area must be a positive number'
-            : '';
-          setErrors(prev => ({ ...prev, plotArea: error }));
-        }}
-        keyboardType="numeric"
-        onFocus={() => showFieldAlert('Area of Plot')}
-        editable={isEditable}
-      />
-      <ErrorText error={errors.plotArea} styles={s} />
-      <Text style={s.label}>Road Width (in ft) *</Text>
-      <TextInput
-        ref={roadWidthRef}
-        style={[s.input, errors.roadWidth && s.inputError]}
-        placeholder="Road Width"
-        placeholderTextColor="#000"
-        value={roadWidth}
-        onChangeText={text => {
-          setRoadWidth(text);
-          const error = !text
-            ? 'Road Width is required'
-            : isNaN(text) || parseFloat(text) < 0
-            ? 'Road Width must be a positive number or 0'
-            : '';
-          setErrors(prev => ({ ...prev, roadWidth: error }));
-        }}
-        keyboardType="numeric"
-        onFocus={() => showFieldAlert('Road Width')}
-        editable={isEditable}
-      />
-      <ErrorText error={errors.roadWidth} styles={s} />
-      <Text style={s.label}>
-        In Case of No Road Enter "0" (For Vacant Land Only)
-      </Text>
-
-      <ErrorText error={errors.noRoad} styles={s} />
-    </View>
-  );
-};
-
-export default PropertyDetails;

@@ -27,11 +27,48 @@ import HeaderLogin from '../Screen/HeaderLogin';
 import MonthYearPicker from 'react-native-month-year-picker';
 import HeaderNavigation from '../Components/HeaderNavigation';
 import { BASE_URL } from '../config';
+import { WARD_API } from '../api/apiRoutes';
+import { getToken } from '../utils/auth';
+import ExtraChargesSection from './components/ExtraChargesSection';
+import { getUserDetails } from '../utils/auth';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
+const yesNoOptions = [
+  { label: 'Yes', value: 'yes' },
+  { label: 'No', value: 'no' },
+];
 const SurveyPage = ({ route, navigation }) => {
   const { id } = route.params;
   console.log(id);
-  // floor related
+
+  const [mobileTower, setMobileTower] = useState('no');
+  const [towerArea, setTowerArea] = useState('');
+  const [installationDate, setInstallationDate] = useState(null);
+  const [showInstallationDatePicker, setShowInstallationDatePicker] =
+    useState(false);
+
+  // Hoarding
+  const [hoarding, setHoarding] = useState('no');
+  const [hoardingArea, setHoardingArea] = useState('');
+  const [hoardingInstallationDate, setHoardingInstallationDate] =
+    useState(null);
+  const [
+    showHoardingInstallationDatePicker,
+    setShowHoardingInstallationDatePicker,
+  ] = useState(false);
+
+  // Petrol Pump
+  const [petrolPump, setPetrolPump] = useState('no');
+  const [pumpArea, setPumpArea] = useState('');
+  const [pumpInstallationDate, setPumpInstallationDate] = useState(null);
+  const [showPumpInstallationDatePicker, setShowPumpInstallationDatePicker] =
+    useState(false);
+
+  // Rainwater Harvesting
+  const [rainHarvesting, setRainHarvesting] = useState('no');
+  const [completionDate, setCompletionDate] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
   const [addExtraFloor, setAddExtraFloor] = useState(false);
   const [floors, setFloors] = useState([]);
 
@@ -96,6 +133,8 @@ const SurveyPage = ({ route, navigation }) => {
   const [floorDropdownValues, setFloorDropdownValues] = useState({});
   const [floorInputValues, setFloorInputValues] = useState({});
 
+  const [newWardOptions, setNewWardOptions] = useState([]);
+
   // Helper function to update floor-specific state
   const updateFloorState = (
     floorId,
@@ -150,6 +189,33 @@ const SurveyPage = ({ route, navigation }) => {
     setFromDate(date);
     hideFromPicker();
   };
+  const [error, setError] = useState({});
+
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const [apartmentList, setApartmentList] = useState([]); // dropdown data
+  const [apartmentDetail, setApartmentDetail] = useState(null);
+  const [loadingApartments, setLoadingApartments] = useState(false);
+  // floor related
+  const [isULBUser, setIsULBUser] = useState(false);
+
+  const handleDateChange1 = (event, date) => {
+    setShowDatePicker(false);
+    if (date) {
+      setSelectedDate(date);
+    }
+  };
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await getUserDetails();
+        if (user?.userFor === 'ULB') setIsULBUser(true);
+      } catch (err) {
+        console.log('Error fetching user:', err);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const getLabelFromOptions = (options, value) => {
     const found = options?.find(item => item.value === value);
@@ -243,6 +309,10 @@ const SurveyPage = ({ route, navigation }) => {
     const submissionData = {
       ...previewData,
       // Main property IDs
+      selectedDate: selectedDate
+        ? selectedDate.toISOString().split('T')[0]
+        : null,
+      apartmentDetail: apartmentDetail,
       safDetailId: id,
       wardMstrId: getVerifiedId(
         wardVerification,
@@ -276,6 +346,18 @@ const SurveyPage = ({ route, navigation }) => {
       parkingFloor: parkingFloorData,
       basementFloor: basementFloorData,
 
+      mobileTower,
+      towerArea,
+      installationDate,
+      hoarding,
+      hoardingArea,
+      hoardingInstallationDate,
+      petrolPump,
+      pumpArea,
+      pumpInstallationDate,
+      rainHarvesting,
+      completionDate,
+
       // Extra floors with IDs
       extraFloors: addExtraFloor
         ? floors?.map((floor, index) => ({
@@ -307,7 +389,7 @@ const SurveyPage = ({ route, navigation }) => {
         : [],
     };
 
-    // console.log('Submitted Data with IDs:', floorIds, data);
+    console.log('Submitted Data with IDs:', submissionData);
 
     // Navigate and optionally pass data
     navigation.navigate('VerifiedStatus', {
@@ -378,6 +460,44 @@ const SurveyPage = ({ route, navigation }) => {
 
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    if (wardVerification === 'Incorrect' && wardDropdown) {
+      fetchNewWardByOldWard(wardDropdown);
+    }
+    // else do nothing, keep existing options
+  }, [wardVerification, wardDropdown]);
+
+  const fetchNewWardByOldWard = async wardId => {
+    try {
+      const token = await getToken();
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+      const response = await axios.post(
+        WARD_API.OLD_WARD_API,
+        { oldWardId: wardId },
+        { headers },
+      );
+
+      console.log('New ward response:', response?.data);
+      if (response?.data?.status) {
+        const newOptions = response.data.data.map(item => ({
+          label: item.wardNo,
+          value: item.id,
+        }));
+        setNewWardOptions(newOptions);
+        console.log('New Ward', newOptions);
+      } else {
+        console.warn('Failed to fetch new wards:', response?.data?.message);
+        setNewWardOptions([]);
+      }
+    } catch (error) {
+      console.error('Error fetching new ward:', error);
+      setNewWardOptions([]);
+    }
+  };
 
   // Prepare dropdown options for ward and zone
   const wardDropdownOptions = (masterData?.wardList || []).map(item => ({
@@ -509,15 +629,17 @@ const SurveyPage = ({ route, navigation }) => {
           dropdownValue={wardDropdown}
           setDropdownValue={setWardDropdown}
         />
-        {/* New Ward No. Card */}
+
+        {/* Always show New Ward No., hide 'Correct' only if Ward No is Incorrect */}
         <VerificationCard
           label="New Ward No."
           value={data?.newWardNo || ''}
-          dropdownOptions={wardDropdownOptions || []}
+          dropdownOptions={newWardOptions} // do not clear unless really needed
           selectedVerification={newWardVerification}
           setSelectedVerification={setNewWardVerification}
           dropdownValue={newWardDropdown}
           setDropdownValue={setNewWardDropdown}
+          hideCorrectOption={wardVerification === 'Incorrect'} // only hide Correct if Ward No is Incorrect
         />
         {/* Zone Card */}
         <VerificationCard
@@ -538,6 +660,62 @@ const SurveyPage = ({ route, navigation }) => {
           dropdownValue={propertyDropdown}
           setDropdownValue={setPropertyDropdown}
         />
+        {selectedPropertyLabel === 'FLATS / UNIT IN MULTI STORIED BUILDING' && (
+          <View style={styles.card}>
+            <View>
+              {/* Date Picker */}
+              <Text
+                style={[styles.label, error.ownershipType && styles.errorLabel]}
+              >
+                Select Date *
+              </Text>
+              <TouchableOpacity
+                style={{
+                  borderWidth: 1,
+                  padding: 10,
+                  marginBottom: 10,
+                  borderRadius: 5,
+                }}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text>
+                  {selectedDate
+                    ? selectedDate.toISOString().split('T')[0] // Y-M-D format
+                    : 'Select Date'}
+                </Text>
+              </TouchableOpacity>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={selectedDate}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={handleDateChange1}
+                />
+              )}
+
+              {/* Apartment Details Dropdown */}
+              <Text
+                style={[styles.label, error.ownershipType && styles.errorLabel]}
+              >
+                Appartment Datails *
+              </Text>
+              <Dropdown
+                style={[
+                  styles.dropdown,
+                  error.propertyType && styles.errorInput,
+                ]}
+                data={apartmentList}
+                labelField="label"
+                valueField="value"
+                placeholder="Select Apartment"
+                value={apartmentDetail}
+                onChange={item => setApartmentDetail(item.value)}
+              />
+            </View>
+          </View>
+        )}
+
         {shouldShowSections &&
           selectedPropertyLabel.toUpperCase() !== 'VACANT LAND' && (
             <>
@@ -778,203 +956,265 @@ const SurveyPage = ({ route, navigation }) => {
                   </View>
                 ))}
               </LinearGradient>
-
-              <View style={styles.extraFloorContainer}>
-                <View style={styles.row}>
-                  <Text style={styles.labelCheckbox}>
-                    Do You Want To Add Extra Floor?
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.checkbox}
-                    onPress={() => {
-                      setAddExtraFloor(!addExtraFloor);
-                      if (!addExtraFloor && floors.length === 0) {
-                        setFloors([1]); // add first floor when checked
-                      } else if (addExtraFloor) {
-                        setFloors([]); // reset on uncheck
-                      }
-                    }}
-                  >
-                    <View
-                      style={
-                        addExtraFloor ? styles.checkedBox : styles.uncheckedBox
-                      }
-                    />
-                  </TouchableOpacity>
-                </View>
-
-                {addExtraFloor && (
-                  <>
-                    {floors.map((floor, index) => (
-                      <LinearGradient
-                        key={index}
-                        colors={['#ececf2ff', '#eee7e7ff']}
-                        style={styles.card}
-                      >
-                        <View style={styles.rowlabel}>
-                          <Text style={{ color: 'white' }}>
-                            Extra Floor {index + 1}
-                          </Text>
-                        </View>
-                        <View>
-                          <Text style={styles.label}>Floor Name</Text>
-                          <Dropdown
-                            style={styles.dropdown}
-                            placeholderStyle={styles.placeholder}
-                            selectedTextStyle={styles.selectedText}
-                            data={floorNameDropdownOptions}
-                            labelField="label"
-                            valueField="value"
-                            placeholder="Select"
-                            value={floor.floorName}
-                            onChange={item =>
-                              updateFloor(index, 'floorName', item.value)
-                            }
-                          />
-
-                          <Text style={styles.label}>Construction Type</Text>
-                          <Dropdown
-                            style={styles.dropdown}
-                            placeholderStyle={styles.placeholder}
-                            selectedTextStyle={styles.selectedText}
-                            data={constructionTypeDropdownOptions}
-                            labelField="label"
-                            valueField="value"
-                            placeholder="Select"
-                            value={floor.constructionType}
-                            onChange={item =>
-                              updateFloor(index, 'constructionType', item.value)
-                            }
-                          />
-
-                          <Text style={styles.label}>Occupancy Type</Text>
-                          <Dropdown
-                            style={styles.dropdown}
-                            placeholderStyle={styles.placeholder}
-                            selectedTextStyle={styles.selectedText}
-                            data={occupancyTypeDropdownOptions}
-                            labelField="label"
-                            valueField="value"
-                            placeholder="Select"
-                            value={floor.occupancyType}
-                            onChange={item =>
-                              updateFloor(index, 'occupancyType', item.value)
-                            }
-                          />
-
-                          <Text style={styles.label}>Usage Type</Text>
-                          <Dropdown
-                            style={styles.dropdown}
-                            placeholderStyle={styles.placeholder}
-                            selectedTextStyle={styles.selectedText}
-                            data={usageTypeDropdownOptions}
-                            labelField="label"
-                            valueField="value"
-                            placeholder="Select"
-                            value={floor.usageType}
-                            onChange={item =>
-                              updateFloor(index, 'usageType', item.value)
-                            }
-                          />
-
-                          <Text style={styles.label}>Built-up Area</Text>
-                          <TextInput
-                            style={styles.input}
-                            placeholder="Enter built-up area"
-                            value={floor.builtupArea}
-                            onChangeText={text =>
-                              updateFloor(index, 'builtupArea', text)
-                            }
-                            keyboardType="numeric"
-                          />
-                        </View>
-
-                        <Text style={styles.label}>Date From</Text>
-                        <TouchableOpacity
-                          style={styles.dateBox}
-                          onPress={() =>
-                            updateFloor(index, 'showFromPicker', true)
-                          }
-                        >
-                          <Text style={styles.dateText}>
-                            {floor.fromDate
-                              ? formatDate(floor.fromDate)
-                              : 'Select Date'}
-                          </Text>
-                        </TouchableOpacity>
-                        {floor.showFromPicker && (
-                          <MonthYearPicker
-                            onChange={(event, newDate) => {
-                              updateFloor(index, 'showFromPicker', false);
-                              if (newDate) {
-                                updateFloor(index, 'fromDate', newDate);
-                              }
-                            }}
-                            value={floor.fromDate || new Date()}
-                          />
-                        )}
-
-                        <Text style={styles.label}>Date Upto</Text>
-                        <TouchableOpacity
-                          style={styles.dateBox}
-                          onPress={() =>
-                            updateFloor(index, 'showToPicker', true)
-                          }
-                        >
-                          <Text style={styles.dateText}>
-                            {floor.toDate
-                              ? formatDate(floor.toDate)
-                              : 'Select Date'}
-                          </Text>
-                        </TouchableOpacity>
-                        {floor.showToPicker && (
-                          <MonthYearPicker
-                            onChange={(event, newDate) => {
-                              updateFloor(index, 'showToPicker', false);
-                              if (newDate) {
-                                updateFloor(index, 'toDate', newDate);
-                              }
-                            }}
-                            value={floor.toDate || new Date()}
-                          />
-                        )}
-
-                        <Text style={styles.cardText}></Text>
-                      </LinearGradient>
-                    ))}
-
-                    <View style={styles.buttonRow}>
+              {!isULBUser && (
+                <View>
+                  <View style={styles.extraFloorContainer}>
+                    <View style={styles.row}>
+                      <Text style={styles.labelCheckbox}>
+                        Do You Want To Add Extra Floor?
+                      </Text>
                       <TouchableOpacity
-                        onPress={addFloor}
-                        style={styles.addButton}
+                        style={styles.checkbox}
+                        onPress={() => {
+                          setAddExtraFloor(!addExtraFloor);
+                          if (!addExtraFloor && floors.length === 0) {
+                            setFloors([1]); // add first floor when checked
+                          } else if (addExtraFloor) {
+                            setFloors([]); // reset on uncheck
+                          }
+                        }}
                       >
-                        <Text style={styles.buttonText}>Add Floor</Text>
+                        <View
+                          style={
+                            addExtraFloor
+                              ? styles.checkedBox
+                              : styles.uncheckedBox
+                          }
+                        />
                       </TouchableOpacity>
-                      {floors.length > 0 && (
-                        <TouchableOpacity
-                          onPress={removeFloor}
-                          style={styles.removeButton}
-                        >
-                          <Text style={styles.buttonText}>Remove Floor</Text>
-                        </TouchableOpacity>
-                      )}
                     </View>
-                  </>
-                )}
-              </View>
 
-              {/* Remarks Section */}
-              <View style={styles.remarksContainer}>
-                <Text style={styles.remarksLabel}>Remarks</Text>
-                <TextInput
-                  style={styles.remarksInput}
-                  placeholder="Enter your remarks here..."
-                  placeholderTextColor="#999"
-                  multiline
-                  numberOfLines={4}
-                  value={remarks}
-                  onChangeText={setRemarks}
-                  textAlignVertical="top"
+                    {addExtraFloor && (
+                      <>
+                        {floors.map((floor, index) => (
+                          <LinearGradient
+                            key={index}
+                            colors={['#ececf2ff', '#eee7e7ff']}
+                            style={styles.card}
+                          >
+                            <View style={styles.rowlabel}>
+                              <Text style={{ color: 'white' }}>
+                                Extra Floor {index + 1}
+                              </Text>
+                            </View>
+                            <View>
+                              <Text style={styles.label}>Floor Name</Text>
+                              <Dropdown
+                                style={styles.dropdown}
+                                placeholderStyle={styles.placeholder}
+                                selectedTextStyle={styles.selectedText}
+                                data={floorNameDropdownOptions}
+                                labelField="label"
+                                valueField="value"
+                                placeholder="Select"
+                                value={floor.floorName}
+                                onChange={item =>
+                                  updateFloor(index, 'floorName', item.value)
+                                }
+                              />
+
+                              <Text style={styles.label}>
+                                Construction Type
+                              </Text>
+                              <Dropdown
+                                style={styles.dropdown}
+                                placeholderStyle={styles.placeholder}
+                                selectedTextStyle={styles.selectedText}
+                                data={constructionTypeDropdownOptions}
+                                labelField="label"
+                                valueField="value"
+                                placeholder="Select"
+                                value={floor.constructionType}
+                                onChange={item =>
+                                  updateFloor(
+                                    index,
+                                    'constructionType',
+                                    item.value,
+                                  )
+                                }
+                              />
+
+                              <Text style={styles.label}>Occupancy Type</Text>
+                              <Dropdown
+                                style={styles.dropdown}
+                                placeholderStyle={styles.placeholder}
+                                selectedTextStyle={styles.selectedText}
+                                data={occupancyTypeDropdownOptions}
+                                labelField="label"
+                                valueField="value"
+                                placeholder="Select"
+                                value={floor.occupancyType}
+                                onChange={item =>
+                                  updateFloor(
+                                    index,
+                                    'occupancyType',
+                                    item.value,
+                                  )
+                                }
+                              />
+
+                              <Text style={styles.label}>Usage Type</Text>
+                              <Dropdown
+                                style={styles.dropdown}
+                                placeholderStyle={styles.placeholder}
+                                selectedTextStyle={styles.selectedText}
+                                data={usageTypeDropdownOptions}
+                                labelField="label"
+                                valueField="value"
+                                placeholder="Select"
+                                value={floor.usageType}
+                                onChange={item =>
+                                  updateFloor(index, 'usageType', item.value)
+                                }
+                              />
+
+                              <Text style={styles.label}>Built-up Area</Text>
+                              <TextInput
+                                style={styles.input}
+                                placeholder="Enter built-up area"
+                                value={floor.builtupArea}
+                                onChangeText={text =>
+                                  updateFloor(index, 'builtupArea', text)
+                                }
+                                keyboardType="numeric"
+                              />
+                            </View>
+
+                            <Text style={styles.label}>Date From</Text>
+                            <TouchableOpacity
+                              style={styles.dateBox}
+                              onPress={() =>
+                                updateFloor(index, 'showFromPicker', true)
+                              }
+                            >
+                              <Text style={styles.dateText}>
+                                {floor.fromDate
+                                  ? formatDate(floor.fromDate)
+                                  : 'Select Date'}
+                              </Text>
+                            </TouchableOpacity>
+                            {floor.showFromPicker && (
+                              <MonthYearPicker
+                                onChange={(event, newDate) => {
+                                  updateFloor(index, 'showFromPicker', false);
+                                  if (newDate) {
+                                    updateFloor(index, 'fromDate', newDate);
+                                  }
+                                }}
+                                value={floor.fromDate || new Date()}
+                              />
+                            )}
+
+                            <Text style={styles.label}>Date Upto</Text>
+                            <TouchableOpacity
+                              style={styles.dateBox}
+                              onPress={() =>
+                                updateFloor(index, 'showToPicker', true)
+                              }
+                            >
+                              <Text style={styles.dateText}>
+                                {floor.toDate
+                                  ? formatDate(floor.toDate)
+                                  : 'Select Date'}
+                              </Text>
+                            </TouchableOpacity>
+                            {floor.showToPicker && (
+                              <MonthYearPicker
+                                onChange={(event, newDate) => {
+                                  updateFloor(index, 'showToPicker', false);
+                                  if (newDate) {
+                                    updateFloor(index, 'toDate', newDate);
+                                  }
+                                }}
+                                value={floor.toDate || new Date()}
+                              />
+                            )}
+
+                            <Text style={styles.cardText}></Text>
+                          </LinearGradient>
+                        ))}
+
+                        <View style={styles.buttonRow}>
+                          <TouchableOpacity
+                            onPress={addFloor}
+                            style={styles.addButton}
+                          >
+                            <Text style={styles.buttonText}>Add Floor</Text>
+                          </TouchableOpacity>
+                          {floors.length > 0 && (
+                            <TouchableOpacity
+                              onPress={removeFloor}
+                              style={styles.removeButton}
+                            >
+                              <Text style={styles.buttonText}>
+                                Remove Floor
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </>
+                    )}
+                  </View>
+
+                  {/* Remarks Section */}
+                  <View style={styles.remarksContainer}>
+                    <Text style={styles.remarksLabel}>Remarks</Text>
+                    <TextInput
+                      style={styles.remarksInput}
+                      placeholder="Enter your remarks here..."
+                      placeholderTextColor="#999"
+                      multiline
+                      numberOfLines={4}
+                      value={remarks}
+                      onChangeText={setRemarks}
+                      textAlignVertical="top"
+                    />
+                  </View>
+                </View>
+              )}
+              <View style={[styles.card, styles.shadow]}>
+                <ExtraChargesSection
+                  mobileTower={mobileTower}
+                  setMobileTower={setMobileTower}
+                  towerArea={towerArea}
+                  setTowerArea={setTowerArea}
+                  installationDate={installationDate}
+                  setInstallationDate={setInstallationDate}
+                  showInstallationDatePicker={showInstallationDatePicker}
+                  setShowInstallationDatePicker={setShowInstallationDatePicker}
+                  hoarding={hoarding}
+                  setHoarding={setHoarding}
+                  hoardingArea={hoardingArea}
+                  setHoardingArea={setHoardingArea}
+                  hoardingInstallationDate={hoardingInstallationDate}
+                  setHoardingInstallationDate={setHoardingInstallationDate}
+                  showHoardingInstallationDatePicker={
+                    showHoardingInstallationDatePicker
+                  }
+                  setShowHoardingInstallationDatePicker={
+                    setShowHoardingInstallationDatePicker
+                  }
+                  petrolPump={petrolPump}
+                  setPetrolPump={setPetrolPump}
+                  pumpArea={pumpArea}
+                  setPumpArea={setPumpArea}
+                  pumpInstallationDate={pumpInstallationDate}
+                  setPumpInstallationDate={setPumpInstallationDate}
+                  showPumpInstallationDatePicker={
+                    showPumpInstallationDatePicker
+                  }
+                  setShowPumpInstallationDatePicker={
+                    setShowPumpInstallationDatePicker
+                  }
+                  rainHarvesting={rainHarvesting}
+                  setRainHarvesting={setRainHarvesting}
+                  completionDate={completionDate}
+                  setCompletionDate={setCompletionDate}
+                  showDatePicker={showDatePicker}
+                  setShowDatePicker={setShowDatePicker}
+                  yesNoOptions={yesNoOptions}
+                  isRessessment={false}
+                  isMutation={false}
                 />
               </View>
             </>
@@ -1015,6 +1255,8 @@ const SurveyPage = ({ route, navigation }) => {
                 propertyVerification,
                 propertyDropdownOptions,
               ),
+              selectedDate: selectedDate.toISOString().split('T')[0], // YYYY-MM-DD
+              apartmentDetail: apartmentDetail,
             };
 
             if (data?.propertyType !== 'VACANT LAND') {
@@ -1098,6 +1340,7 @@ const SurveyPage = ({ route, navigation }) => {
             }
 
             setPreviewData(generatedPreview);
+            console.log('Preview', generatedPreview);
             setIsPreviewVisible(true);
           }}
         >
@@ -1158,6 +1401,38 @@ const SurveyPage = ({ route, navigation }) => {
                         {previewData['Verified_PropertyType'] || 'N/A'}
                       </Text>
                     </View>
+                    {selectedPropertyLabel ===
+                      'FLATS / UNIT IN MULTI STORIED BUILDING' && (
+                      <>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableCellLabel}>
+                            Selected Date
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData.selectedDate}
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {' '}
+                            {/* Optional verified value */}{' '}
+                          </Text>
+                        </View>
+
+                        <View
+                          style={[styles.tableRow, styles.tableRowAlternate]}
+                        >
+                          <Text style={styles.tableCellLabel}>
+                            Apartment Detail
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {previewData.apartmentDetail || 'N/A'}
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {' '}
+                            {/* Optional verified value */}{' '}
+                          </Text>
+                        </View>
+                      </>
+                    )}
                   </View>
                 </View>
 
@@ -1311,6 +1586,7 @@ const SurveyPage = ({ route, navigation }) => {
                           </View>
                         );
                       })}
+
                       {/* Extra Floor Details Cards */}
                       {addExtraFloor &&
                         floors.length > 0 &&
@@ -1398,6 +1674,139 @@ const SurveyPage = ({ route, navigation }) => {
                     </>
                   ) : null;
                 })()}
+                {/* Other Property Features Section */}
+                {selectedPropertyLabel !== 'VACANT LAND' && (
+                  <View style={styles.tableContainer}>
+                    <Text style={styles.tableTitle}>
+                      Other Property Features
+                    </Text>
+                    <View style={styles.table}>
+                      <View style={styles.tableHeader}>
+                        <Text style={styles.tableHeaderText}>Field</Text>
+                        <Text style={styles.tableHeaderText}>Value</Text>
+                      </View>
+
+                      {/* Mobile Tower */}
+                      <View style={styles.tableRow}>
+                        <Text style={styles.tableCellLabel}>Mobile Tower</Text>
+                        <Text style={styles.tableCell}>
+                          {mobileTower || 'N/A'}
+                        </Text>
+                      </View>
+                      {mobileTower === 'yes' && (
+                        <>
+                          <View
+                            style={[styles.tableRow, styles.tableRowAlternate]}
+                          >
+                            <Text style={styles.tableCellLabel}>
+                              Tower Area
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {towerArea || 'N/A'}
+                            </Text>
+                          </View>
+                          <View style={styles.tableRow}>
+                            <Text style={styles.tableCellLabel}>
+                              Installation Date
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {installationDate
+                                ? formatDate(installationDate)
+                                : 'N/A'}
+                            </Text>
+                          </View>
+                        </>
+                      )}
+
+                      {/* Hoarding */}
+                      <></>
+                      <View style={[styles.tableRow, styles.tableRowAlternate]}>
+                        <Text style={styles.tableCellLabel}>Hoarding</Text>
+                        <Text style={styles.tableCell}>
+                          {hoarding || 'N/A'}
+                        </Text>
+                      </View>
+                      {hoarding === 'yes' && (
+                        <>
+                          <View style={styles.tableRow}>
+                            <Text style={styles.tableCellLabel}>
+                              Hoarding Area
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {hoardingArea || 'N/A'}
+                            </Text>
+                          </View>
+                          <View
+                            style={[styles.tableRow, styles.tableRowAlternate]}
+                          >
+                            <Text style={styles.tableCellLabel}>
+                              Installation Date
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {hoardingInstallationDate
+                                ? formatDate(hoardingInstallationDate)
+                                : 'N/A'}
+                            </Text>
+                          </View>
+                        </>
+                      )}
+
+                      {/* Petrol Pump */}
+                      <View style={styles.tableRow}>
+                        <Text style={styles.tableCellLabel}>Petrol Pump</Text>
+                        <Text style={styles.tableCell}>
+                          {petrolPump || 'N/A'}
+                        </Text>
+                      </View>
+                      {petrolPump === 'yes' && (
+                        <>
+                          <View
+                            style={[styles.tableRow, styles.tableRowAlternate]}
+                          >
+                            <Text style={styles.tableCellLabel}>Pump Area</Text>
+                            <Text style={styles.tableCell}>
+                              {pumpArea || 'N/A'}
+                            </Text>
+                          </View>
+                          <View style={styles.tableRow}>
+                            <Text style={styles.tableCellLabel}>
+                              Installation Date
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {pumpInstallationDate
+                                ? formatDate(pumpInstallationDate)
+                                : 'N/A'}
+                            </Text>
+                          </View>
+                        </>
+                      )}
+
+                      {/* Rainwater Harvesting */}
+                      <View style={[styles.tableRow, styles.tableRowAlternate]}>
+                        <Text style={styles.tableCellLabel}>
+                          Rainwater Harvesting
+                        </Text>
+                        <Text style={styles.tableCell}>
+                          {rainHarvesting || 'N/A'}
+                        </Text>
+                      </View>
+                      {rainHarvesting === 'yes' && (
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableCellLabel}>
+                            Completion Date
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {completionDate
+                              ? new Date(completionDate)
+                                  .toISOString()
+                                  .split('T')[0]
+                              : 'N/A'}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                )}
               </ScrollView>
 
               <View style={styles.modalButtonContainer}>

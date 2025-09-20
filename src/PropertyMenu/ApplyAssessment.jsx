@@ -685,7 +685,6 @@ const ApplyAssessment = ({ navigation, route }) => {
               Old Ward *
             </Text>
             <Dropdown
-              ref={oldWardRef}
               style={[styles.dropdown, error.oldWard && styles.errorInput]}
               data={wardDropdownOptions}
               labelField="label"
@@ -703,7 +702,6 @@ const ApplyAssessment = ({ navigation, route }) => {
               New Ward *
             </Text>
             <Dropdown
-              ref={newWardRef}
               style={[styles.dropdown, error.newWard && styles.errorInput]}
               data={newWardOptions}
               labelField="label"
@@ -723,7 +721,6 @@ const ApplyAssessment = ({ navigation, route }) => {
               Ownership Type *
             </Text>
             <Dropdown
-              ref={ownershipTypeRef}
               style={[
                 styles.dropdown,
                 error.ownershipType && styles.errorInput,
@@ -746,7 +743,6 @@ const ApplyAssessment = ({ navigation, route }) => {
               Property Type *
             </Text>
             <Dropdown
-              ref={propertyTypeRef}
               style={[styles.dropdown, error.propertyType && styles.errorInput]}
               data={propertyTypeDropdownOptions}
               labelField="label"
@@ -827,7 +823,6 @@ const ApplyAssessment = ({ navigation, route }) => {
               Zone *
             </Text>
             <Dropdown
-              ref={zoneRef}
               style={[styles.dropdown, error.zone && styles.errorInput]}
               data={[
                 { label: 'Zone 1', value: '1' },
