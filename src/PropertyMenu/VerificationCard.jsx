@@ -139,7 +139,7 @@ const VerificationCard = ({
               data={dropdownOptions}
               labelField="label"
               valueField="value"
-              placeholder="Select reason for incorrect verification"
+              placeholder="Select"
               value={dropdownValue}
               onChange={item => setDropdownValue(item.value)}
               disable={false}

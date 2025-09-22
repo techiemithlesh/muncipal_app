@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
-import Header from '../Screen/Header';
+import HeaderNavigation from '../Components/HeaderNavigation';
 import { BASE_URL } from '../config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -25,6 +25,7 @@ import PropertyDetails from './components/PropertyDetails';
 import { handleValidation, scrollToInput } from './AssessmentValidation';
 import { getToken } from '../utils/auth';
 import { PROPERTY_API } from '../api/apiRoutes';
+import { showToast } from '../utils/toast';
 const ApplyAssessment = ({ navigation, route }) => {
   // Get data from route params if it's a reassessment or mutation
   const {
@@ -77,13 +78,13 @@ const ApplyAssessment = ({ navigation, route }) => {
   const [propertyType, setPropertyType] = useState('');
   const [gender, setGender] = useState('');
   const [relation, setRelation] = useState('');
-  const [armedForces, setArmedForces] = useState('');
-  const [speciallyAbled, setSpeciallyAbled] = useState('');
+  const [armedForces, setArmedForces] = useState('no');
+  const [speciallyAbled, setSpeciallyAbled] = useState('no');
   const [electricityCategory, setElectricityCategory] = useState('');
-  const [mobileTower, setMobileTower] = useState('');
-  const [hoarding, setHoarding] = useState('');
-  const [petrolPump, setPetrolPump] = useState('');
-  const [rainHarvesting, setRainHarvesting] = useState('');
+  const [mobileTower, setMobileTower] = useState('no');
+  const [hoarding, setHoarding] = useState('no');
+  const [petrolPump, setPetrolPump] = useState('no');
+  const [rainHarvesting, setRainHarvesting] = useState('no');
   const [data, setData] = useState(null);
   const [zone, setZone] = useState('');
   const [transferMode, setTransferMode] = useState('');
@@ -269,22 +270,108 @@ const ApplyAssessment = ({ navigation, route }) => {
   };
 
   const Validate = () => {
+    let newErrors = {};
+
     if (!oldWard) {
-      setError(prev => ({
-        ...prev,
-        oldWard: 'old ward is empty ',
-      }));
+      newErrors.oldWard = 'Old Ward is required';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Select Old Ward');
+      return false; // stop at first error
     }
+
+    if (!newWard) {
+      newErrors.newWard = 'New Ward is required';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Select New Ward');
+      return false;
+    }
+
+    if (!ownershipType) {
+      newErrors.ownershipType = 'Ownership Type is required';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Select Ownership Type');
+      return false;
+    }
+
+    if (!propertyType) {
+      newErrors.propertyType = 'Property Type is required';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Select Property Type');
+      return false;
+    }
+
+    if (!zone) {
+      newErrors.zone = 'Zone is required';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Select Zone');
+      return false;
+    }
+    if (!ownerName) {
+      newErrors.ownerName = 'Owner Name is required';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Enter Owner Name');
+      return false;
+    }
+
+    if (!gender) {
+      newErrors.gender = 'Gender is required';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Select Gender');
+      return false;
+    }
+
+    if (!relation) {
+      newErrors.relation = 'Relation is required';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Select Relation');
+      return false;
+    }
+
+    if (!mobile) {
+      newErrors.mobile = 'Mobile is required';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Enter Mobile Number');
+      return false;
+    }
+
+    if (!aadhaar) {
+      newErrors.aadhaar = 'Aadhaar is required';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Enter Aadhaar Number');
+      return false;
+    }
+
+    if (!pan) {
+      newErrors.pan = 'PAN is required';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Enter PAN Number');
+      return false;
+    }
+
+    if (!email) {
+      newErrors.email = 'Email is required';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Enter Email');
+      return false;
+    }
+
+    if (!guardianName) {
+      newErrors.guardianName = 'Guardian Name is required';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Enter Guardian Name');
+      return false;
+    }
+    // If we reached here, all fields are valid
+    setError(prev => ({ ...prev, ...newErrors })); // clear any previous errors
+    return true;
   };
+
   const handleSubmit = async () => {
     console.log(error);
 
-    Validate();
-    if (!oldWard || !newWard) {
-      // Alert.alert('old ward is empty');
-      return;
+    if (!Validate()) {
+      return; // stop if invalid
     }
-
     const formData = {
       oldWard,
       newWard,
@@ -669,7 +756,7 @@ const ApplyAssessment = ({ navigation, route }) => {
 
   return (
     <View style={{ flex: 1 }}>
-      <Header />
+      <HeaderNavigation />
       <ScrollView ref={scrollViewRef} contentContainerStyle={styles.container}>
         {/* Assessment Type Section */}
         <View style={styles.cardContainer}>

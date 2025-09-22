@@ -208,7 +208,8 @@ const VerifiedStatus = ({ route }) => {
                 value: submissionData['Property Type (Current)'],
                 verifiedValue: submissionData['Verified_PropertyType'],
               },
-              ...(submissionData['Property Type (Current)'] ===
+
+              ...(submissionData['Verified_PropertyType'] ===
               'FLATS / UNIT IN MULTI STORIED BUILDING'
                 ? [
                     {

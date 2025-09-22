@@ -32,7 +32,7 @@ import { getToken } from '../utils/auth';
 import ExtraChargesSection from './components/ExtraChargesSection';
 import { getUserDetails } from '../utils/auth';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
+import { PROPERTY_API } from '../api/apiRoutes';
 const yesNoOptions = [
   { label: 'Yes', value: 'yes' },
   { label: 'No', value: 'no' },
@@ -587,6 +587,44 @@ const SurveyPage = ({ route, navigation }) => {
     );
   }
 
+  const fetchApartments = async () => {
+    try {
+      const token = await getToken();
+      const body = data?.wardMstrId ? { oldWardId: data?.wardMstrId } : {};
+      console.log('Body:', body);
+
+      const response = await axios.post(PROPERTY_API.APARTMENT_API, body, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('Response:', response);
+
+      if (response.data?.status) {
+        const formatted = response.data.data.map(item => ({
+          label: `${item.apartmentName} (${item.aptCode})`,
+          value: item.id,
+        }));
+
+        setApartmentList(formatted);
+        // console.log('Formatted apartments:', formatted);
+      }
+    } catch (error) {
+      console.error('Error fetching apartments:', error);
+    } finally {
+      setLoadingApartments(false);
+    }
+  };
+
+  // ✅ Call it immediately if condition matches
+  // console.log('Selected Property Label:', selectedPropertyLabel);
+  if (
+    selectedPropertyLabel?.trim().toUpperCase() ===
+    'FLATS / UNIT IN MULTI STORIED BUILDING'
+  ) {
+    fetchApartments();
+  }
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -1157,7 +1195,7 @@ const SurveyPage = ({ route, navigation }) => {
                   </View>
 
                   {/* Remarks Section */}
-                  <View style={styles.remarksContainer}>
+                  {/* <View style={styles.remarksContainer}>
                     <Text style={styles.remarksLabel}>Remarks</Text>
                     <TextInput
                       style={styles.remarksInput}
@@ -1169,7 +1207,7 @@ const SurveyPage = ({ route, navigation }) => {
                       onChangeText={setRemarks}
                       textAlignVertical="top"
                     />
-                  </View>
+                  </View> */}
                 </View>
               )}
               <View style={[styles.card, styles.shadow]}>
@@ -1260,7 +1298,7 @@ const SurveyPage = ({ route, navigation }) => {
             };
 
             if (data?.propertyType !== 'VACANT LAND') {
-              generatedPreview['Remarks (Preview)'] = remarks ?? 'NA';
+              // generatedPreview['Remarks (Preview)'] = remarks ?? 'NA';
 
               // Generate preview data for each floor dynamically
               floorIds.forEach((floor, index) => {
@@ -1335,9 +1373,9 @@ const SurveyPage = ({ route, navigation }) => {
             }
 
             // Add remarks if property type is not VACANT LAND
-            if (data?.propertyType !== 'VACANT LAND' && remarks) {
-              generatedPreview['Remarks'] = remarks;
-            }
+            // if (data?.propertyType !== 'VACANT LAND' && remarks) {
+            //   generatedPreview['Remarks'] = remarks;
+            // }
 
             setPreviewData(generatedPreview);
             console.log('Preview', generatedPreview);

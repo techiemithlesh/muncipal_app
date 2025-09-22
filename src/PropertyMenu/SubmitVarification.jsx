@@ -131,6 +131,9 @@ const SubmitVarification = ({ route }) => {
 
       const fieldPayload = {
         // Mobile Tower
+
+        appartmentDetailsId: submissionData?.apartmentDetail,
+
         isMobileTower: submissionData?.isMobileTower === true, // ensure boolean
         towerArea: submissionData?.isMobileTower
           ? parseFloat(submissionData?.towerArea) || 0
@@ -307,13 +310,13 @@ const SubmitVarification = ({ route }) => {
     }
   };
 
-  const handleSendToLevel = async () => {
+  const handleSendToLevel = async status => {
     try {
       const token = await getToken();
       const payload = {
         id: id,
         remarks: remarks,
-        status: 'FORWARD',
+        status: status, // 'FORWARD' or 'BACKWARD'
       };
 
       await axios.post(SAF_API_ROUTES.SEND_TO_LEVEL_API, payload, {
@@ -475,12 +478,26 @@ const SubmitVarification = ({ route }) => {
               onChangeText={setRemarks}
               multiline
             />
-            <TouchableOpacity
-              style={styles.sendButton}
-              onPress={handleSendToLevel}
-            >
-              <Text style={styles.sendButtonText}>Send to Level</Text>
-            </TouchableOpacity>
+
+            <View style={styles.buttonRow}>
+              {isULBUser && (
+                <>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.backwardButton]}
+                    onPress={() => handleSendToLevel('BACKWARD')}
+                  >
+                    <Text style={styles.buttonText}>Backward</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.forwardButton]}
+                onPress={() => handleSendToLevel('FORWARD')}
+              >
+                <Text style={styles.buttonText}>Forward</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -491,6 +508,31 @@ const SubmitVarification = ({ route }) => {
 export default SubmitVarification;
 
 const styles = StyleSheet.create({
+  actionButton: {
+    borderRadius: 8,
+    padding: 5,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3, // for Android shadow
+  },
+  forwardButton: {
+    backgroundColor: '#4CAF50', // Green
+  },
+  backwardButton: {
+    backgroundColor: '#F44336', // Red
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
   submitButtonContainer: {
     marginTop: 20,
     alignItems: 'center',
