@@ -35,8 +35,27 @@ const AssessmentSummary = ({ route, navigation }) => {
   const [loading, setLoading] = useState(false);
 
   function convertToYearMonth(date) {
-    const [month, year] = date.split('-');
-    return `${year}-${month}`;
+    if (!date) return '2024-01';
+
+    // Handle MM/YYYY format
+    if (date.includes('/')) {
+      const parts = date.split('/');
+      if (parts.length === 2) {
+        const [month, year] = parts;
+        return `${year}-${month.padStart(2, '0')}`;
+      }
+    }
+
+    // Handle MM-YYYY format
+    if (date.includes('-')) {
+      const parts = date.split('-');
+      if (parts.length === 2) {
+        const [month, year] = parts;
+        return `${year}-${month.padStart(2, '0')}`;
+      }
+    }
+
+    return '2024-01';
   }
 
   const parseDate = str => {
@@ -45,16 +64,32 @@ const AssessmentSummary = ({ route, navigation }) => {
     const [month, year] = str.split('/');
     return new Date(`${year}-${month}-01`);
   };
-  function formatDate1(dob) {
-    if (!dob) return '2019-02-14'; // fallback if empty
-    const parts = dob.split('/'); // ["18", "09", "1901"]
-    if (parts.length !== 3) return '2019-02-14'; // fallback for invalid format
+  function formatDate1(dateInput) {
+    if (!dateInput) return '';
 
-    const day = parts[0].padStart(2, '0');
-    const month = parts[1].padStart(2, '0');
-    const year = parts[2];
+    // Handle ISO date format (from date pickers)
+    if (dateInput.includes('T')) {
+      return dateInput.split('T')[0]; // Already in YYYY-MM-DD format
+    }
 
-    return `${year}-${month}-${day}`; // YYYY-MM-DD
+    // Handle DD/MM/YYYY format
+    if (dateInput.includes('/')) {
+      const parts = dateInput.split('/');
+      if (parts.length !== 3) return '';
+
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+
+      return `${year}-${month}-${day}`;
+    }
+
+    // Handle YYYY-MM-DD format (already correct)
+    if (dateInput.includes('-') && dateInput.length === 10) {
+      return dateInput;
+    }
+
+    return '';
   }
 
   const handleSubmit = async () => {
@@ -87,13 +122,13 @@ const AssessmentSummary = ({ route, navigation }) => {
       // Map data to API structure
       const payload = {
         assessmentType: 'New Assessment',
-        zoneMstrId: data.zone || 1,
+        zoneMstrId: String(data.zone || 1),
         wardMstrId: String(data.oldWard || 1),
         newWardMstrId: data.newWard || 1,
         ownershipTypeMstrId: data.ownershipTypeId || data.ownershipType || 1,
         propTypeMstrId: data.propertyTypeId || data.propertyType || 1,
-        appartmentDetailsId: data.apartmentDetail,
-        flatRegistryDate: '2024-01-01',
+        appartmentDetailsId: data.apartmentDetail || null,
+        flatRegistryDate: formatDate1(data.selectedDate) || '',
         roadWidth: String(data.roadWidth || '40'),
         khataNo: data.khataNo || 'a',
         plotNo: data.plotNo || 'a',
@@ -105,29 +140,30 @@ const AssessmentSummary = ({ route, navigation }) => {
         propPinCode: data.pincode || '123456',
         propState: data.state || 'a',
         isMobileTower: data.mobileTower === 'yes' ? 1 : 0,
-        towerArea:
-          data.mobileTower === 'yes' ? parseInt(data.towerArea || 50) : 50,
-        towerInstallationDate:
-          data.mobileTower === 'yes'
-            ? formatDate1(data.installationDate)
-            : '2024-01-01',
+        ...(data.mobileTower === 'yes' && {
+          towerArea: parseInt(data.towerArea || 50),
+          towerInstallationDate: formatDate1(data.installationDate) || '',
+        }),
+
         isHoardingBoard: data.hoarding === 'yes' ? 1 : 0,
-        hoardingArea:
-          data.hoarding === 'yes' ? String(data.hoardingArea || '50') : '50',
-        hoardingInstallationDate:
-          data.hoarding === 'yes'
-            ? formatDate1(data.hoardingInstallationDate)
-            : '2016-04-17',
+        ...(data.hoarding === 'yes' && {
+          hoardingArea: String(data.hoardingArea || '50'),
+          hoardingInstallationDate:
+            formatDate1(data.hoardingInstallationDate) || '',
+        }),
+
         isPetrolPump: data.petrolPump === 'yes' ? 1 : 0,
-        underGroundArea:
-          data.petrolPump === 'yes' ? String(data.pumpArea || '25') : '25',
-        petrolPumpCompletionDate:
-          data.petrolPump === 'yes'
-            ? formatDate1(data.pumpInstallationDate)
-            : '2020-04-10',
+        ...(data.petrolPump === 'yes' && {
+          underGroundArea: String(data.pumpArea || '25'),
+          petrolPumpCompletionDate:
+            formatDate1(data.pumpInstallationDate) || '',
+        }),
+
         landOccupationDate: '2021-02-03',
         isWaterHarvesting: data.rainHarvesting === 'yes' ? 1 : 0,
-
+        ...(data.rainHarvesting === 'yes' && {
+          waterHarvestingDate: formatDate1(data.completionDate) || '',
+        }),
         ownerDtl: [
           {
             ownerName: data.ownerName || '10',
@@ -138,7 +174,7 @@ const AssessmentSummary = ({ route, navigation }) => {
                 : data.gender === 'female'
                 ? 'Female'
                 : 'Male',
-            dob: formatDate1(data.dob),
+            dob: formatDate1(data.dob) || '2000-01-01',
             isArmedForce:
               data.armedForces === 'yes'
                 ? 1
@@ -152,12 +188,8 @@ const AssessmentSummary = ({ route, navigation }) => {
           data.floors && data.floors.length > 0
             ? data.floors.map(floor => ({
                 builtupArea: String(floor.builtUpArea || '100'),
-                dateFrom:
-                  convertToYearMonth(floor.fromDate.replace('/', '-')) ||
-                  '2014-01',
-                dateUpto1:
-                  convertToYearMonth(floor.uptoDate.replace('/', '-')) ||
-                  '2012-04',
+                dateFrom: convertToYearMonth(floor.fromDate) || '2024-01',
+                dateUpto1: convertToYearMonth(floor.uptoDate) || '2024-01',
                 floorMasterId: String(floor.floorName || '2'),
                 usageTypeMasterId: String(floor.usageType || '1'),
                 constructionTypeMasterId: floor.constructionType || 1,

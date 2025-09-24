@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -47,11 +41,21 @@ const ExtraChargesSection = ({
   const isDisabled = isRessessment || isMutation;
 
   return (
-    <View style={styles.section}>
-      {/* Mobile Tower */}
-      <Text style={styles.label}>Mobile Tower</Text>
+    <View style={{ marginBottom: 20 }}>
+      <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
+        Mobile Tower
+      </Text>
       <Dropdown
-        style={styles.dropdown}
+        style={{
+          height: 45,
+          borderColor: '#ccc',
+          borderWidth: 1,
+          borderRadius: 8,
+          paddingHorizontal: 12,
+          backgroundColor: '#fff',
+          marginBottom: 12,
+          justifyContent: 'center',
+        }}
         data={yesNoOptions}
         labelField="label"
         valueField="value"
@@ -61,23 +65,42 @@ const ExtraChargesSection = ({
         disable={isDisabled}
       />
       {mobileTower === 'yes' && (
-        <View style={styles.subSection}>
-          <Text style={styles.label}>
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
             Total Area Covered by Mobile Tower & Supporting Equipments (in Sq.
             Ft.)
           </Text>
           <TextInput
-            style={styles.input}
+            style={{
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              backgroundColor: '#fff',
+              marginBottom: 12,
+              fontSize: 16,
+              color: '#333',
+            }}
             placeholder="Eg. 200 SQMTR"
             value={towerArea}
             onChangeText={setTowerArea}
             editable={!isDisabled}
           />
-          <Text style={styles.label}>
+          <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
             Date of Installation of Mobile Tower *
           </Text>
           <TouchableOpacity
-            style={styles.dateInput}
+            style={{
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              backgroundColor: '#fff',
+              marginBottom: 12,
+              justifyContent: 'center',
+            }}
             onPress={() => !isDisabled && setShowInstallationDatePicker(true)}
           >
             <Text style={{ color: installationDate ? '#000' : '#999' }}>
@@ -101,11 +124,20 @@ const ExtraChargesSection = ({
           )}
         </View>
       )}
-
-      {/* Hoarding */}
-      <Text style={styles.label}>Does Property Have Hoarding Board(s) ? *</Text>
+      <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
+        Does Property Have Hoarding Board(s) ? *
+      </Text>
       <Dropdown
-        style={styles.dropdown}
+        style={{
+          height: 45,
+          borderColor: '#ccc',
+          borderWidth: 1,
+          borderRadius: 8,
+          paddingHorizontal: 12,
+          backgroundColor: '#fff',
+          marginBottom: 12,
+          justifyContent: 'center',
+        }}
         data={yesNoOptions}
         labelField="label"
         valueField="value"
@@ -115,23 +147,42 @@ const ExtraChargesSection = ({
         disable={isDisabled}
       />
       {hoarding === 'yes' && (
-        <View style={styles.subSection}>
-          <Text style={styles.label}>
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
             Total Area of Wall / Roof / Land (in Sq. Ft.) *
           </Text>
           <TextInput
-            style={styles.input}
+            style={{
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              backgroundColor: '#fff',
+              marginBottom: 12,
+              fontSize: 16,
+              color: '#333',
+            }}
             placeholder="Total Area of Wall / Roof / Land (in Sq. Ft.) *"
             value={hoardingArea}
             onChangeText={setHoardingArea}
             placeholderTextColor="#000"
             editable={!isDisabled}
           />
-          <Text style={styles.label}>
+          <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
             Date of Installation of Hoarding Board(s) *
           </Text>
           <TouchableOpacity
-            style={styles.dateInput}
+            style={{
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              backgroundColor: '#fff',
+              marginBottom: 12,
+              justifyContent: 'center',
+            }}
             onPress={() =>
               !isDisabled && setShowHoardingInstallationDatePicker(true)
             }
@@ -161,11 +212,20 @@ const ExtraChargesSection = ({
           )}
         </View>
       )}
-
-      {/* Petrol Pump */}
-      <Text style={styles.label}>Is property a Petrol Pump ? *</Text>
+      <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
+        Is property a Petrol Pump ? *
+      </Text>
       <Dropdown
-        style={styles.dropdown}
+        style={{
+          height: 45,
+          borderColor: '#ccc',
+          borderWidth: 1,
+          borderRadius: 8,
+          paddingHorizontal: 12,
+          backgroundColor: '#fff',
+          marginBottom: 12,
+          justifyContent: 'center',
+        }}
         data={yesNoOptions}
         labelField="label"
         valueField="value"
@@ -175,21 +235,42 @@ const ExtraChargesSection = ({
         disable={isDisabled}
       />
       {petrolPump === 'yes' && (
-        <View style={styles.subSection}>
-          <Text style={styles.label}>
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
             Total Area of Petrol Pump (in Sq. Ft.) *
           </Text>
           <TextInput
-            style={styles.input}
+            style={{
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              backgroundColor: '#fff',
+              marginBottom: 12,
+              fontSize: 16,
+              color: '#333',
+            }}
             placeholder="Total Area of Petrol Pump (in Sq. Ft.) *"
             value={pumpArea}
             onChangeText={setPumpArea}
             placeholderTextColor="#000"
             editable={!isDisabled}
           />
-          <Text style={styles.label}>Date of Installation *</Text>
+          <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
+            Date of Installation *
+          </Text>
           <TouchableOpacity
-            style={styles.dateInput}
+            style={{
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              backgroundColor: '#fff',
+              marginBottom: 12,
+              justifyContent: 'center',
+            }}
             onPress={() =>
               !isDisabled && setShowPumpInstallationDatePicker(true)
             }
@@ -219,11 +300,20 @@ const ExtraChargesSection = ({
           )}
         </View>
       )}
-
-      {/* Rainwater Harvesting */}
-      <Text style={styles.label}>Rainwater harvesting provision ? *</Text>
+      <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
+        Rainwater harvesting provision ? *
+      </Text>
       <Dropdown
-        style={styles.dropdown}
+        style={{
+          height: 45,
+          borderColor: '#ccc',
+          borderWidth: 1,
+          borderRadius: 8,
+          paddingHorizontal: 12,
+          backgroundColor: '#fff',
+          marginBottom: 12,
+          justifyContent: 'center',
+        }}
         data={yesNoOptions}
         labelField="label"
         valueField="value"
@@ -233,10 +323,21 @@ const ExtraChargesSection = ({
         disable={isDisabled}
       />
       {rainHarvesting === 'yes' && (
-        <View style={styles.subSection}>
-          <Text style={styles.label}>Completion Date of Petrol Pump *</Text>
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
+            Completion Date of Petrol Pump *
+          </Text>
           <TouchableOpacity
-            style={styles.dateInput}
+            style={{
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              backgroundColor: '#fff',
+              marginBottom: 12,
+              justifyContent: 'center',
+            }}
             onPress={() => !isDisabled && setShowDatePicker(true)}
           >
             <Text style={{ color: completionDate ? '#000' : '#999' }}>
@@ -265,48 +366,3 @@ const ExtraChargesSection = ({
 };
 
 export default ExtraChargesSection;
-
-const styles = StyleSheet.create({
-  section: {
-    marginBottom: 20,
-  },
-  subSection: {
-    marginBottom: 12,
-  },
-  label: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 5,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-    marginBottom: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-  dropdown: {
-    height: 45,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#fff',
-    marginBottom: 12,
-    justifyContent: 'center',
-  },
-  dateInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-    marginBottom: 12,
-    justifyContent: 'center',
-  },
-});

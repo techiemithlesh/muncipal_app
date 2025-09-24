@@ -33,14 +33,18 @@ import ExtraChargesSection from './components/ExtraChargesSection';
 import { getUserDetails } from '../utils/auth';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { PROPERTY_API } from '../api/apiRoutes';
+import { useRef } from 'react';
+
 const yesNoOptions = [
   { label: 'Yes', value: 'yes' },
   { label: 'No', value: 'no' },
 ];
+
 const SurveyPage = ({ route, navigation }) => {
   const { id } = route.params;
-  console.log(id);
 
+  console.log(id);
+  const hasFetched = useRef(false);
   const [mobileTower, setMobileTower] = useState('no');
   const [towerArea, setTowerArea] = useState('');
   const [installationDate, setInstallationDate] = useState(null);
@@ -204,7 +208,56 @@ const SurveyPage = ({ route, navigation }) => {
     if (date) {
       setSelectedDate(date);
     }
+    console.log(selectedDate, 'date');
   };
+  const formatDates = (date, format = 'DD-MM-YYYY') => {
+    if (!date) return null;
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+
+    if (format === 'YYYY-MM-DD') return `${year}-${month}-${day}`;
+    return `${day}-${month}-${year}`; // default
+  };
+
+  useEffect(() => {
+    if (data) {
+      console.log('Received data:', data); // <-- Log the whole data object
+
+      // Mobile Tower
+      setMobileTower(data.isMobileTower ? 'yes' : 'no');
+      setTowerArea(data.towerArea || '');
+      setInstallationDate(
+        data.towerInstallationDate
+          ? new Date(data.towerInstallationDate)
+          : null,
+      );
+
+      // Hoarding
+      setHoarding(data.isHoardingBoard ? 'yes' : 'no');
+      setHoardingArea(data.hoardingArea || '');
+      setHoardingInstallationDate(
+        data.hoardingInstallationDate
+          ? new Date(data.hoardingInstallationDate)
+          : null,
+      );
+
+      // Petrol Pump
+      setPetrolPump(data.isPetrolPump ? 'yes' : 'no');
+      setPumpArea(data.underGroundArea || '');
+      setPumpInstallationDate(
+        data.petrolPumpCompletionDate
+          ? new Date(data.petrolPumpCompletionDate)
+          : null,
+      );
+
+      // Rainwater Harvesting
+      setRainHarvesting(data.isWaterHarvesting ? 'yes' : 'no');
+      setCompletionDate(
+        data.waterHarvestingDate ? new Date(data.waterHarvestingDate) : null,
+      );
+    }
+  }, [data]);
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -348,15 +401,27 @@ const SurveyPage = ({ route, navigation }) => {
 
       mobileTower,
       towerArea,
-      installationDate,
+      // installationDate,
       hoarding,
       hoardingArea,
-      hoardingInstallationDate,
+      // hoardingInstallationDate,
       petrolPump,
       pumpArea,
-      pumpInstallationDate,
+      // pumpInstallationDate,
       rainHarvesting,
-      completionDate,
+      // completionDate,
+      installationDate: installationDate
+        ? installationDate.toISOString().split('T')[0]
+        : null,
+      hoardingInstallationDate: hoardingInstallationDate
+        ? hoardingInstallationDate.toISOString().split('T')[0]
+        : null,
+      pumpInstallationDate: pumpInstallationDate
+        ? pumpInstallationDate.toISOString().split('T')[0]
+        : null,
+      completionDate: completionDate
+        ? completionDate.toISOString().split('T')[0]
+        : null,
 
       // Extra floors with IDs
       extraFloors: addExtraFloor
@@ -620,10 +685,12 @@ const SurveyPage = ({ route, navigation }) => {
   // ✅ Call it immediately if condition matches
   // console.log('Selected Property Label:', selectedPropertyLabel);
   if (
+    !hasFetched.current &&
     selectedPropertyLabel?.trim().toUpperCase() ===
-    'FLATS / UNIT IN MULTI STORIED BUILDING'
+      'FLATS / UNIT IN MULTI STORIED BUILDING'
   ) {
     fetchApartments();
+    hasFetched.current = true;
   }
   return (
     <KeyboardAvoidingView
@@ -705,7 +772,7 @@ const SurveyPage = ({ route, navigation }) => {
               <Text
                 style={[styles.label, error.ownershipType && styles.errorLabel]}
               >
-                Select Date *
+                Flat Registry Date *
               </Text>
               <TouchableOpacity
                 style={{
@@ -716,11 +783,7 @@ const SurveyPage = ({ route, navigation }) => {
                 }}
                 onPress={() => setShowDatePicker(true)}
               >
-                <Text>
-                  {selectedDate
-                    ? selectedDate.toISOString().split('T')[0] // Y-M-D format
-                    : 'Select Date'}
-                </Text>
+                <Text>{formatDates(selectedDate, 'DD-MM-YYYY')}</Text>
               </TouchableOpacity>
 
               {showDatePicker && (

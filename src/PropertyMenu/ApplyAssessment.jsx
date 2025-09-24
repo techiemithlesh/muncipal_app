@@ -341,19 +341,19 @@ const ApplyAssessment = ({ navigation, route }) => {
       return false;
     }
 
-    if (!pan) {
-      newErrors.pan = 'PAN is required';
+    if (!aadhaar) {
+      newErrors.aadhaar = 'Aadhaar is required';
       setError(prev => ({ ...prev, ...newErrors }));
-      showToast('error', 'Enter PAN Number');
+      showToast('error', 'Enter aadhaar Number');
       return false;
     }
 
-    if (!email) {
-      newErrors.email = 'Email is required';
-      setError(prev => ({ ...prev, ...newErrors }));
-      showToast('error', 'Enter Email');
-      return false;
-    }
+    // if (!email) {
+    //   newErrors.email = 'Email is required';
+    //   setError(prev => ({ ...prev, ...newErrors }));
+    //   showToast('error', 'Enter Email');
+    //   return false;
+    // }
 
     if (!guardianName) {
       newErrors.guardianName = 'Guardian Name is required';
