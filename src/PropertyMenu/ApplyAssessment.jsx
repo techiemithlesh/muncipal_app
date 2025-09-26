@@ -16,7 +16,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AddressSection from './components/AddressSection';
-import OwnerDetailsSection from './components/OwnerDetailsSection';
 import ElectricityDetailsSection from './components/ElectricityDetailsSection';
 import WaterConnectionDetailsSection from './components/WaterConnectionDetailsSection';
 import ExtraChargesSection from './components/ExtraChargesSection';
@@ -26,6 +25,7 @@ import { handleValidation, scrollToInput } from './AssessmentValidation';
 import { getToken } from '../utils/auth';
 import { PROPERTY_API } from '../api/apiRoutes';
 import { showToast } from '../utils/toast';
+
 const ApplyAssessment = ({ navigation, route }) => {
   // Get data from route params if it's a reassessment or mutation
   const {
@@ -45,10 +45,6 @@ const ApplyAssessment = ({ navigation, route }) => {
   const [waterConnectionNo, setWaterConnectionNo] = useState('');
   const [waterConnectionDate, setWaterConnectionDate] = useState('');
   const [propertyTypeLabel, setPropertyTypeLabel] = useState('');
-  const [mobile, setMobile] = useState('');
-  const [aadhaar, setAadhaar] = useState('');
-  const [pan, setPan] = useState('');
-  const [email, setEmail] = useState('');
   const [kno, setKno] = useState('');
   const [accNo, setAccNo] = useState('');
   const [bindBookNo, setBindBookNo] = useState('');
@@ -76,10 +72,6 @@ const ApplyAssessment = ({ navigation, route }) => {
   const [newWardOptions, setNewWardOptions] = useState([]);
   const [ownershipType, setOwnershipType] = useState('');
   const [propertyType, setPropertyType] = useState('');
-  const [gender, setGender] = useState('');
-  const [relation, setRelation] = useState('');
-  const [armedForces, setArmedForces] = useState('no');
-  const [speciallyAbled, setSpeciallyAbled] = useState('no');
   const [electricityCategory, setElectricityCategory] = useState('');
   const [mobileTower, setMobileTower] = useState('no');
   const [hoarding, setHoarding] = useState('no');
@@ -106,17 +98,34 @@ const ApplyAssessment = ({ navigation, route }) => {
   const [correspondingDistrict, setCorrespondingDistrict] = useState('');
   const [correspondingState, setCorrespondingState] = useState('');
   const [correspondingPincode, setCorrespondingPincode] = useState('');
-  const [dob, setDob] = useState('');
-  const [showDobPicker, setShowDobPicker] = useState(false);
-  const [ownerName, setOwnerName] = useState('');
-  const [guardianName, setGuardianName] = useState('');
   const [error, setError] = useState({});
-
   const [selectedDate, setSelectedDate] = useState(new Date());
-
-  const [apartmentList, setApartmentList] = useState([]); // dropdown data
+  const [apartmentList, setApartmentList] = useState([]);
   const [apartmentDetail, setApartmentDetail] = useState(null);
   const [loadingApartments, setLoadingApartments] = useState(false);
+
+  // MULTIPLE OWNERS STATE
+  const [ownerDetails, setOwnerDetails] = useState([
+    {
+      ownerName: '',
+      gender: '',
+      dob: '',
+      guardianName: '',
+      relation: '',
+      mobile: '',
+      aadhaar: '',
+      pan: '',
+      email: '',
+      armedForces: 'no',
+      speciallyAbled: 'no',
+    },
+  ]);
+
+  // Date picker for owners
+  const [ownerDatePicker, setOwnerDatePicker] = useState({
+    index: null,
+    show: false,
+  });
 
   const apartmentDropdownOptions = [
     { label: 'Apartment A', value: 'A' },
@@ -130,19 +139,6 @@ const ApplyAssessment = ({ navigation, route }) => {
   const ownershipTypeRef = useRef(null);
   const propertyTypeRef = useRef(null);
   const zoneRef = useRef(null);
-  const ownerNameRef = useRef(null);
-  const genderRef = useRef(null);
-  const guardianNameRef = useRef(null);
-  const relationRef = useRef(null);
-  const mobileRef = useRef(null);
-  const aadhaarRef = useRef(null);
-  const panRef = useRef(null);
-  const emailRef = useRef(null);
-  const armedForcesRef = useRef(null);
-  const speciallyAbledRef = useRef(null);
-  const knoRef = useRef(null);
-  const accNoRef = useRef(null);
-  const bindBookNoRef = useRef(null);
   const electricityCategoryRef = useRef(null);
   const khataNoRef = useRef(null);
   const plotNoRef = useRef(null);
@@ -168,6 +164,7 @@ const ApplyAssessment = ({ navigation, route }) => {
   const pumpAreaRef = useRef(null);
   const rainHarvestingRef = useRef(null);
   const floorRefs = useRef([]);
+  const ownerRefs = useRef([]);
 
   const [floorDetails, setFloorDetails] = useState([
     {
@@ -186,17 +183,63 @@ const ApplyAssessment = ({ navigation, route }) => {
     show: false,
   });
 
+  // OWNER FUNCTIONS
+  const updateOwnerDetail = (index, field, value) => {
+    const updated = [...ownerDetails];
+    updated[index][field] = value;
+    setOwnerDetails(updated);
+  };
+
+  const addOwner = () => {
+    setOwnerDetails(prev => [
+      ...prev,
+      {
+        ownerName: '',
+        gender: '',
+        dob: '',
+        guardianName: '',
+        relation: '',
+        mobile: '',
+        aadhaar: '',
+        pan: '',
+        email: '',
+        armedForces: 'no',
+        speciallyAbled: 'no',
+      },
+    ]);
+  };
+
+  const removeOwner = index => {
+    if (ownerDetails.length > 1) {
+      const updated = ownerDetails.filter((_, i) => i !== index);
+      setOwnerDetails(updated);
+    } else {
+      showToast('error', 'At least one owner is required');
+    }
+  };
+
+  const handleOwnerDateChange = (event, selectedDate) => {
+    if (event.type === 'set' && selectedDate) {
+      const formatted = selectedDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      const { index } = ownerDatePicker;
+      updateOwnerDetail(index, 'dob', formatted);
+    }
+    setOwnerDatePicker({ index: null, show: false });
+  };
+
   const updateFloorDetail = (index, field, value) => {
     const updated = [...floorDetails];
     updated[index][field] = value;
     setFloorDetails(updated);
   };
+
   const handleDateChange1 = (event, date) => {
     setShowDatePicker(false);
     if (date) {
       setSelectedDate(date);
     }
   };
+
   const handleDateChange = (event, selectedDate) => {
     if (event.type === 'set' && selectedDate) {
       const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
@@ -223,6 +266,15 @@ const ApplyAssessment = ({ navigation, route }) => {
     ]);
   };
 
+  const removeFloor = index => {
+    if (floorDetails.length > 1) {
+      const updated = floorDetails.filter((_, i) => i !== index);
+      setFloorDetails(updated);
+    } else {
+      showToast('error', 'At least one floor is required');
+    }
+  };
+
   const handleCheckboxToggle = () => {
     setIsChecked(!isChecked);
     if (!isChecked) {
@@ -232,7 +284,7 @@ const ApplyAssessment = ({ navigation, route }) => {
     }
   };
 
-  // 🔹 Fetch Apartments from API when Flats is selected
+  // Fetch Apartments from API when Flats is selected
   useEffect(() => {
     if (propertyTypeLabel === 'FLATS / UNIT IN MULTI STORIED BUILDING') {
       fetchApartments();
@@ -244,7 +296,7 @@ const ApplyAssessment = ({ navigation, route }) => {
       setLoadingApartments(true);
       const token = await getToken();
       const body = oldWard ? { oldWardId: oldWard } : {};
-      console.log('tooek', body);
+      console.log('token', body);
 
       const response = await axios.post(PROPERTY_API.APARTMENT_API, body, {
         headers: {
@@ -252,11 +304,11 @@ const ApplyAssessment = ({ navigation, route }) => {
           'Content-Type': 'application/json',
         },
       });
-      console.log('responmse', response);
+      console.log('response', response);
       if (response.data?.status) {
         const formatted = response.data.data.map(item => ({
-          label: `${item.apartmentName} (${item.aptCode})`, // 👈 show name + code in dropdown
-          value: item.id, // 👈 use id as valu
+          label: `${item.apartmentName} (${item.aptCode})`,
+          value: item.id,
         }));
 
         setApartmentList(formatted);
@@ -276,7 +328,7 @@ const ApplyAssessment = ({ navigation, route }) => {
       newErrors.oldWard = 'Old Ward is required';
       setError(prev => ({ ...prev, ...newErrors }));
       showToast('error', 'Select Old Ward');
-      return false; // stop at first error
+      return false;
     }
 
     if (!newWard) {
@@ -306,149 +358,494 @@ const ApplyAssessment = ({ navigation, route }) => {
       showToast('error', 'Select Zone');
       return false;
     }
-    if (!ownerName) {
-      newErrors.ownerName = 'Owner Name is required';
+
+    // Validate each owner
+    for (let i = 0; i < ownerDetails.length; i++) {
+      const owner = ownerDetails[i];
+      const nameRegex = /^[a-zA-ZÀ-ÖØ-öø-ÿ' - .]+$/; // Only letters and spaces
+
+      if (!owner.ownerName) {
+        newErrors[`ownerName_${i}`] = 'Owner Name is required';
+        setError(prev => ({ ...prev, ...newErrors }));
+        showToast('error', `Enter Owner Name for Owner ${i + 1}`);
+        return false;
+      } else if (!nameRegex.test(owner.ownerName)) {
+        newErrors[`ownerName_${i}`] =
+          'Owner Name can only contain letters and spaces';
+        setError(prev => ({ ...prev, ...newErrors }));
+        showToast('error', `Owner Name for Owner ${i + 1} is invalid`);
+        return false;
+      }
+
+      if (!owner.guardianName) {
+        newErrors[`guardianName_${i}`] = 'Guardian Name is required';
+        setError(prev => ({ ...prev, ...newErrors }));
+        showToast('error', `Enter Guardian Name for Owner ${i + 1}`);
+        return false;
+      } else if (!nameRegex.test(owner.guardianName)) {
+        newErrors[`guardianName_${i}`] =
+          'Guardian Name can only contain letters and spaces';
+        setError(prev => ({ ...prev, ...newErrors }));
+        showToast('error', `Guardian Name for Owner ${i + 1} is invalid`);
+        return false;
+      }
+
+      if (!owner.gender) {
+        newErrors[`gender_${i}`] = 'Gender is required';
+        setError(prev => ({ ...prev, ...newErrors }));
+        showToast('error', `Select Gender for Owner ${i + 1}`);
+        return false;
+      }
+      if (!owner.dob) {
+        newErrors[`dob_${i}`] = 'dob is required';
+        setError(prev => ({ ...prev, ...newErrors }));
+        showToast('error', `dob dob for Owner ${i + 1}`);
+        return false;
+      }
+      if (!owner.relation) {
+        newErrors[`relation_${i}`] = 'Relation is required';
+        setError(prev => ({ ...prev, ...newErrors }));
+        showToast('error', `Select relation for Owner ${i + 1}`);
+        return false;
+      }
+
+      if (!owner.relation) {
+        newErrors[`relation_${i}`] = 'Relation is required';
+        setError(prev => ({ ...prev, ...newErrors }));
+        showToast('error', `Select Relation for Owner ${i + 1}`);
+        return false;
+      }
+
+      if (!owner.mobile) {
+        newErrors[`mobile_${i}`] = 'Mobile is required';
+        setError(prev => ({ ...prev, ...newErrors }));
+        showToast('error', `Enter Mobile Number for Owner ${i + 1}`);
+        return false;
+      } else if (!/^\d{10}$/.test(owner.mobile)) {
+        newErrors[`mobile_${i}`] = 'Mobile number must be 10 digits';
+        setError(prev => ({ ...prev, ...newErrors }));
+        showToast(
+          'error',
+          `Mobile Number for Owner ${i + 1} must be 10 digits`,
+        );
+        return false;
+      }
+
+      if (!owner.aadhaar) {
+        newErrors[`aadhaar_${i}`] = 'Aadhaar is required';
+        setError(prev => ({ ...prev, ...newErrors }));
+        showToast('error', `Enter Aadhaar Number for Owner ${i + 1}`);
+        return false;
+      } else if (!/^\d{12}$/.test(owner.aadhaar)) {
+        newErrors[`mobile_${i}`] = 'Aadhaar number must be 12 digits';
+        setError(prev => ({ ...prev, ...newErrors }));
+        showToast('error', `Aadhaar Number must be 12 digits`);
+        return false;
+      }
+    }
+    const alphabetRegex = /^[A-Za-z\s]+$/;
+    const addressRegex = /^[A-Za-z0-9\s,./-]+$/; // letters, numbers, space, comma, dot, slash, dash
+    const pincodeRegex = /^[0-9]{6}$/;
+    // Khata No - required + alphanumeric
+    if (!khataNo) {
+      newErrors.khataNo = 'Khata No is required';
       setError(prev => ({ ...prev, ...newErrors }));
-      showToast('error', 'Enter Owner Name');
+      showToast('error', 'Enter Khata No');
+      return false;
+    } else if (!addressRegex.test(khataNo)) {
+      newErrors.khataNo = 'Invalid Khata No';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Khata No can only contain letters, numbers, , . / -');
       return false;
     }
 
-    if (!gender) {
-      newErrors.gender = 'Gender is required';
+    // Plot No - required + alphanumeric
+    if (!plotNo) {
+      newErrors.plotNo = 'Plot No is required';
       setError(prev => ({ ...prev, ...newErrors }));
-      showToast('error', 'Select Gender');
+      showToast('error', 'Enter Plot No');
+      return false;
+    } else if (!addressRegex.test(plotNo)) {
+      newErrors.plotNo = 'Invalid Plot No';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Plot No can only contain letters, numbers, , . / -');
       return false;
     }
 
-    if (!relation) {
-      newErrors.relation = 'Relation is required';
+    // Village Name - required + only alphabets
+    if (!villageName) {
+      newErrors.villageName = 'Village Name is required';
       setError(prev => ({ ...prev, ...newErrors }));
-      showToast('error', 'Select Relation');
+      showToast('error', 'Enter Village Name');
+      return false;
+    } else if (!alphabetRegex.test(villageName)) {
+      newErrors.villageName = 'Invalid Village Name';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Village Name must contain only letters');
       return false;
     }
 
-    if (!mobile) {
-      newErrors.mobile = 'Mobile is required';
+    // Plot Area - required + must be number
+    if (!plotArea) {
+      newErrors.plotArea = 'Plot Area is required';
       setError(prev => ({ ...prev, ...newErrors }));
-      showToast('error', 'Enter Mobile Number');
+      showToast('error', 'Enter Plot Area');
+      return false;
+    } else if (isNaN(plotArea)) {
+      newErrors.plotArea = 'Plot Area must be a number';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Plot Area must be numeric');
       return false;
     }
 
-    if (!aadhaar) {
-      newErrors.aadhaar = 'Aadhaar is required';
+    // Road Width - required + must be number
+    if (!roadWidth) {
+      newErrors.roadWidth = 'Road Width is required';
       setError(prev => ({ ...prev, ...newErrors }));
-      showToast('error', 'Enter Aadhaar Number');
+      showToast('error', 'Enter Road Width');
+      return false;
+    } else if (isNaN(roadWidth)) {
+      newErrors.roadWidth = 'Road Width must be a number';
+      setError(prev => ({ ...prev, ...newErrors }));
+      showToast('error', 'Road Width must be numeric');
       return false;
     }
 
-    if (!aadhaar) {
-      newErrors.aadhaar = 'Aadhaar is required';
+    // Example extra: Pincode (if you add it)
+    if (pincode && !pincodeRegex.test(pincode)) {
+      newErrors.pincode = 'Invalid Pincode';
       setError(prev => ({ ...prev, ...newErrors }));
-      showToast('error', 'Enter aadhaar Number');
+      showToast('error', 'Pincode must be exactly 6 digits');
       return false;
     }
 
-    // if (!email) {
-    //   newErrors.email = 'Email is required';
-    //   setError(prev => ({ ...prev, ...newErrors }));
-    //   showToast('error', 'Enter Email');
-    //   return false;
-    // }
+    // Helper regex
 
-    if (!guardianName) {
-      newErrors.guardianName = 'Guardian Name is required';
-      setError(prev => ({ ...prev, ...newErrors }));
-      showToast('error', 'Enter Guardian Name');
-      return false;
+    // Address validation
+    if (!propertyAddress) {
+      newErrors.address = 'Address is required';
+      showToast('error', 'Enter Address');
+      isValid = false;
+    } else if (!addressRegex.test(propertyAddress)) {
+      newErrors.address = 'Invalid Address';
+      showToast('error', 'Address can contain letters, numbers, and ,.-/');
+      isValid = false;
     }
-    // If we reached here, all fields are valid
-    setError(prev => ({ ...prev, ...newErrors })); // clear any previous errors
+
+    // City validation
+    if (!city) {
+      newErrors.city = 'City is required';
+      showToast('error', 'Enter City');
+      isValid = false;
+    } else if (!alphabetRegex.test(city)) {
+      newErrors.city = 'City should contain only letters';
+      showToast('error', 'City should contain only letters');
+      isValid = false;
+    }
+
+    // District validation
+    if (!district) {
+      newErrors.district = 'District is required';
+      showToast('error', 'Enter District');
+      isValid = false;
+    } else if (!alphabetRegex.test(district)) {
+      newErrors.district = 'District should contain only letters';
+      showToast('error', 'District should contain only letters');
+      isValid = false;
+    }
+
+    // State validation
+    if (!state) {
+      newErrors.state = 'State is required';
+      showToast('error', 'Enter State');
+      isValid = false;
+    } else if (!alphabetRegex.test(state)) {
+      newErrors.state = 'State should contain only letters';
+      showToast('error', 'State should contain only letters');
+      isValid = false;
+    }
+
+    // Pincode validation
+    if (!pincode) {
+      newErrors.pincode = 'Pincode is required';
+      showToast('error', 'Enter Pincode');
+      isValid = false;
+    } else if (!pincodeRegex.test(pincode)) {
+      newErrors.pincode = 'Pincode should be 6 digits';
+      showToast('error', 'Pincode should be 6 digits');
+      isValid = false;
+    }
+
+    if (mobileTower === 'yes' || mobileTower === true) {
+      if (!towerArea) {
+        newErrors.towerArea = 'Tower area is required';
+        showToast('error', 'Enter Tower Area');
+        isValid = false;
+      }
+      if (!installationDate) {
+        newErrors.installationDate = 'Installation date is required';
+        showToast('error', 'Select Tower Installation Date');
+        isValid = false;
+      }
+    }
+
+    // Hoarding
+    // Hoarding
+    if (hoarding === 'yes') {
+      if (!hoardingArea) {
+        newErrors.hoardingArea = 'Hoarding area is required';
+        showToast('error', 'Enter Hoarding Area');
+        isValid = false;
+      }
+      if (!hoardingInstallationDate) {
+        newErrors.hoardingInstallationDate =
+          'Hoarding Installation Date is required';
+        showToast('error', 'Select Hoarding Installation Date');
+        isValid = false;
+      }
+    }
+
+    // Petrol Pump
+    if (petrolPump === 'yes') {
+      if (!pumpArea) {
+        newErrors.pumpArea = 'Pump area is required';
+        showToast('error', 'Enter Pump Area');
+        isValid = false;
+      }
+      if (!pumpInstallationDate) {
+        newErrors.pumpInstallationDate = 'Pump Installation Date is required';
+        showToast('error', 'Select Pump Installation Date');
+        isValid = false;
+      }
+    }
+
+    // Rain Harvesting
+    if (rainHarvesting === 'yes') {
+      if (!completionDate) {
+        newErrors.completionDate = 'Completion date is required';
+        showToast('error', 'Select Rain Harvesting Completion Date');
+        isValid = false;
+      }
+    }
+
+    if (floorDetails && floorDetails.length > 0) {
+      floorDetails.forEach((floor, index) => {
+        const floorErrors = {};
+
+        if (!floor.floorName) {
+          floorErrors.floorName = 'Floor name is required';
+          showToast('error', `Select Floor Name for Floor ${index + 1}`);
+          isValid = false;
+        }
+
+        if (!floor.usageType) {
+          floorErrors.usageType = 'Usage type is required';
+          showToast('error', `Select Usage Type for Floor ${index + 1}`);
+          isValid = false;
+        }
+
+        if (!floor.constructionType) {
+          floorErrors.constructionType = 'Construction type is required';
+          showToast('error', `Select Construction Type for Floor ${index + 1}`);
+          isValid = false;
+        }
+
+        if (!floor.occupancyType) {
+          floorErrors.occupancyType = 'Occupancy type is required';
+          showToast('error', `Select Occupancy Type for Floor ${index + 1}`);
+          isValid = false;
+        }
+
+        if (!floor.builtUpArea || floor.builtUpArea <= 0) {
+          floorErrors.builtUpArea = 'Built-up area is required and must be > 0';
+          showToast('error', `Enter Built-up Area for Floor ${index + 1}`);
+          isValid = false;
+        }
+
+        if (!floor.fromDate) {
+          floorErrors.fromDate = 'Start date is required';
+          showToast('error', `Select Start Date for Floor ${index + 1}`);
+          isValid = false;
+        }
+
+        if (!floor.uptoDate) {
+          floorErrors.uptoDate = 'End date is required';
+          showToast('error', `Select End Date for Floor ${index + 1}`);
+          isValid = false;
+        }
+
+        if (Object.keys(floorErrors).length > 0) {
+          newErrors[`floor_${index}`] = floorErrors;
+        }
+      });
+    }
+    setError(prev => ({ ...prev, ...newErrors }));
     return true;
   };
+  function convertToYearMonth(date) {
+    if (!date) return '2024-01';
 
+    // Handle MM/YYYY format
+    if (date.includes('/')) {
+      const parts = date.split('/');
+      if (parts.length === 2) {
+        const [month, year] = parts;
+        return `${year}-${month.padStart(2, '0')}`;
+      }
+    }
+
+    // Handle MM-YYYY format
+    if (date.includes('-')) {
+      const parts = date.split('-');
+      if (parts.length === 2) {
+        const [month, year] = parts;
+        return `${year}-${month.padStart(2, '0')}`;
+      }
+    }
+
+    return '2024-01';
+  }
+
+  function formatDate1(dateInput) {
+    if (!dateInput) return '';
+
+    // Handle ISO date format (from date pickers)
+    if (dateInput.includes('T')) {
+      return dateInput.split('T')[0]; // Already in YYYY-MM-DD format
+    }
+
+    // Handle DD/MM/YYYY format
+    if (dateInput.includes('/')) {
+      const parts = dateInput.split('/');
+      if (parts.length !== 3) return '';
+
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+
+      return `${year}-${month}-${day}`;
+    }
+
+    // Handle YYYY-MM-DD format (already correct)
+    if (dateInput.includes('-') && dateInput.length === 10) {
+      return dateInput;
+    }
+
+    return '';
+  }
+  console.log('completin date', completionDate);
   const handleSubmit = async () => {
-    console.log(error);
-
     if (!Validate()) {
-      return; // stop if invalid
+      return;
     }
-    const formData = {
-      oldWard,
-      newWard,
-      ownershipType,
-      propertyType,
-      zone,
-      transferMode: isMutation ? transferMode : '',
-      propertyTransferPercentage: isMutation ? propertyTransferPercentage : '',
-      gender,
-      relation,
-      mobile,
-      aadhaar,
-      pan,
-      email,
-      armedForces,
-      speciallyAbled,
-      kno,
-      accNo,
-      bindBookNo,
-      electricityCategory,
-      khataNo,
-      plotNo,
-      villageName,
-      plotArea,
-      roadWidth,
-      noRoad,
-      waterConnectionNo,
-      waterConnectionDate,
-      propertyAddress,
-      city,
-      district,
-      state,
-      pincode,
-      dob: dob ? new Date(dob).toLocaleDateString('en-GB') : '',
-      ownerName,
-      guardianName,
-      correspondingAddress: isChecked ? correspondingAddress : '',
-      correspondingCity: isChecked ? correspondingCity : '',
-      correspondingDistrict: isChecked ? correspondingDistrict : '',
-      correspondingState: isChecked ? correspondingState : '',
-      correspondingPincode: isChecked ? correspondingPincode : '',
-      mobileTower,
-      towerArea,
-      installationDate,
-      hoarding,
-      hoardingArea,
-      hoardingInstallationDate,
-      petrolPump,
-      pumpArea,
-      pumpInstallationDate,
-      rainHarvesting,
-      completionDate: completionDate ? completionDate.toISOString() : '',
-      apartmentDetail,
-      selectedDate: selectedDate
+
+    // ✅ Prepare API request payload in the expected format
+    const payload = {
+      assessmentType: 'New Assessment',
+      zoneMstrId: zone, // map your zone id
+      wardMstrId: oldWard,
+      newWardMstrId: newWard,
+      ownershipTypeMstrId: ownershipType,
+      propTypeMstrId: propertyType,
+      appartmentDetailsId: apartmentDetail || '',
+      flatRegistryDate: selectedDate
         ? selectedDate.toISOString().split('T')[0]
-        : '', // YYYY-MM-DD
+        : '',
+      roadWidth: roadWidth,
+      khataNo: khataNo,
+      plotNo: plotNo,
+      villageMaujaName: villageName,
+      areaOfPlot: plotArea,
+      propAddress: propertyAddress,
+      propCity: city,
+      propDist: district,
+      propPinCode: pincode,
+      propState: state,
+      isMobileTower: mobileTower === 'yes' ? '1' : '0',
+      ...(mobileTower === 'yes' && {
+        towerArea: parseInt(towerArea || 50),
+        towerInstallationDate: installationDate
+          ? formatDate1(installationDate)
+          : '',
+      }),
+
+      isHoardingBoard: hoarding === 'yes' ? '1' : '0',
+      ...(hoarding === 'yes' && {
+        hoardingArea: hoardingArea ? String(hoardingArea) : '50',
+        hoardingInstallationDate: hoardingInstallationDate
+          ? formatDate1(hoardingInstallationDate)
+          : '',
+      }),
+
+      isPetrolPump: petrolPump === 'yes' ? '1' : '0',
+      ...(petrolPump === 'yes' && {
+        underGroundArea: pumpArea ? String(pumpArea) : '25',
+        petrolPumpCompletionDate: pumpInstallationDate
+          ? formatDate1(pumpInstallationDate)
+          : '',
+      }),
+
+      isWaterHarvesting: rainHarvesting === 'yes' ? '1' : '0',
+      ...(rainHarvesting === 'yes' && {
+        waterHarvestingDate: completionDate ? formatDate1(completionDate) : '',
+      }),
+
+      landOccupationDate: completionDate
+        ? formatDate1(completionDate)
+        : '2021-02-03',
+
+      // Owner Details
+      ownerDtl: (ownerDetails || []).map(owner => ({
+        ownerName: owner.ownerName,
+        mobileNo: owner.mobile,
+        gender: owner.gender,
+        dob: owner.dob,
+        isArmedForce: owner.isArmedForce ? 1 : 0,
+        isSpeciallyAbled: owner.isSpeciallyAbled ? 1 : 0,
+      })),
+
+      // Floor Details
+      floorDtl:
+        propertyTypeLabel !== 'VACANT LAND'
+          ? (floorDetails || []).map(floor => ({
+              builtupArea: floor.builtUpArea,
+              dateFrom: convertToYearMonth(floor.fromDate),
+              dateUpto1: convertToYearMonth(floor.uptoDate),
+              floorMasterId: floor.floorName,
+              usageTypeMasterId: floor.usageType,
+              constructionTypeMasterId: floor.constructionType,
+              occupancyTypeMasterId: floor.occupancyType,
+            }))
+          : [],
     };
-    console.log('Foe,dnmg', formData);
 
-    if (propertyTypeLabel !== 'VACANT LAND') {
-      formData.floors = floorDetails.map(floor => ({
-        floorName: floor.floorName,
-        usageType: floor.usageType,
-        occupancyType: floor.occupancyType,
-        constructionType: floor.constructionType,
-        builtUpArea: floor.builtUpArea,
-        fromDate: floor.fromDate,
-        uptoDate: floor.uptoDate,
-      }));
-    }
+    console.log(JSON.stringify(payload, null, 2));
+    try {
+      const token = await getToken();
 
-    if (isRessessment) {
-      navigation.navigate('RessesmentSummry', { data: formData });
-    } else if (isMutation) {
-      navigation.navigate('MutationScreen', { data: formData });
-    } else {
-      navigation.navigate('AssessmentSummary', { data: formData });
+      // 🔥 Hit the API with mapped payload
+      const response = await axios.post(
+        PROPERTY_API.TEST_REQUEST_API,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      console.log('API Response:', response.data);
+      if (response.data.status && response.data.message === 'Valid Request') {
+        showToast('success', response.data.message); // show success message
+        navigation.navigate('AssessmentSummary', { data: payload }); // navigate and pass data
+      } else {
+        showToast('error', response.data.message); // show error message if not valid
+      }
+      // Navigate only after successful API call
+    } catch (error) {
+      console.error('API Test Error:', error.response?.data || error.message);
+      showToast('error', 'API Test Failed ❌');
     }
   };
 
@@ -560,9 +957,9 @@ const ApplyAssessment = ({ navigation, route }) => {
     })) || [];
 
   const genderOptions = [
-    { label: 'Male', value: 'male' },
-    { label: 'Female', value: 'female' },
-    { label: 'Other', value: 'other' },
+    { label: 'Male', value: 'Male' },
+    { label: 'Female', value: 'Female' },
+    { label: 'Other', value: 'Other' },
   ];
 
   const yesNoOptions = [
@@ -571,16 +968,17 @@ const ApplyAssessment = ({ navigation, route }) => {
   ];
 
   const selectRelation = [
-    { label: 'S/O', value: 'so' },
-    { label: 'D/O', value: 'do' },
-    { label: 'W/O', value: 'wo' },
-    { label: 'F/O', value: 'fo' },
+    { label: 'S/O', value: 'S/O' },
+    { label: 'D/O', value: 'D/O' },
+    { label: 'W/O', value: 'W/O' },
+    { label: 'F/O', value: 'F/O' },
   ];
 
-  const selectelectcate = [
-    { label: 'DSI', value: 'DSI' },
-    { label: 'DSII', value: 'DSII' },
-  ];
+  const selectelectcate =
+    data?.electricityType?.map((item, index) => ({
+      label: item, // the string itself
+      value: item, // you can assign index as value, or keep same string
+    })) || [];
 
   const transferModeOptions = [
     { label: 'Sale', value: '1' },
@@ -590,169 +988,6 @@ const ApplyAssessment = ({ navigation, route }) => {
     { label: 'Partition', value: '5' },
     { label: 'Succession', value: '6' },
   ];
-
-  // Populate form data when it's a reassessment or mutation
-  useEffect(() => {
-    if ((isRessessment || isMutation) && safData && data) {
-      console.log('Populating reassessment data:', safData);
-      console.log('Owner list:', ownerList);
-      console.log('Master data:', data);
-
-      // Basic Details - Assessment Type
-      const oldWardOption = data?.wardList?.find(
-        ward => ward.wardNo === safData.wardNo,
-      );
-      setOldWard(oldWardOption?.id || '');
-
-      const newWardOption = data?.wardList?.find(
-        ward => ward.wardNo === safData.newWardNo,
-      );
-      setNewWard(newWardOption?.id || '');
-
-      const ownershipOption = data?.ownershipType?.find(
-        item => item.ownershipType === safData.ownershipType,
-      );
-      setOwnershipType(ownershipOption?.id || '');
-
-      const propertyTypeOption = data?.propertyType?.find(
-        item => item.propertyType === safData.propertyType,
-      );
-      setPropertyType(propertyTypeOption?.id || '');
-      setPropertyTypeLabel(safData.propertyType || '');
-
-      const zoneValue = safData.zone || '';
-      let mappedZone = '';
-      if (
-        zoneValue.toLowerCase().includes('zone 1') ||
-        zoneValue.toLowerCase().includes('zone1')
-      ) {
-        mappedZone = 'Zone1';
-      } else if (
-        zoneValue.toLowerCase().includes('zone 2') ||
-        zoneValue.toLowerCase().includes('zone2')
-      ) {
-        mappedZone = 'Zone2';
-      } else {
-        mappedZone = zoneValue;
-      }
-      setZone(mappedZone);
-
-      // Property Details
-      setKhataNo(safData.khataNo || '');
-      setPlotNo(safData.plotNo || '');
-      setVillageName(safData.villageMaujaName || '');
-      setPlotArea(safData.areaOfPlot || '');
-      setRoadWidth(safData.roadWidth || '');
-
-      // Populate owner details if available
-      if (ownerList && ownerList.length > 0) {
-        const owner = ownerList[0];
-        console.log('Setting owner data:', owner);
-
-        setOwnerName(owner.ownerName || '');
-        const genderValue = owner.gender?.toLowerCase() || '';
-        setGender(genderValue);
-        setDob(owner.dob || '');
-        setGuardianName(owner.guardianName || '');
-
-        const relationOption = selectRelation.find(
-          item => item.label === owner.relationType,
-        );
-        setRelation(relationOption?.value || '');
-
-        setMobile(owner.mobileNo || '');
-        setAadhaar(owner.aadharNo || '');
-        setPan(owner.panNo || '');
-        setEmail(owner.email || '');
-        setArmedForces(owner.isArmedForce ? 'yes' : 'no');
-        setSpeciallyAbled(owner.isSpeciallyAbled ? 'yes' : 'no');
-      }
-
-      // Electricity Details
-      setKno(safData.electConsumerNo || '');
-      setAccNo(safData.electAccNo || '');
-      setBindBookNo(safData.electBindBookNo || '');
-
-      const electricityCategoryOption = selectelectcate.find(
-        item => item.label === safData.electConsCategory,
-      );
-      setElectricityCategory(electricityCategoryOption?.value || '');
-
-      // Water Connection Details
-      setWaterConnectionNo(safData.waterConnNo || '');
-      setWaterConnectionDate(safData.waterConnDate || '');
-
-      // Property Address
-      setPropertyAddress(safData.propAddress || '');
-      setCity(safData.propCity || '');
-      setDistrict(safData.propDist || '');
-      setState(safData.propState || '');
-      setPincode(safData.propPinCode || '');
-
-      // Corresponding Address if different
-      if (safData.isCorrAddDiffer) {
-        setIsChecked(true);
-        setCorrespondingAddress(safData.corrAddress || '');
-        setCorrespondingCity(safData.corrCity || '');
-        setCorrespondingDistrict(safData.corrDist || '');
-        setCorrespondingState(safData.corrState || '');
-        setCorrespondingPincode(safData.corrPinCode || '');
-      }
-
-      // Extra Charges
-      setMobileTower(safData.isMobileTower ? 'yes' : 'no');
-      setTowerArea(safData.towerArea || '');
-      setInstallationDate(safData.towerInstallationDate || '');
-      setHoarding(safData.isHoardingBoard ? 'yes' : 'no');
-      setHoardingArea(safData.hoardingArea || '');
-      setHoardingInstallationDate(safData.hoardingInstallationDate || '');
-      setPetrolPump(safData.isPetrolPump ? 'yes' : 'no');
-      setPumpArea(safData.underGroundArea || '');
-      setPumpInstallationDate(safData.petrolPumpCompletionDate || '');
-      setRainHarvesting(safData.isWaterHarvesting ? 'yes' : 'no');
-      setCompletionDate(
-        safData.petrolPumpCompletionDate
-          ? new Date(safData.petrolPumpCompletionDate)
-          : null,
-      );
-
-      // Populate floor details from existing data
-      if (safData.floors && safData.floors.length > 0) {
-        console.log('Setting floor data:', safData.floors);
-
-        const populatedFloorDetails = safData.floors.map(floor => {
-          const floorNameOption = data?.floorType?.find(
-            item => item.floorName === floor.floorName,
-          );
-          const usageTypeOption = data?.usageType?.find(
-            item => item.usageType === floor.usageType,
-          );
-          const occupancyTypeOption = data?.occupancyType?.find(
-            item => item.occupancyName === floor.occupancyName,
-          );
-          const constructionTypeOption = data?.constructionType?.find(
-            item => item.constructionType === floor.constructionType,
-          );
-
-          return {
-            floorName: floorNameOption?.id || floor.floorName || '',
-            usageType: usageTypeOption?.id || floor.usageType || '',
-            occupancyType: occupancyTypeOption?.id || floor.occupancyName || '',
-            constructionType:
-              constructionTypeOption?.id || floor.constructionType || '',
-            builtUpArea: floor.builtupArea || '',
-            fromDate: floor.dateFrom || '',
-            uptoDate: floor.dateUpto || '',
-          };
-        });
-
-        setFloorDetails(populatedFloorDetails);
-        console.log('Floor details populated:', populatedFloorDetails);
-      }
-
-      console.log('Reassessment/Mutation data populated successfully');
-    }
-  }, [isRessessment, isMutation, safData, ownerList, data]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -795,6 +1030,7 @@ const ApplyAssessment = ({ navigation, route }) => {
               valueField="value"
               placeholder="Select New Ward"
               value={newWard}
+              F
               onChange={item => setNewWard(item.value)}
               disable={isRessessment || isMutation}
             />
@@ -855,7 +1091,7 @@ const ApplyAssessment = ({ navigation, route }) => {
                     error.ownershipType && styles.errorLabel,
                   ]}
                 >
-                  Select Date *
+                  Select Flat Registry Date *
                 </Text>
                 <TouchableOpacity
                   style={{
@@ -876,6 +1112,7 @@ const ApplyAssessment = ({ navigation, route }) => {
                 {showDatePicker && (
                   <DateTimePicker
                     value={selectedDate}
+                    maximumDate={new Date()}
                     mode="date"
                     display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                     onChange={handleDateChange1}
@@ -957,54 +1194,261 @@ const ApplyAssessment = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Owner Details Section */}
+        {/* MULTIPLE OWNER DETAILS SECTION */}
         <View style={styles.cardContainer}>
           <Text style={styles.cardTitle}>Owner Details</Text>
-          <View style={styles.card}>
-            <OwnerDetailsSection
-              ownerName={ownerName}
-              setOwnerName={setOwnerName}
-              gender={gender}
-              setGender={setGender}
-              genderOptions={genderOptions}
-              dob={dob}
-              setDob={setDob}
-              showDobPicker={showDobPicker}
-              setShowDobPicker={setShowDobPicker}
-              guardianName={guardianName}
-              setGuardianName={setGuardianName}
-              relation={relation}
-              setRelation={setRelation}
-              selectRelation={selectRelation}
-              mobile={mobile}
-              setMobile={setMobile}
-              aadhaar={aadhaar}
-              setAadhaar={setAadhaar}
-              pan={pan}
-              setPan={setPan}
-              email={email}
-              setEmail={setEmail}
-              armedForces={armedForces}
-              setArmedForces={setArmedForces}
-              speciallyAbled={speciallyAbled}
-              setSpeciallyAbled={setSpeciallyAbled}
-              yesNoOptions={yesNoOptions}
-              isRessessment={isRessessment}
-              isMutation={isMutation}
-              error={error}
-              ownerNameRef={ownerNameRef}
-              genderRef={genderRef}
-              guardianNameRef={guardianNameRef}
-              relationRef={relationRef}
-              mobileRef={mobileRef}
-              aadhaarRef={aadhaarRef}
-              panRef={panRef}
-              emailRef={emailRef}
-              armedForcesRef={armedForcesRef}
-              speciallyAbledRef={speciallyAbledRef}
-            />
-          </View>
+          {ownerDetails.map((owner, index) => (
+            <View key={index} style={styles.floorCard}>
+              <View style={styles.floorHeader}>
+                <Text style={styles.floorTitle}>Owner {index + 1}</Text>
+                {ownerDetails.length > 1 && (
+                  <TouchableOpacity
+                    style={styles.removeBtn}
+                    onPress={() => removeOwner(index)}
+                  >
+                    <Text style={styles.removeBtnText}>Remove Owner</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <Text
+                style={[
+                  styles.label,
+                  error[`ownerName_${index}`] && styles.errorLabel,
+                ]}
+              >
+                Owner Name *
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  error[`ownerName_${index}`] && styles.errorInput,
+                ]}
+                placeholder="Enter Owner Name"
+                value={owner.ownerName}
+                onChangeText={value =>
+                  updateOwnerDetail(index, 'ownerName', value)
+                }
+                editable={!(isRessessment || isMutation)}
+              />
+              {error[`ownerName_${index}`] && (
+                <Text style={styles.errorText}>
+                  {error[`ownerName_${index}`]}
+                </Text>
+              )}
+
+              <Text
+                style={[
+                  styles.label,
+                  error[`gender_${index}`] && styles.errorLabel,
+                ]}
+              >
+                Gender *
+              </Text>
+              <Dropdown
+                style={[
+                  styles.dropdown,
+                  error[`gender_${index}`] && styles.errorInput,
+                ]}
+                data={genderOptions}
+                labelField="label"
+                valueField="value"
+                placeholder="Select Gender"
+                value={owner.gender}
+                onChange={item =>
+                  updateOwnerDetail(index, 'gender', item.value)
+                }
+                disable={isRessessment || isMutation}
+              />
+              {error[`gender_${index}`] && (
+                <Text style={styles.errorText}>{error[`gender_${index}`]}</Text>
+              )}
+
+              <Text style={styles.label}>Date of Birth</Text>
+              <TouchableOpacity
+                style={styles.dateInput}
+                onPress={() => setOwnerDatePicker({ index, show: true })}
+                disabled={isRessessment || isMutation}
+              >
+                <Text style={styles.dateText}>
+                  {owner.dob || 'Select Date of Birth'}
+                </Text>
+              </TouchableOpacity>
+
+              <Text
+                style={[
+                  styles.label,
+                  error[`guardianName_${index}`] && styles.errorLabel,
+                ]}
+              >
+                Guardian Name *
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  error[`guardianName_${index}`] && styles.errorInput,
+                ]}
+                placeholder="Enter Guardian Name"
+                value={owner.guardianName}
+                onChangeText={value =>
+                  updateOwnerDetail(index, 'guardianName', value)
+                }
+                editable={!(isRessessment || isMutation)}
+              />
+              {error[`guardianName_${index}`] && (
+                <Text style={styles.errorText}>
+                  {error[`guardianName_${index}`]}
+                </Text>
+              )}
+
+              <Text
+                style={[
+                  styles.label,
+                  error[`relation_${index}`] && styles.errorLabel,
+                ]}
+              >
+                Relation *
+              </Text>
+              <Dropdown
+                style={[
+                  styles.dropdown,
+                  error[`relation_${index}`] && styles.errorInput,
+                ]}
+                data={selectRelation}
+                labelField="label"
+                valueField="value"
+                placeholder="Select Relation"
+                value={owner.relation}
+                onChange={item =>
+                  updateOwnerDetail(index, 'relation', item.value)
+                }
+                disable={isRessessment || isMutation}
+              />
+              {error[`relation_${index}`] && (
+                <Text style={styles.errorText}>
+                  {error[`relation_${index}`]}
+                </Text>
+              )}
+
+              <Text
+                style={[
+                  styles.label,
+                  error[`mobile_${index}`] && styles.errorLabel,
+                ]}
+              >
+                Mobile Number *
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  error[`mobile_${index}`] && styles.errorInput,
+                ]}
+                placeholder="Enter Mobile Number"
+                keyboardType="phone-pad"
+                value={owner.mobile}
+                onChangeText={value =>
+                  updateOwnerDetail(index, 'mobile', value)
+                }
+                maxLength={10}
+                editable={!(isRessessment || isMutation)}
+              />
+              {error[`mobile_${index}`] && (
+                <Text style={styles.errorText}>{error[`mobile_${index}`]}</Text>
+              )}
+
+              <Text
+                style={[
+                  styles.label,
+                  error[`aadhaar_${index}`] && styles.errorLabel,
+                ]}
+              >
+                Aadhaar Number *
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  error[`aadhaar_${index}`] && styles.errorInput,
+                ]}
+                placeholder="Enter Aadhaar Number"
+                keyboardType="numeric"
+                value={owner.aadhaar}
+                onChangeText={value =>
+                  updateOwnerDetail(index, 'aadhaar', value)
+                }
+                maxLength={12}
+                editable={!(isRessessment || isMutation)}
+              />
+              {error[`aadhaar_${index}`] && (
+                <Text style={styles.errorText}>
+                  {error[`aadhaar_${index}`]}
+                </Text>
+              )}
+
+              <Text style={styles.label}>PAN Number</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter PAN Number"
+                value={owner.pan}
+                onChangeText={value => updateOwnerDetail(index, 'pan', value)}
+                maxLength={10}
+                editable={!(isRessessment || isMutation)}
+              />
+
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter Email"
+                keyboardType="email-address"
+                value={owner.email}
+                onChangeText={value => updateOwnerDetail(index, 'email', value)}
+                editable={!(isRessessment || isMutation)}
+              />
+
+              <Text style={styles.label}>Armed Forces</Text>
+              <Dropdown
+                style={styles.dropdown}
+                data={yesNoOptions}
+                labelField="label"
+                valueField="value"
+                placeholder="Select Armed Forces"
+                value={owner.armedForces}
+                onChange={item =>
+                  updateOwnerDetail(index, 'armedForces', item.value)
+                }
+                disable={isRessessment || isMutation}
+              />
+
+              <Text style={styles.label}>Specially Abled</Text>
+              <Dropdown
+                style={styles.dropdown}
+                data={yesNoOptions}
+                labelField="label"
+                valueField="value"
+                placeholder="Select Specially Abled"
+                value={owner.speciallyAbled}
+                onChange={item =>
+                  updateOwnerDetail(index, 'speciallyAbled', item.value)
+                }
+                disable={isRessessment || isMutation}
+              />
+            </View>
+          ))}
+
+          <TouchableOpacity style={styles.addBtn} onPress={addOwner}>
+            <Text style={styles.addBtnText}>Add Owner</Text>
+          </TouchableOpacity>
         </View>
+
+        {/* Owner Date Picker */}
+        {ownerDatePicker.show && (
+          <DateTimePicker
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            value={new Date()}
+            maximumDate={new Date()}
+            onChange={handleOwnerDateChange}
+          />
+        )}
 
         {/* Electricity Details Section */}
         <View style={styles.cardContainer}>
@@ -1023,10 +1467,6 @@ const ApplyAssessment = ({ navigation, route }) => {
               isRessessment={isRessessment}
               isMutation={isMutation}
               error={error}
-              knoRef={knoRef}
-              accNoRef={accNoRef}
-              bindBookNoRef={bindBookNoRef}
-              electricityCategoryRef={electricityCategoryRef}
             />
           </View>
         </View>
@@ -1065,17 +1505,10 @@ const ApplyAssessment = ({ navigation, route }) => {
               setPlotArea={setPlotArea}
               roadWidth={roadWidth}
               setRoadWidth={setRoadWidth}
-              // noRoad={noRoad}
               setNoRoad={setNoRoad}
               showFieldAlert={msg => {}}
               styles={styles}
               error={error}
-              khataNoRef={khataNoRef}
-              plotNoRef={plotNoRef}
-              villageNameRef={villageNameRef}
-              plotAreaRef={plotAreaRef}
-              roadWidthRef={roadWidthRef}
-              // noRoadRef={noRoadRef}
             />
           </View>
         </View>
@@ -1098,11 +1531,6 @@ const ApplyAssessment = ({ navigation, route }) => {
               isRessessment={isRessessment}
               isMutation={isMutation}
               error={error}
-              addressRef={propertyAddressRef}
-              cityRef={cityRef}
-              districtRef={districtRef}
-              stateRef={stateRef}
-              pincodeRef={pincodeRef}
             />
           </View>
         </View>
@@ -1121,7 +1549,7 @@ const ApplyAssessment = ({ navigation, route }) => {
           </TouchableOpacity>
           {isChecked && (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Corresponding Address</Text>
+              {/* <Text style={styles.cardTitle}>Corresponding Address</Text> */}
               <AddressSection
                 address={correspondingAddress}
                 setAddress={setCorrespondingAddress}
@@ -1137,11 +1565,6 @@ const ApplyAssessment = ({ navigation, route }) => {
                 isRessessment={isRessessment}
                 isMutation={isMutation}
                 error={error}
-                addressRef={correspondingAddressRef}
-                cityRef={correspondingCityRef}
-                districtRef={correspondingDistrictRef}
-                stateRef={correspondingStateRef}
-                pincodeRef={correspondingPincodeRef}
               />
             </View>
           )}
@@ -1192,41 +1615,133 @@ const ApplyAssessment = ({ navigation, route }) => {
               isRessessment={isRessessment}
               isMutation={isMutation}
               error={error}
-              mobileTowerRef={mobileTowerRef}
-              towerAreaRef={towerAreaRef}
-              hoardingRef={hoardingRef}
-              hoardingAreaRef={hoardingAreaRef}
-              petrolPumpRef={petrolPumpRef}
-              pumpAreaRef={pumpAreaRef}
-              rainHarvestingRef={rainHarvestingRef}
             />
           </View>
         </View>
 
-        {/* Floor Details Section */}
+        {/* UPDATED FLOOR DETAILS SECTION WITH REMOVE BUTTON */}
         <View style={styles.cardContainer}>
           <Text style={styles.cardTitle}>Floor Details</Text>
-          <View style={styles.card}>
-            <FloorDetailsSection
-              propertyTypeLabel={propertyTypeLabel}
-              floorDetails={floorDetails}
-              updateFloorDetail={updateFloorDetail}
-              addFloor={addFloor}
-              datePicker={datePicker}
-              setDatePicker={setDatePicker}
-              floorNameOptions={floorNameOptions}
-              usageTypeOptions={usageTypeOptions}
-              occupancyTypeOptions={occupancyTypeOptions}
-              constructionTypeOptions={constructionTypeOptions}
-              isRessessment={isRessessment}
-              isMutation={isMutation}
-              error={error}
-              floorRefs={floorRefs}
-            />
-          </View>
+          {propertyTypeLabel !== 'VACANT LAND' && (
+            <>
+              {floorDetails.map((floor, index) => (
+                <View key={index} style={styles.floorCard}>
+                  <View style={styles.floorHeader}>
+                    <Text style={styles.floorTitle}>Floor {index + 1}</Text>
+                    {floorDetails.length > 1 && (
+                      <TouchableOpacity
+                        style={styles.removeBtn}
+                        onPress={() => removeFloor(index)}
+                      >
+                        <Text style={styles.removeBtnText}>Remove Floor</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  <Text style={styles.label}>Floor Name</Text>
+                  <Dropdown
+                    style={styles.dropdown}
+                    data={floorNameOptions}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Select Floor Name"
+                    value={floor.floorName}
+                    onChange={item =>
+                      updateFloorDetail(index, 'floorName', item.value)
+                    }
+                    disable={isRessessment || isMutation}
+                  />
+
+                  <Text style={styles.label}>Usage Type</Text>
+                  <Dropdown
+                    style={styles.dropdown}
+                    data={usageTypeOptions}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Select Usage Type"
+                    value={floor.usageType}
+                    onChange={item =>
+                      updateFloorDetail(index, 'usageType', item.value)
+                    }
+                    disable={isRessessment || isMutation}
+                  />
+
+                  <Text style={styles.label}>Occupancy Type</Text>
+                  <Dropdown
+                    style={styles.dropdown}
+                    data={occupancyTypeOptions}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Select Occupancy Type"
+                    value={floor.occupancyType}
+                    onChange={item =>
+                      updateFloorDetail(index, 'occupancyType', item.value)
+                    }
+                    disable={isRessessment || isMutation}
+                  />
+
+                  <Text style={styles.label}>Construction Type</Text>
+                  <Dropdown
+                    style={styles.dropdown}
+                    data={constructionTypeOptions}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Select Construction Type"
+                    value={floor.constructionType}
+                    onChange={item =>
+                      updateFloorDetail(index, 'constructionType', item.value)
+                    }
+                    disable={isRessessment || isMutation}
+                  />
+
+                  <Text style={styles.label}>Built Up Area (Sq Ft)</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter Built Up Area"
+                    keyboardType="numeric"
+                    value={floor.builtUpArea}
+                    onChangeText={value =>
+                      updateFloorDetail(index, 'builtUpArea', value)
+                    }
+                    editable={!(isRessessment || isMutation)}
+                  />
+
+                  <Text style={styles.label}>From Date (MM/YYYY)</Text>
+                  <TouchableOpacity
+                    style={styles.dateInput}
+                    onPress={() =>
+                      setDatePicker({ index, field: 'fromDate', show: true })
+                    }
+                    disabled={isRessessment || isMutation}
+                  >
+                    <Text style={styles.dateText}>
+                      {floor.fromDate || 'Select From Date'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <Text style={styles.label}>Up to Date (MM/YYYY)</Text>
+                  <TouchableOpacity
+                    style={styles.dateInput}
+                    onPress={() =>
+                      setDatePicker({ index, field: 'uptoDate', show: true })
+                    }
+                    disabled={isRessessment || isMutation}
+                  >
+                    <Text style={styles.dateText}>
+                      {floor.uptoDate || 'Select Up to Date'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+
+              <TouchableOpacity style={styles.addBtn} onPress={addFloor}>
+                <Text style={styles.addBtnText}>Add Floor</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
-        {/* Date Picker */}
+        {/* Date Picker for Floors */}
         {datePicker.show && (
           <DateTimePicker
             mode="date"
@@ -1377,6 +1892,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 8,
     marginBottom: 12,
+    backgroundColor: '#fff',
   },
   dateText: {
     color: '#333',
@@ -1390,10 +1906,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
     elevation: 1,
   },
+  floorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   floorTitle: {
     fontWeight: 'bold',
     fontSize: 16,
-    marginBottom: 12,
     color: '#2c3e50',
   },
   addBtn: {
@@ -1408,6 +1929,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 14,
+  },
+  removeBtn: {
+    backgroundColor: '#e74c3c',
+    padding: 8,
+    borderRadius: 6,
+    elevation: 1,
+  },
+  removeBtnText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   label: {
     fontSize: 14,

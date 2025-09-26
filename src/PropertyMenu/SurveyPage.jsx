@@ -34,6 +34,7 @@ import { getUserDetails } from '../utils/auth';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { PROPERTY_API } from '../api/apiRoutes';
 import { useRef } from 'react';
+import { validateExtraChargesDates } from '../Validation/validation.';
 
 const yesNoOptions = [
   { label: 'Yes', value: 'yes' },
@@ -195,8 +196,8 @@ const SurveyPage = ({ route, navigation }) => {
   };
   const [error, setError] = useState({});
 
-  const [selectedDate, setSelectedDate] = useState(new Date());
-
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [date, setDate] = useState(new Date());
   const [apartmentList, setApartmentList] = useState([]); // dropdown data
   const [apartmentDetail, setApartmentDetail] = useState(null);
   const [loadingApartments, setLoadingApartments] = useState(false);
@@ -205,19 +206,9 @@ const SurveyPage = ({ route, navigation }) => {
 
   const handleDateChange1 = (event, date) => {
     setShowDatePicker(false);
-    if (date) {
-      setSelectedDate(date);
+    if (date && event.type !== 'dismissed') {
+      setSelectedDate(date); // this updates the state
     }
-    console.log(selectedDate, 'date');
-  };
-  const formatDates = (date, format = 'DD-MM-YYYY') => {
-    if (!date) return null;
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-
-    if (format === 'YYYY-MM-DD') return `${year}-${month}-${day}`;
-    return `${day}-${month}-${year}`; // default
   };
 
   useEffect(() => {
@@ -292,6 +283,18 @@ const SurveyPage = ({ route, navigation }) => {
 
   const handleSubmitPreview = () => {
     // Get the verified IDs based on selection
+    const isValid = validateExtraChargesDates({
+      mobileTower,
+      installationDate,
+      hoarding,
+      hoardingInstallationDate,
+      petrolPump,
+      pumpInstallationDate,
+      rainHarvesting,
+      completionDate,
+    });
+
+    if (!isValid) return;
     const getVerifiedId = (verification, originalValue, dropdownValue) => {
       if (verification === 'Correct' || !dropdownValue) {
         // If correct or no change, find the original ID from master data
@@ -411,16 +414,16 @@ const SurveyPage = ({ route, navigation }) => {
       rainHarvesting,
       // completionDate,
       installationDate: installationDate
-        ? installationDate.toISOString().split('T')[0]
+        ? new Date(installationDate).toISOString().split('T')[0]
         : null,
       hoardingInstallationDate: hoardingInstallationDate
-        ? hoardingInstallationDate.toISOString().split('T')[0]
+        ? new Date(hoardingInstallationDate).toISOString().split('T')[0]
         : null,
       pumpInstallationDate: pumpInstallationDate
-        ? pumpInstallationDate.toISOString().split('T')[0]
+        ? new Date(pumpInstallationDate).toISOString().split('T')[0]
         : null,
       completionDate: completionDate
-        ? completionDate.toISOString().split('T')[0]
+        ? new Date(completionDate).toISOString().split('T')[0]
         : null,
 
       // Extra floors with IDs
@@ -513,6 +516,22 @@ const SurveyPage = ({ route, navigation }) => {
 
         const floors = response.data.data.floor || [];
         setFloorIds(floors);
+
+        setApartmentDetail(response.data.data.appartmentDetailsId);
+
+        // Debug logging
+        console.log(
+          'Flat Registry Date from backend:',
+          response.data.data.flatRegistryDate,
+        );
+
+        if (response.data.data.flatRegistryDate) {
+          const parsedDate = new Date(response.data.data.flatRegistryDate);
+          console.log('Parsed date:', parsedDate);
+          setSelectedDate(parsedDate);
+        } else {
+          setSelectedDate(new Date());
+        }
 
         console.log('All Floor IDs:', floors);
         // console.log('data', data);
@@ -769,6 +788,7 @@ const SurveyPage = ({ route, navigation }) => {
           <View style={styles.card}>
             <View>
               {/* Date Picker */}
+              {/* Date Picker */}
               <Text
                 style={[styles.label, error.ownershipType && styles.errorLabel]}
               >
@@ -783,15 +803,28 @@ const SurveyPage = ({ route, navigation }) => {
                 }}
                 onPress={() => setShowDatePicker(true)}
               >
-                <Text>{formatDates(selectedDate, 'DD-MM-YYYY')}</Text>
+                <Text>
+                  {selectedDate &&
+                  selectedDate instanceof Date &&
+                  !isNaN(selectedDate)
+                    ? `${selectedDate.getDate().toString().padStart(2, '0')}-${(
+                        selectedDate.getMonth() + 1
+                      )
+                        .toString()
+                        .padStart(2, '0')}-${selectedDate.getFullYear()}`
+                    : 'Select Date'}
+                </Text>
               </TouchableOpacity>
 
               {showDatePicker && (
                 <DateTimePicker
-                  value={selectedDate}
+                  value={
+                    selectedDate instanceof Date ? selectedDate : new Date()
+                  }
                   mode="date"
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                   onChange={handleDateChange1}
+                  maximumDate={new Date()}
                 />
               )}
 
@@ -834,10 +867,13 @@ const SurveyPage = ({ route, navigation }) => {
                         marginTop: 10,
                         marginBottom: 5,
                         marginLeft: 15,
-                        marginRight: 8,
-                        color: 'red',
+                        marginRight: 15,
+                        color: 'white',
                         fontWeight: 'bold',
                         fontSize: 16,
+                        backgroundColor: 'rgba(13, 148, 136, 1)', // 👈 add background color
+                        padding: 5, // optional so the text doesn’t stick to edges
+                        borderRadius: 4, // optional for rounded background
                       }}
                     >
                       {floor.floorName.toUpperCase()}
@@ -1356,7 +1392,9 @@ const SurveyPage = ({ route, navigation }) => {
                 propertyVerification,
                 propertyDropdownOptions,
               ),
-              selectedDate: selectedDate.toISOString().split('T')[0], // YYYY-MM-DD
+              selectedDate: selectedDate
+                ? selectedDate.toISOString().split('T')[0]
+                : null, // YYYY-MM-DD
               apartmentDetail: apartmentDetail,
             };
 

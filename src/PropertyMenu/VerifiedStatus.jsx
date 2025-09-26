@@ -29,6 +29,9 @@ const VerifiedStatus = ({ route }) => {
   const navigation = useNavigation();
   const { submissionData, floorsData, hasExtraFloors, id, data, floorIds } =
     route.params || {};
+  console.log('After Preview', submissionData);
+  console.log('After floor', floorIds);
+  console.log('After data', data);
 
   useEffect(() => {
     const fetchUser = async () => {

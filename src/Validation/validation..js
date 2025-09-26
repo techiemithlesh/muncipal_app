@@ -1,4 +1,5 @@
 // formValidation.js
+import { Alert } from 'react-native';
 
 export const scrollToInput = (inputRef, scrollViewRef) => {
   if (inputRef && inputRef.current && scrollViewRef?.current) {
@@ -143,4 +144,88 @@ export const handleValidation = ({
 
   setError({});
   return true;
+};
+
+
+// dateValidation.js
+
+export const validateExtraChargesDates = ({
+  mobileTower,
+  installationDate,
+  hoarding,
+  hoardingInstallationDate,
+  petrolPump,
+  pumpInstallationDate,
+  rainHarvesting,
+  completionDate,
+}) => {
+  const today = new Date();
+
+  const isFutureDate = (date) => {
+    if (!date) return false;
+    const d = new Date(date);
+    return d > today;
+  };
+
+  // Mobile Tower
+  if (mobileTower === 'yes') {
+    if (!installationDate) {
+      Alert.alert('Validation Error', 'Please select Mobile Tower Installation Date.');
+      return false;
+    }
+    if (isFutureDate(installationDate)) {
+      Alert.alert(
+        'Validation Error',
+        'Mobile Tower Installation Date cannot be in the future.'
+      );
+      return false;
+    }
+  }
+
+  // Hoarding
+  if (hoarding === 'yes') {
+    if (!hoardingInstallationDate) {
+      Alert.alert('Validation Error', 'Please select Hoarding Installation Date.');
+      return false;
+    }
+    if (isFutureDate(hoardingInstallationDate)) {
+      Alert.alert(
+        'Validation Error',
+        'Hoarding Installation Date cannot be in the future.'
+      );
+      return false;
+    }
+  }
+
+  // Petrol Pump
+  if (petrolPump === 'yes') {
+    if (!pumpInstallationDate) {
+      Alert.alert('Validation Error', 'Please select Petrol Pump Installation Date.');
+      return false;
+    }
+    if (isFutureDate(pumpInstallationDate)) {
+      Alert.alert(
+        'Validation Error',
+        'Petrol Pump Installation Date cannot be in the future.'
+      );
+      return false;
+    }
+  }
+
+  // Rain Harvesting
+  if (rainHarvesting === 'yes') {
+    if (!completionDate) {
+      Alert.alert('Validation Error', 'Please select Rain Harvesting Completion Date.');
+      return false;
+    }
+    if (isFutureDate(completionDate)) {
+      Alert.alert(
+        'Validation Error',
+        'Rain Harvesting Completion Date cannot be in the future.'
+      );
+      return false;
+    }
+  }
+
+  return true; // All validations passed
 };

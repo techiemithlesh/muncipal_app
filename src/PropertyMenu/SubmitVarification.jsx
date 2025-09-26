@@ -31,6 +31,9 @@ const SubmitVarification = ({ route }) => {
   const navigation = useNavigation();
   const { submissionData, location, left, right, front, id, data, floorIds } =
     route.params;
+  console.log('submission data', submissionData);
+  console.log('submission data', floorIds);
+  console.log('Submission dta dtya', data);
 
   const [showModal, setShowModal] = useState(false);
   const [remarks, setRemarks] = useState('');

@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   TextInput,
+  Platform,
+  Modal,
 } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import {
@@ -12,12 +14,13 @@ import {
   responsiveHeight,
   responsiveWidth,
 } from 'react-native-responsive-dimensions';
+import MonthPicker from 'react-native-month-year-picker';
 import moment from 'moment';
 
 const VerificationCard = ({
   label,
-  value, // value to show when 'Correct' is selected
-  dropdownOptions, // options for dropdown when 'Incorrect' is selected
+  value,
+  dropdownOptions = [],
   selectedVerification,
   setSelectedVerification,
   dropdownValue,
@@ -30,28 +33,44 @@ const VerificationCard = ({
   showCalendarOnIncorrect = false,
   calendarValue = new Date(),
   setCalendarValue = () => {},
-  onCalendarPress,
-  hideCorrectOption = false, // 👈 NEW PROP
+  hideCorrectOption = false,
 }) => {
+  const [showPicker, setShowPicker] = useState(false);
+
   const isSelectionRequired = selectedVerification === null;
 
   const handleVerificationChange = status => {
     setSelectedVerification(status);
     if (status === 'Correct') {
       setDropdownValue('');
-      setInputValue && setInputValue('');
-      setCalendarValue && setCalendarValue(new Date());
+      setInputValue('');
+      setCalendarValue(new Date());
     }
   };
 
-  // Build radio options dynamically
   const options = hideCorrectOption ? ['Incorrect'] : ['Correct', 'Incorrect'];
+
+  const handleChangeDate = (event, newDate) => {
+    if (Platform.OS === 'ios') {
+      // On iOS, the picker always returns newDate
+      setCalendarValue(newDate);
+    } else {
+      // On Android, dismiss picker if canceled
+      if (event === 'dateSetAction' && newDate) {
+        setCalendarValue(newDate);
+      }
+      setShowPicker(false);
+    }
+  };
 
   return (
     <View style={styles.card}>
+      {/* Label */}
       <View style={styles.rowlabel}>
         <Text style={styles.label}>{label}</Text>
       </View>
+
+      {/* Self Assessed */}
       <View style={styles.row}>
         <Text style={styles.value}>Self Assessed</Text>
       </View>
@@ -59,7 +78,7 @@ const VerificationCard = ({
         <Text style={styles.value}>{value}</Text>
       </View>
 
-      {/* Correct / Incorrect radio buttons */}
+      {/* Correct / Incorrect radio */}
       <View
         style={[
           styles.radioGroup,
@@ -85,35 +104,42 @@ const VerificationCard = ({
 
       <View style={styles.divider} />
 
-      {/* If Correct, show value as plain text */}
+      {/* Correct: show value */}
       {selectedVerification === 'Correct' && (
         <View style={styles.staticValueContainer}>
           <Text style={styles.staticValue}>{value}</Text>
         </View>
       )}
 
-      {/* If Incorrect + calendar */}
+      {/* Incorrect + Calendar */}
       {selectedVerification === 'Incorrect' && showCalendarOnIncorrect && (
         <View style={styles.inputContainer}>
           <Text style={styles.staticValueLabel}>Select Date:</Text>
           <TouchableOpacity
             style={styles.input}
-            onPress={
-              typeof onCalendarPress === 'function'
-                ? onCalendarPress
-                : undefined
-            }
+            onPress={() => setShowPicker(true)}
           >
             <Text style={{ color: calendarValue ? '#333' : '#aaa' }}>
-              {calendarValue && !isNaN(new Date(calendarValue))
+              {calendarValue
                 ? moment(calendarValue).format('MMMM YYYY')
                 : 'Select Date'}
             </Text>
           </TouchableOpacity>
+
+          {/* Month-Year Picker */}
+          {showPicker && (
+            <MonthPicker
+              onChange={handleChangeDate}
+              value={calendarValue || new Date()}
+              minimumDate={new Date(2000, 0)}
+              maximumDate={new Date(2030, 11)}
+              locale="en"
+            />
+          )}
         </View>
       )}
 
-      {/* If Incorrect + text input */}
+      {/* Incorrect + Text Input */}
       {selectedVerification === 'Incorrect' &&
         showInputOnIncorrect &&
         !showCalendarOnIncorrect && (
@@ -129,22 +155,20 @@ const VerificationCard = ({
           </View>
         )}
 
-      {/* If Incorrect + dropdown */}
+      {/* Incorrect + Dropdown */}
       {selectedVerification === 'Incorrect' &&
         !showInputOnIncorrect &&
         !showCalendarOnIncorrect && (
-          <>
-            <Dropdown
-              style={styles.dropdown}
-              data={dropdownOptions}
-              labelField="label"
-              valueField="value"
-              placeholder="Select"
-              value={dropdownValue}
-              onChange={item => setDropdownValue(item.value)}
-              disable={false}
-            />
-          </>
+          <Dropdown
+            style={styles.dropdown}
+            data={dropdownOptions}
+            labelField="label"
+            valueField="value"
+            placeholder="Select"
+            value={dropdownValue}
+            onChange={item => setDropdownValue(item.value)}
+            disable={false}
+          />
         )}
     </View>
   );

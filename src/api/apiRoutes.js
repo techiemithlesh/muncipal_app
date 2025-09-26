@@ -24,6 +24,8 @@ export const SAF_API_ROUTES = {
   APPLY_SAF: `${BASE_URL}/api/property/saf-apply`,
   APPLY_SAF_RESSESMENT_API: `${BASE_URL}/api/property/saf-apply Reassessment`,
   SEND_TO_LEVEL_API: `${BASE_URL}/api/property/post-next`,
+
+  
 };
 export const WORK_FLOW_PERMISSION = `${BASE_URL}/api/get-workflow-permission`;
 export const PROPERTY_API = {
@@ -31,6 +33,8 @@ export const PROPERTY_API = {
   FIELD_VARIFICATION_API: `${BASE_URL}/api/property/field-verification`,
   GEOTAGING_IMAGE_API: `${BASE_URL}/api/property/geotage`,
   APARTMENT_API: `${BASE_URL}/api/property/get-apartment-by-old-ward`, // 👈 added missing slash
+  TEST_REQUEST_API: `${BASE_URL}/api/property/test-request`,
+
 };
 export const HOLDIGN_API_ROUTES ={
   SEARCH_API:`${BASE_URL}/api/property/search-prop`,

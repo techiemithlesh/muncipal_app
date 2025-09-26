@@ -39,6 +39,13 @@ const ExtraChargesSection = ({
   isMutation = false,
 }) => {
   const isDisabled = isRessessment || isMutation;
+  console.log('setCompletionDate ', completionDate);
+  const onChangeCompletionDate = (event, selectedDate) => {
+    setShowDatePicker(false); // close picker
+    if (event.type === 'set' && selectedDate) {
+      setCompletionDate(selectedDate);
+    }
+  };
 
   return (
     <View style={{ marginBottom: 20 }}>
@@ -112,6 +119,7 @@ const ExtraChargesSection = ({
           {showInstallationDatePicker && !isDisabled && (
             <DateTimePicker
               value={installationDate ? new Date(installationDate) : new Date()}
+              maximumDate={new Date()}
               mode="date"
               display="default"
               onChange={(event, selectedDate) => {
@@ -200,6 +208,7 @@ const ExtraChargesSection = ({
                   ? new Date(hoardingInstallationDate)
                   : new Date()
               }
+              maximumDate={new Date()}
               mode="date"
               display="default"
               onChange={(event, selectedDate) => {
@@ -288,6 +297,7 @@ const ExtraChargesSection = ({
                   ? new Date(pumpInstallationDate)
                   : new Date()
               }
+              maximumDate={new Date()}
               mode="date"
               display="default"
               onChange={(event, selectedDate) => {
@@ -325,7 +335,7 @@ const ExtraChargesSection = ({
       {rainHarvesting === 'yes' && (
         <View style={{ marginBottom: 12 }}>
           <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
-            Completion Date of Petrol Pump *
+            Rainwater harvesting Completion Date *
           </Text>
           <TouchableOpacity
             style={{
@@ -340,21 +350,34 @@ const ExtraChargesSection = ({
             }}
             onPress={() => !isDisabled && setShowDatePicker(true)}
           >
-            <Text style={{ color: completionDate ? '#000' : '#999' }}>
+            {/* <Text style={{ color: completionDate ? '#000' : '#999' }}>
               {completionDate
                 ? completionDate.toLocaleDateString('en-GB')
+                : 'Completion Date of Petrol Pump *'}
+            </Text> */}
+            <Text style={{ color: completionDate ? '#000' : '#999' }}>
+              {completionDate
+                ? new Date(completionDate).toLocaleDateString('en-GB')
                 : 'Completion Date of Petrol Pump *'}
             </Text>
           </TouchableOpacity>
           {showDatePicker && !isDisabled && (
             <DateTimePicker
               value={completionDate || new Date()}
+              maximumDate={new Date()}
               mode="date"
               display="default"
               onChange={(event, selectedDate) => {
                 setShowDatePicker(false);
+                console.log('event', event.nativeEvent.timestamp);
+                console.log('selectedDate', selectedDate);
+                console.log(
+                  'Selected (YYYY-MM-DD):',
+                  selectedDate.toISOString().split('T')[0],
+                );
+
                 if (event.type === 'set' && selectedDate) {
-                  setCompletionDate(selectedDate);
+                  setCompletionDate(selectedDate.toISOString());
                 }
               }}
             />
