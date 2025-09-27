@@ -39,13 +39,13 @@ const ExtraChargesSection = ({
   isMutation = false,
 }) => {
   const isDisabled = isRessessment || isMutation;
-  console.log('setCompletionDate ', completionDate);
-  const onChangeCompletionDate = (event, selectedDate) => {
-    setShowDatePicker(false); // close picker
-    if (event.type === 'set' && selectedDate) {
-      setCompletionDate(selectedDate);
-    }
-  };
+  // console.log('setCompletionDate ', completionDate);
+  // const onChangeCompletionDate = (event, selectedDate) => {
+  //   setShowDatePicker(false); // close picker
+  //   if (event.type === 'set' && selectedDate) {
+  //     setCompletionDate(selectedDate);
+  //   }
+  // };
 
   return (
     <View style={{ marginBottom: 20 }}>
@@ -363,21 +363,14 @@ const ExtraChargesSection = ({
           </TouchableOpacity>
           {showDatePicker && !isDisabled && (
             <DateTimePicker
-              value={completionDate || new Date()}
+              value={completionDate ? new Date(completionDate) : new Date()}
               maximumDate={new Date()}
               mode="date"
               display="default"
               onChange={(event, selectedDate) => {
                 setShowDatePicker(false);
-                console.log('event', event.nativeEvent.timestamp);
-                console.log('selectedDate', selectedDate);
-                console.log(
-                  'Selected (YYYY-MM-DD):',
-                  selectedDate.toISOString().split('T')[0],
-                );
-
                 if (event.type === 'set' && selectedDate) {
-                  setCompletionDate(selectedDate.toISOString());
+                  setCompletionDate(selectedDate.toISOString()); // store as string
                 }
               }}
             />

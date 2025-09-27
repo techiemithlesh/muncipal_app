@@ -196,7 +196,8 @@ const SurveyPage = ({ route, navigation }) => {
   };
   const [error, setError] = useState({});
 
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
   const [date, setDate] = useState(new Date());
   const [apartmentList, setApartmentList] = useState([]); // dropdown data
   const [apartmentDetail, setApartmentDetail] = useState(null);
@@ -206,14 +207,22 @@ const SurveyPage = ({ route, navigation }) => {
 
   const handleDateChange1 = (event, date) => {
     setShowDatePicker(false);
-    if (date && event.type !== 'dismissed') {
-      setSelectedDate(date); // this updates the state
+
+    console.log('DateTimePicker event:', event);
+    console.log('Selected date object:', date);
+    console.log('Selected Date:', date.toISOString().split('T')[0]);
+
+    // Android fires "dismissed" event
+    if (event.type === 'set' && date) {
+      setSelectedDate(date);
+      // setSelectedDate(prev => ({ ...prev, date }));
+      // formatted
     }
   };
 
   useEffect(() => {
     if (data) {
-      console.log('Received data:', data); // <-- Log the whole data object
+      // console.log('Received data:', data); // <-- Log the whole data object
 
       // Mobile Tower
       setMobileTower(data.isMobileTower ? 'yes' : 'no');
@@ -390,42 +399,47 @@ const SurveyPage = ({ route, navigation }) => {
         data?.zoneMstrId,
         zoneDropdown,
       ),
-      roadWidth: data?.roadWidth || 20,
-      areaOfPlot: data?.areaOfPlot || 80,
-      isMobileTower: data?.isMobileTower || false,
-      isHoardingBoard: data?.isHoardingBoard || false,
-      isPetrolPump: data?.isPetrolPump || false,
-      isWaterHarvesting: data?.isWaterHarvesting || false,
-      remarks: remarks || '',
+      roadWidth: data?.roadWidth,
+      areaOfPlot: data?.areaOfPlot,
+      // isMobileTower: data?.isMobileTower || false,
+      // isHoardingBoard: data?.isHoardingBoard || false,
+      // isPetrolPump: data?.isPetrolPump || false,
+      // isWaterHarvesting: data?.isWaterHarvesting || false,
+      // remarks: remarks || '',
 
       // Floor details
       parkingFloor: parkingFloorData,
       basementFloor: basementFloorData,
 
       mobileTower,
-      towerArea,
-      // installationDate,
-      hoarding,
-      hoardingArea,
-      // hoardingInstallationDate,
-      petrolPump,
-      pumpArea,
-      // pumpInstallationDate,
-      rainHarvesting,
-      // completionDate,
-      installationDate: installationDate
-        ? new Date(installationDate).toISOString().split('T')[0]
-        : null,
-      hoardingInstallationDate: hoardingInstallationDate
-        ? new Date(hoardingInstallationDate).toISOString().split('T')[0]
-        : null,
-      pumpInstallationDate: pumpInstallationDate
-        ? new Date(pumpInstallationDate).toISOString().split('T')[0]
-        : null,
-      completionDate: completionDate
-        ? new Date(completionDate).toISOString().split('T')[0]
-        : null,
+      towerArea: mobileTower === 'yes' ? towerArea : null,
+      installationDate:
+        mobileTower === 'yes' && installationDate
+          ? new Date(installationDate).toISOString().split('T')[0]
+          : null,
 
+      // Hoarding
+      hoarding,
+      hoardingArea: hoarding === 'yes' ? hoardingArea : null,
+      hoardingInstallationDate:
+        hoarding === 'yes' && hoardingInstallationDate
+          ? new Date(hoardingInstallationDate).toISOString().split('T')[0]
+          : null,
+
+      // Petrol Pump
+      petrolPump,
+      pumpArea: petrolPump === 'yes' ? pumpArea : null,
+      pumpInstallationDate:
+        petrolPump === 'yes' && pumpInstallationDate
+          ? new Date(pumpInstallationDate).toISOString().split('T')[0]
+          : null,
+
+      // Rainwater Harvesting
+      rainHarvesting,
+      completionDate:
+        rainHarvesting === 'yes' && completionDate
+          ? new Date(completionDate).toISOString().split('T')[0]
+          : null,
       // Extra floors with IDs
       extraFloors: addExtraFloor
         ? floors?.map((floor, index) => ({
@@ -457,7 +471,7 @@ const SurveyPage = ({ route, navigation }) => {
         : [],
     };
 
-    console.log('Submitted Data with IDs:', submissionData);
+    console.log('Submitted Data with IDs: Survey page', submissionData);
 
     // Navigate and optionally pass data
     navigation.navigate('VerifiedStatus', {
@@ -473,6 +487,15 @@ const SurveyPage = ({ route, navigation }) => {
   const handleToConfirm = date => {
     setToDate(date);
     hideToPicker();
+  };
+
+  // Format date as YYYY-MM-DD (local)
+  const formatDate1 = date => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const formatDate = date => {
@@ -520,21 +543,18 @@ const SurveyPage = ({ route, navigation }) => {
         setApartmentDetail(response.data.data.appartmentDetailsId);
 
         // Debug logging
-        console.log(
-          'Flat Registry Date from backend:',
-          response.data.data.flatRegistryDate,
-        );
+        // console.log(
+        //   'Flat Registry Date from backend:',
+        //   response.data.data.flatRegistryDate,
+        // );
 
         if (response.data.data.flatRegistryDate) {
           const parsedDate = new Date(response.data.data.flatRegistryDate);
-          console.log('Parsed date:', parsedDate);
+          console.log('Parsed date:', parsedDate.toISOString().split('T')[0]);
           setSelectedDate(parsedDate);
         } else {
           setSelectedDate(new Date());
         }
-
-        console.log('All Floor IDs:', floors);
-        // console.log('data', data);
       } catch (error) {
         console.error('Fetch error:', error);
       } finally {
@@ -608,8 +628,8 @@ const SurveyPage = ({ route, navigation }) => {
       selectedPropertyLabel.toUpperCase() !== 'VACANT LAND' &&
       selectedPropertyLabel !== '');
   const zoneDropdownOptions = [
-    { label: 'Zone 1', value: 'zone1' },
-    { label: 'Zone 2', value: 'zone2' },
+    { label: 'Zone 1', value: '1' },
+    { label: 'Zone 2', value: '2' },
   ];
 
   const floorNameDropdownOptions = (masterData?.floorType || []).map(item => ({
@@ -701,8 +721,6 @@ const SurveyPage = ({ route, navigation }) => {
     }
   };
 
-  // ✅ Call it immediately if condition matches
-  // console.log('Selected Property Label:', selectedPropertyLabel);
   if (
     !hasFetched.current &&
     selectedPropertyLabel?.trim().toUpperCase() ===
@@ -795,36 +813,32 @@ const SurveyPage = ({ route, navigation }) => {
                 Flat Registry Date *
               </Text>
               <TouchableOpacity
-                style={{
-                  borderWidth: 1,
-                  padding: 10,
-                  marginBottom: 10,
-                  borderRadius: 5,
-                }}
                 onPress={() => setShowDatePicker(true)}
+                style={{
+                  padding: 12,
+                  borderWidth: 1,
+                  borderColor: '#ccc',
+                  borderRadius: 8,
+                }}
               >
                 <Text>
-                  {selectedDate &&
-                  selectedDate instanceof Date &&
-                  !isNaN(selectedDate)
-                    ? `${selectedDate.getDate().toString().padStart(2, '0')}-${(
-                        selectedDate.getMonth() + 1
-                      )
-                        .toString()
-                        .padStart(2, '0')}-${selectedDate.getFullYear()}`
-                    : 'Select Date'}
+                  {selectedDate ? formatDate1(selectedDate) : 'Select Date'}
                 </Text>
               </TouchableOpacity>
 
               {showDatePicker && (
                 <DateTimePicker
-                  value={
-                    selectedDate instanceof Date ? selectedDate : new Date()
-                  }
+                  value={selectedDate}
+                  maximumDate={new Date()}
                   mode="date"
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={handleDateChange1}
-                  maximumDate={new Date()}
+                  onChange={(event, date) => {
+                    setShowDatePicker(false);
+                    if (event.type === 'set' && date) {
+                      console.log('Selected new date:', date.toISOString());
+                      setSelectedDate(date); // keep as Date object
+                    }
+                  }}
                 />
               )}
 

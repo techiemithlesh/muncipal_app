@@ -17,6 +17,13 @@ import Geolocation from '@react-native-community/geolocation';
 import { useNavigation } from '@react-navigation/native';
 import HeaderNavigation from '../Components/HeaderNavigation';
 import { getUserDetails } from '../utils/auth';
+import { showToast } from '../utils/toast';
+import SubmissionModal from './Surveysubmission/SubmissionModal';
+import {
+  submitFieldVerification,
+  submitGeotaggedImages,
+  sendToLevel,
+} from './Surveysubmission/submissionApi';
 
 const VerifiedStatus = ({ route }) => {
   const [isULBUser, setIsULBUser] = useState(false);
@@ -25,13 +32,16 @@ const VerifiedStatus = ({ route }) => {
   const [front, setFront] = useState(null);
   const [location, setLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [remarks, setRemarks] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigation = useNavigation();
   const { submissionData, floorsData, hasExtraFloors, id, data, floorIds } =
     route.params || {};
-  console.log('After Preview', submissionData);
-  console.log('After floor', floorIds);
-  console.log('After data', data);
+  console.log('After Preview Verified Status', submissionData);
+  // console.log('After floor', floorIds);
+  // console.log('After data', data);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -95,6 +105,71 @@ const VerifiedStatus = ({ route }) => {
       Linking.openSettings();
     } else {
       Linking.openURL('app-settings:');
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!isULBUser && (!location || !left || !right || !front)) {
+      Alert.alert(
+        'Missing Information',
+        'Please capture location and all required photos before submitting.',
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Submit field verification
+      const fieldResponse = await submitFieldVerification(
+        submissionData,
+        floorIds,
+        id,
+        data,
+      );
+
+      if (fieldResponse.status === 200) {
+        showToast('success', fieldResponse.data.message);
+
+        // Submit geotagged images if not ULB user
+        if (!isULBUser && location) {
+          const photos = [
+            { label: 'left side', direction: 'West', ...left },
+            { label: 'right side', direction: 'East', ...right },
+            { label: 'front side', direction: 'North', ...front },
+          ];
+
+          const geoResponse = await submitGeotaggedImages(photos, location, id);
+          console.log('GeoTagging Response:', geoResponse.data);
+        }
+
+        // Show modal for remarks and send to level
+        setShowModal(true);
+      }
+    } catch (error) {
+      console.error('Submission Error:', error.response?.data || error.message);
+      Alert.alert('Error', 'Submission failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSendToLevel = async status => {
+    try {
+      await sendToLevel(id, remarks, status);
+      setShowModal(false);
+      showToast('success', `Successfully sent ${status.toLowerCase()}`);
+
+      // Navigate back to FieldVerification or previous screen
+      navigation.navigate('FieldVarification', {
+        submissionData,
+        location,
+        photos: [left, right, front],
+        remarks,
+        id,
+      });
+    } catch (err) {
+      console.error('Send to Level Error:', err.response?.data || err.message);
+      Alert.alert('Error', 'Failed to send to level.');
     }
   };
 
@@ -414,24 +489,26 @@ const VerifiedStatus = ({ route }) => {
       )}
 
       <TouchableOpacity
-        style={styles.button}
-        onPress={() =>
-          navigation.navigate('SubmitVarification', {
-            submissionData,
-            floorsData,
-            hasExtraFloors,
-            location,
-            left,
-            right,
-            front,
-            id,
-            floorIds,
-            data,
-          })
-        }
+        style={[styles.button, isSubmitting && styles.disabledButton]}
+        onPress={handleSubmit}
+        disabled={isSubmitting}
       >
-        <Text style={styles.buttonText}>Save and Next</Text>
+        {isSubmitting ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Submit</Text>
+        )}
       </TouchableOpacity>
+
+      <SubmissionModal
+        visible={showModal}
+        onClose={() => setShowModal(false)}
+        remarks={remarks}
+        onRemarksChange={setRemarks}
+        onForward={() => handleSendToLevel('FORWARD')}
+        onBackward={() => handleSendToLevel('BACKWARD')}
+        isULBUser={isULBUser}
+      />
     </ScrollView>
   );
 };
@@ -614,6 +691,9 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
 
   extraFloorCard: {
     backgroundColor: '#f9f9f9',
