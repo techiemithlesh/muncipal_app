@@ -167,36 +167,36 @@ const SearchAssesment = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <HeaderNavigation />
-      <ScrollView>
-        <View style={styles.seacrhCont}>
-          <View style={styles.searchhead}>
-            <Text style={styles.text}>Search Application</Text>
-          </View>
 
-          <View style={styles.selectWardKey}>
-            <Dropdown
-              style={styles.dropdown}
-              data={wardDropdownOptions}
-              labelField="label"
-              valueField="value"
-              placeholder="Select Ward"
-              value={value}
-              onChange={item => setValue(item.value)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Search Keyword"
-              placeholderTextColor="black"
-              value={keyword}
-              onChangeText={text => setKeyword(text)}
-            />
-          </View>
-
-          <TouchableOpacity style={styles.button} onPress={onPress}>
-            <Text style={styles.buttonText}>Search</Text>
-          </TouchableOpacity>
+      <View style={styles.seacrhCont}>
+        <View style={styles.searchhead}>
+          <Text style={styles.text}>Search Application</Text>
         </View>
-      </ScrollView>
+
+        <View style={styles.selectWardKey}>
+          <Dropdown
+            style={styles.dropdown}
+            data={wardDropdownOptions}
+            labelField="label"
+            valueField="value"
+            placeholder="Select Ward"
+            value={value}
+            onChange={item => setValue(item.value)}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Search Keyword"
+            placeholderTextColor="black"
+            value={keyword}
+            onChangeText={text => setKeyword(text)}
+          />
+        </View>
+
+        <TouchableOpacity style={styles.button} onPress={onPress}>
+          <Text style={styles.buttonText}>Search</Text>
+        </TouchableOpacity>
+      </View>
+
       {searchResults.length > 0 && (
         <FlatList
           data={searchResults}
@@ -224,23 +224,46 @@ const styles = StyleSheet.create({
   seacrhCont: {
     paddingVertical: responsiveHeight(2),
     paddingHorizontal: responsiveWidth(4),
-    marginVertical: responsiveHeight(3),
+    marginVertical: responsiveHeight(2),
     marginHorizontal: responsiveWidth(3),
-    borderWidth: 1,
-    borderLeftWidth: 0,
     borderColor: Colors.borderColor,
-  },
-  searchhead: {
-    backgroundColor: Colors.headignColor,
-    paddingVertical: responsiveHeight(2),
-    paddingHorizontal: responsiveWidth(2),
+    borderWidth: 1, // optional, adds border around
+    borderRadius: 5, // makes shadow and border look nice
+    height: 200,
+
+    // iOS shadow
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 2 }, // shadow direction
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    minHeight: responsiveHeight(10),
+    // Android shadow
     elevation: 5,
-    marginBottom: responsiveHeight(2),
+    backgroundColor: '#fff', // required on Android to see elevation
   },
+
+  searchhead: {
+    backgroundColor: Colors.headignColor,
+    paddingVertical: responsiveHeight(1),
+    paddingHorizontal: responsiveWidth(1),
+    marginBottom: responsiveHeight(1),
+    justifyContent: 'center',
+    alignItems: 'center',
+
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 }, // makes shadow go down
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+
+    // Android shadow
+    elevation: 5,
+
+    // Optional: rounded corners to make shadow fully visible
+    borderRadius: 5,
+    overflow: 'visible', // ensures shadow isn't clipped
+  },
+
   text: {
     color: Colors.background,
     fontSize: responsiveFontSize(2),
@@ -302,8 +325,8 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: Colors.borderColor,
-    paddingVertical: responsiveHeight(1.8),
-    paddingHorizontal: responsiveWidth(10),
+    paddingVertical: responsiveHeight(1),
+    // paddingHorizontal: responsiveWidth(1),
     borderRadius: responsiveWidth(2),
     alignItems: 'center',
     marginTop: responsiveHeight(2),
@@ -317,12 +340,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: responsiveHeight(2),
-    marginBottom: responsiveHeight(2),
+    marginBottom: responsiveHeight(1),
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 3,
+    margin: 15,
   },
   resultText: {
     fontSize: responsiveFontSize(1.8),

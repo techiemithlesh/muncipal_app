@@ -390,6 +390,14 @@ const ApplyAssessment = ({ navigation, route }) => {
         return false;
       }
 
+      // Now check relation is required
+      if (!owner.relation) {
+        newErrors[`relation_${i}`] = 'Relation is required';
+        setError(prev => ({ ...prev, ...newErrors }));
+        showToast('error', `Enter Relation for Owner ${i + 1}`);
+        return false;
+      }
+
       if (!owner.gender) {
         newErrors[`gender_${i}`] = 'Gender is required';
         setError(prev => ({ ...prev, ...newErrors }));
@@ -431,17 +439,17 @@ const ApplyAssessment = ({ navigation, route }) => {
         return false;
       }
 
-      if (!owner.aadhaar) {
-        newErrors[`aadhaar_${i}`] = 'Aadhaar is required';
-        setError(prev => ({ ...prev, ...newErrors }));
-        showToast('error', `Enter Aadhaar Number for Owner ${i + 1}`);
-        return false;
-      } else if (!/^\d{12}$/.test(owner.aadhaar)) {
-        newErrors[`mobile_${i}`] = 'Aadhaar number must be 12 digits';
-        setError(prev => ({ ...prev, ...newErrors }));
-        showToast('error', `Aadhaar Number must be 12 digits`);
-        return false;
-      }
+      // if (!owner.aadhaar) {
+      //   newErrors[`aadhaar_${i}`] = 'Aadhaar is required';
+      //   setError(prev => ({ ...prev, ...newErrors }));
+      //   showToast('error', `Enter Aadhaar Number for Owner ${i + 1}`);
+      //   return false;
+      // } else if (!/^\d{12}$/.test(owner.aadhaar)) {
+      //   newErrors[`mobile_${i}`] = 'Aadhaar number must be 12 digits';
+      //   setError(prev => ({ ...prev, ...newErrors }));
+      //   showToast('error', `Aadhaar Number must be 12 digits`);
+      //   return false;
+      // }
     }
     const alphabetRegex = /^[A-Za-z\s]+$/;
     const addressRegex = /^[A-Za-z0-9\s,./-]+$/; // letters, numbers, space, comma, dot, slash, dash
@@ -740,12 +748,20 @@ const ApplyAssessment = ({ navigation, route }) => {
     }
 
     // ✅ Prepare API request payload in the expected format
+
     const payload = {
       assessmentType: 'New Assessment',
       zoneMstrId: zone, // map your zone id
       wardMstrId: oldWard,
       newWardMstrId: newWard,
       ownershipTypeMstrId: ownershipType,
+      electAccNo: khataNo,
+      electBindBookNo: bindBookNo,
+      electConsCategory: electricityCategory,
+      electConsumerNo: kno,
+      waterConnDate: waterConnectionDate,
+      waterConnNo: waterConnectionNo,
+
       propTypeMstrId: propertyType,
       appartmentDetailsId: apartmentDetail || '',
       flatRegistryDate: selectedDate
@@ -797,7 +813,9 @@ const ApplyAssessment = ({ navigation, route }) => {
       // Owner Details
       ownerDtl: (ownerDetails || []).map(owner => ({
         ownerName: owner.ownerName,
+        guardianName: owner.guardianName,
         mobileNo: owner.mobile,
+        relationType: owner.relation,
         gender: owner.gender,
         dob: owner.dob,
         isArmedForce: owner.isArmedForce ? 1 : 0,
@@ -838,7 +856,10 @@ const ApplyAssessment = ({ navigation, route }) => {
       console.log('API Response:', response.data);
       if (response.data.status && response.data.message === 'Valid Request') {
         showToast('success', response.data.message); // show success message
-        navigation.navigate('AssessmentSummary', { data: payload }); // navigate and pass data
+        navigation.navigate('AssessmentSummary', {
+          data: payload,
+          masterData: data,
+        }); // navigate and pass data
       } else {
         showToast('error', response.data.message); // show error message if not valid
       }
@@ -1011,7 +1032,8 @@ const ApplyAssessment = ({ navigation, route }) => {
               data={wardDropdownOptions}
               labelField="label"
               valueField="value"
-              placeholder="Select Old Ward"
+              placeholder="Select"
+              placeholderTextColor="grey"
               value={oldWard}
               onChange={item => setOldWard(item.value)}
               disable={isRessessment || isMutation}
@@ -1028,7 +1050,8 @@ const ApplyAssessment = ({ navigation, route }) => {
               data={newWardOptions}
               labelField="label"
               valueField="value"
-              placeholder="Select New Ward"
+              placeholder="Select"
+              placeholderTextColor="grey"
               value={newWard}
               F
               onChange={item => setNewWard(item.value)}
@@ -1051,7 +1074,8 @@ const ApplyAssessment = ({ navigation, route }) => {
               data={ownershipDropdownOptions}
               labelField="label"
               valueField="value"
-              placeholder="Select Ownership Type"
+              placeholder="Select"
+              placeholderTextColor="grey"
               value={ownershipType}
               onChange={item => setOwnershipType(item.value)}
               disable={isRessessment || isMutation}
@@ -1070,7 +1094,8 @@ const ApplyAssessment = ({ navigation, route }) => {
               data={propertyTypeDropdownOptions}
               labelField="label"
               valueField="value"
-              placeholder="Select Property Type"
+              placeholder="Select"
+              placeholderTextColor="grey"
               value={propertyType}
               onChange={item => {
                 setPropertyType(item.value);
@@ -1154,7 +1179,8 @@ const ApplyAssessment = ({ navigation, route }) => {
               ]}
               labelField="label"
               valueField="value"
-              placeholder="Select Zone"
+              placeholder="Select"
+              placeholderTextColor="grey"
               value={zone}
               onChange={item => setZone(item.value)}
               disable={isRessessment || isMutation}
@@ -1644,7 +1670,8 @@ const ApplyAssessment = ({ navigation, route }) => {
                     data={floorNameOptions}
                     labelField="label"
                     valueField="value"
-                    placeholder="Select Floor Name"
+                    placeholder="Select"
+                    placeholderStyle={{ color: 'grey' }}
                     value={floor.floorName}
                     onChange={item =>
                       updateFloorDetail(index, 'floorName', item.value)
@@ -1658,7 +1685,8 @@ const ApplyAssessment = ({ navigation, route }) => {
                     data={usageTypeOptions}
                     labelField="label"
                     valueField="value"
-                    placeholder="Select Usage Type"
+                    placeholder="Select"
+                    placeholderStyle={{ color: 'grey' }}
                     value={floor.usageType}
                     onChange={item =>
                       updateFloorDetail(index, 'usageType', item.value)
@@ -1672,7 +1700,8 @@ const ApplyAssessment = ({ navigation, route }) => {
                     data={occupancyTypeOptions}
                     labelField="label"
                     valueField="value"
-                    placeholder="Select Occupancy Type"
+                    placeholder="Select"
+                    placeholderStyle={{ color: 'grey' }}
                     value={floor.occupancyType}
                     onChange={item =>
                       updateFloorDetail(index, 'occupancyType', item.value)
@@ -1686,7 +1715,8 @@ const ApplyAssessment = ({ navigation, route }) => {
                     data={constructionTypeOptions}
                     labelField="label"
                     valueField="value"
-                    placeholder="Select Construction Type"
+                    placeholder="Select"
+                    placeholderStyle={{ color: 'grey' }}
                     value={floor.constructionType}
                     onChange={item =>
                       updateFloorDetail(index, 'constructionType', item.value)
@@ -1698,6 +1728,7 @@ const ApplyAssessment = ({ navigation, route }) => {
                   <TextInput
                     style={styles.input}
                     placeholder="Enter Built Up Area"
+                    placeholderStyle={{ color: 'grey' }}
                     keyboardType="numeric"
                     value={floor.builtUpArea}
                     onChangeText={value =>
@@ -1808,7 +1839,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     marginBottom: 12,
     fontSize: 16,
-    color: '#333',
+    // color: '#333',
   },
   errorInput: {
     borderColor: '#e74c3c',

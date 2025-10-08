@@ -205,21 +205,22 @@ const SurveyPage = ({ route, navigation }) => {
   // floor related
   const [isULBUser, setIsULBUser] = useState(false);
 
-  const handleDateChange1 = (event, date) => {
-    setShowDatePicker(false);
+  // const handleDateChange1 = (event, date) => {
+  //   setShowDatePicker(false);
 
-    console.log('DateTimePicker event:', event);
-    console.log('Selected date object:', date);
-    console.log('Selected Date:', date.toISOString().split('T')[0]);
+  //   console.log('DateTimePicker event:', event);
+  //   console.log('Selected date object:', date);
+  //   console.log('Selected Date:', date.toISOString().split('T')[0]);
 
-    // Android fires "dismissed" event
-    if (event.type === 'set' && date) {
-      setSelectedDate(date);
-      // setSelectedDate(prev => ({ ...prev, date }));
-      // formatted
-    }
-  };
+  //   // Android fires "dismissed" event
+  //   if (event.type === 'set' && date) {
+  //     setSelectedDate(date);
+  //     // setSelectedDate(prev => ({ ...prev, date }));
+  //     // formatted
+  //   }
+  // };
 
+  console.log('selected date', selectedDate.toISOString());
   useEffect(() => {
     if (data) {
       // console.log('Received data:', data); // <-- Log the whole data object
@@ -490,12 +491,20 @@ const SurveyPage = ({ route, navigation }) => {
   };
 
   // Format date as YYYY-MM-DD (local)
+  // const formatDate1 = date => {
+  //   if (!date) return '';
+  //   const year = date.getFullYear();
+  //   const month = String(date.getMonth() + 1).padStart(2, '0');
+  //   const day = String(date.getDate()).padStart(2, '0');
+  //   return `${year}-${month}-${day}`;
+  // };
+
   const formatDate1 = date => {
     if (!date) return '';
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   };
 
   const formatDate = date => {
@@ -536,22 +545,21 @@ const SurveyPage = ({ route, navigation }) => {
         console.log('field Virification data', response.data.data);
         setMasterData(response1.data.data);
         setData(response.data.data);
-
+        console.log('master data', response1.data.data);
         const floors = response.data.data.floor || [];
         setFloorIds(floors);
 
         setApartmentDetail(response.data.data.appartmentDetailsId);
 
-        // Debug logging
-        // console.log(
-        //   'Flat Registry Date from backend:',
-        //   response.data.data.flatRegistryDate,
-        // );
-
         if (response.data.data.flatRegistryDate) {
           const parsedDate = new Date(response.data.data.flatRegistryDate);
-          console.log('Parsed date:', parsedDate.toISOString().split('T')[0]);
-          setSelectedDate(parsedDate);
+          // Normalize to remove timezone shift issues
+          const normalized = new Date(
+            parsedDate.getFullYear(),
+            parsedDate.getMonth(),
+            parsedDate.getDate(),
+          );
+          setSelectedDate(normalized);
         } else {
           setSelectedDate(new Date());
         }
@@ -827,16 +835,34 @@ const SurveyPage = ({ route, navigation }) => {
               </TouchableOpacity>
 
               {showDatePicker && (
+                // <DateTimePicker
+                //   value={selectedDate}
+                //   maximumDate={new Date()}
+                //   mode="date"
+                //   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                //   onChange={(event, date) => {
+                //     setShowDatePicker(false);
+                //     if (event.type === 'set' && date) {
+                //       console.log('Selected new date:', date.toISOString());
+                //       setSelectedDate(date); // keep as Date object
+                //     }
+                //   }}
+                // />
                 <DateTimePicker
-                  value={selectedDate}
+                  value={selectedDate || new Date()}
                   maximumDate={new Date()}
                   mode="date"
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                   onChange={(event, date) => {
                     setShowDatePicker(false);
                     if (event.type === 'set' && date) {
-                      console.log('Selected new date:', date.toISOString());
-                      setSelectedDate(date); // keep as Date object
+                      setSelectedDate(
+                        new Date(
+                          date.getFullYear(),
+                          date.getMonth(),
+                          date.getDate(),
+                        ),
+                      );
                     }
                   }}
                 />

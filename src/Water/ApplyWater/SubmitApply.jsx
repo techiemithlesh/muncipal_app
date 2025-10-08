@@ -14,7 +14,7 @@ import axios from 'axios';
 import { getToken } from '../../utils/auth';
 const SubmitApply = ({ route }) => {
   const { formData, masterData } = route.params;
-  console.log('Form Data:', masterData);
+  console.log('Form Data:', formData);
   // const {}
 
   // Mapping field keys to their label property
@@ -66,32 +66,36 @@ const SubmitApply = ({ route }) => {
 
   const handleSubmit = async () => {
     const payload = {
-      category: formData.categoryType || '',
-      pipelineTypeId: formData.pipelineType.toString() || '1',
-      connectionTypeId: formData.typeOfConnection.toString() || '1',
-      connectionThroughId: formData.connectionThrough.toString() || '1',
-      propertyTypeId: formData.propertyType,
-      ownershipTypeId: formData.ownerType.toString() || '1',
-      wardMstrId: formData.wardNo.toString() || '1',
-      newWardMstrId: formData.newWardNo.toString() || '1',
-      areaSqft: formData.totalArea || '',
+      category: formData.category || '',
+      pipelineTypeId: parseInt(formData.pipelineTypeId) || 1,
+      connectionTypeId: parseInt(formData.connectionTypeId) || 1,
+      connectionThroughId: parseInt(formData.connectionThroughId) || 1,
+      propertyTypeId: parseInt(formData.propertyTypeId) || 1,
+      ownershipTypeId: parseInt(formData.ownershipTypeId) || 1,
+      wardMstrId: parseInt(formData.wardMstrId) || 1,
+      newWardMstrId: parseInt(formData.newWardMstrId) || 1,
+      areaSqft: formData.areaSqft || '',
       address: formData.address || '',
       landmark: formData.landmark || '',
-      pinCode: formData.pin || '',
+      pinCode: formData.pinCode || '',
       holdingNo: formData.holdingNo || '',
-
-      ownerDtl: formData.applicants.map((applicant, index) => ({
+      ownerDtl: formData.ownerDtl?.map((applicant, index) => ({
         id: applicant.id || index + 1,
         ownerName: applicant.ownerName || '',
         guardianName: applicant.guardianName || '',
-        dob: applicant.dob,
+        dob: applicant.dob || '',
         mobileNo: applicant.mobileNo || '',
         email: applicant.email || '',
       })),
     };
 
+    // Insert safNo conditionally
+    if (formData.connectionThrough === 2) {
+      payload.safNo = formData.safNo;
+    }
+
     // Insert safNo conditionally into the payload
-    if (formData.connectionThrough.toString() === '2') {
+    if (formData.connectionThroughId.toString() === '2') {
       payload.safNo = formData.safNo;
     }
 
@@ -100,7 +104,7 @@ const SubmitApply = ({ route }) => {
       const token = await getToken();
 
       const response = await axios.post(
-        WATER_API_ROUTES.APPLY_CONNECTION_API,
+        WATER_API_ROUTES.APPLY_CONNECTION,
         payload,
         {
           headers: {
@@ -142,31 +146,31 @@ const SubmitApply = ({ route }) => {
           <Text style={styles.heading}>Connection Details</Text>
           <RowItem
             label="Type of Connection"
-            value={formData.typeOfConnection || 'N/A'}
+            value={formData.connectionTypeId || 'N/A'}
           />
           <RowItem
             label="Connection Through"
-            value={formData.connectionThrough || 'N/A'}
+            value={formData.connectionThroughId || 'N/A'}
           />
-          <RowItem label="Property Type" value={propertyLabel} />
-          <RowItem label="Owner Type" value={ownershipLabel} />
+          <RowItem label="Property Type" value={formData.propertyTypeId} />
+          <RowItem label="Owner Type" value={formData.ownershipTypeId} />
         </View>
 
         {/* Property Details */}
         <View style={styles.card}>
           <Text style={styles.heading}>Property Details</Text>
-          <RowItem label="Ward No" value={wardLabel} />
-          <RowItem label="New Ward No" value={newWardLabel} />
-          <RowItem label="Total Area" value={formData.totalArea || 'N/A'} />
+          <RowItem label="Ward No" value={formData.wardMstrId} />
+          <RowItem label="New Ward No" value={formData.newWardMstrId} />
+          <RowItem label="Total Area" value={formData.areaSqft || 'N/A'} />
           <RowItem label="Landmark" value={formData.landmark || 'N/A'} />
-          <RowItem label="Pin" value={formData.pin || 'N/A'} />
+          <RowItem label="Pin" value={formData.pinCode || 'N/A'} />
           <RowItem label="Address" value={formData.address || 'N/A'} />
         </View>
 
         {/* Applicants */}
         <View style={styles.card}>
           <Text style={styles.heading}>Applicants</Text>
-          {formData.applicants?.map((a, index) => (
+          {formData.ownerDtl?.map((a, index) => (
             <View key={index} style={styles.subCard}>
               <RowItem label="Owner Name" value={a.ownerName || 'N/A'} />
               <RowItem label="Guardian Name" value={a.guardianName || 'N/A'} />

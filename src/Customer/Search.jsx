@@ -22,6 +22,7 @@ import axios from 'axios';
 import { API_ROUTES } from '../api/apiRoutes';
 import { getToken } from '../utils/auth';
 import { CUSTOMER_API } from '../api/apiRoutes';
+import GenerateDemandModal from './Model/GenerateDemandModal';
 
 const Search = ({ navigation }) => {
   const [value, setValue] = useState(null); // selected ward id

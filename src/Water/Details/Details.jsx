@@ -43,6 +43,7 @@ const Details = ({ route }) => {
   const [documents, setDocuments] = useState([]);
   const [levelRemarks, setLevelRemarks] = useState([]);
   const [tradeDue, setTradeDue] = useState(null);
+  const [tcVerification, setTcVerification] = useState(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -59,7 +60,7 @@ const Details = ({ route }) => {
 
         // Fetch trade details first to get workflowId
         const tradeRes = await axios.post(
-          WATER_API_ROUTES.WATER_DETAILS_API,
+          WATER_API_ROUTES.WATER_DETAILS,
           { id: Number(id) },
           { headers: { Authorization: `Bearer ${token}` } },
         );
@@ -72,6 +73,7 @@ const Details = ({ route }) => {
           setTradeDetails(tradeRes.data.data);
           setPaymentDtl(tradeRes.data.data.tranDtls?.[0] || null);
           setLevelRemarks(tradeRes.data.data.levelRemarks || []);
+          setTcVerification(tradeRes.data.data.tcVerifications || null);
         }
 
         const workflowId = tradeRes?.data?.data?.workflowId || 0;
@@ -80,7 +82,7 @@ const Details = ({ route }) => {
         const [waterDue, workflowRes, paymentRes, receiptRes, documentRes] =
           await Promise.all([
             axios.post(
-              WATER_API_ROUTES.WATER_DUE_API,
+              WATER_API_ROUTES.WATER_DUE,
               { id },
               { headers: { Authorization: `Bearer ${token}` } },
             ),
@@ -90,14 +92,14 @@ const Details = ({ route }) => {
               { headers: { Authorization: `Bearer ${token}` } },
             ),
             axios.post(
-              WATER_API_ROUTES.PAYMENT_RECEIPT_API,
+              WATER_API_ROUTES.PAYMENT_RECEIPT,
               {
                 id,
               },
               { headers: { Authorization: `Bearer ${token}` } },
             ),
             axios.post(
-              WATER_API_ROUTES.PAY_DEMAND_API,
+              WATER_API_ROUTES.PAY_DEMAND,
               { id },
               { headers: { Authorization: `Bearer ${token}` } },
             ),
@@ -107,7 +109,7 @@ const Details = ({ route }) => {
               { headers: { Authorization: `Bearer ${token}` } },
             ),
           ]);
-        console.log('Payment Receipt:', paymentRes?.data);
+        console.log('Payment Receipt:', waterDue?.data);
 
         if (waterDue?.data?.status) setWaterDue(waterDue.data.data);
         if (workflowRes?.data?.status) setWorkflowData(workflowRes.data.data);
@@ -166,13 +168,10 @@ const Details = ({ route }) => {
         {/* Basic Details */}
         <Section title="Basic Details">
           <DetailRow label="Ward No" value={tradeDetails?.wardNo} />
+          <DetailRow label="category" value={`${tradeDetails?.category} `} />
           <DetailRow
-            label="Licence For"
-            value={`${tradeDetails?.licenseForYears} Years`}
-          />
-          <DetailRow
-            label="Nature Of Business"
-            value={tradeDetails?.natureOfBusiness}
+            label="connectionType"
+            value={tradeDetails?.connectionType}
           />
           <DetailRow
             label="Ownership Type"
@@ -193,18 +192,15 @@ const Details = ({ route }) => {
             value={tradeDetails?.updatedAt?.slice(0, 10)}
           />
           <DetailRow
-            label="Application Type"
-            value={tradeDetails?.applicationType}
+            label="connectionThrough"
+            value={tradeDetails?.connectionThrough}
           />
-          <DetailRow label="Firm Name" value={tradeDetails?.firmName} />
-          <DetailRow label="Firm Type" value={tradeDetails?.firmType} />
+          <DetailRow label="pipelineType" value={tradeDetails?.pipelineType} />
+          <DetailRow label="propertyType" value={tradeDetails?.propertyType} />
           <DetailRow label="Category Type" value="Others" />
-          <DetailRow
-            label="Firm Establishment Date"
-            value={tradeDetails?.firmEstablishmentDate}
-          />
+          <DetailRow label="applyDate" value={tradeDetails?.applyDate} />
           <DetailRow label="Applied Date" value={tradeDetails?.applyDate} />
-          <DetailRow label="Area" value={tradeDetails?.areaInSqft} />
+          <DetailRow label="Area" value={tradeDetails?.areaSqft} />
           <DetailRow label="Pin Code" value={tradeDetails?.pinCode} />
         </Section>
 
@@ -283,11 +279,40 @@ const Details = ({ route }) => {
 
         {/* Field Verification */}
         <Section title="Field Verification">
-          <View style={styles.noDataContainer}>
-            <Text style={styles.noDataText}>
-              No Field Verification Available!
-            </Text>
+          {/* Table Header */}
+          <View style={styles.docHeader}>
+            <Text style={styles.docCol}>SL</Text>
+            <Text style={styles.docCol}>Verified By</Text>
+            <Text style={styles.docCol}>Verification On</Text>
+            <Text style={styles.docCol}>View</Text>
           </View>
+
+          {/* Table Rows */}
+          {tcVerification && tcVerification.length > 0 ? (
+            tcVerification.map((item, index) => (
+              <View key={item.id || index} style={styles.paymentRow}>
+                <Text style={styles.paymentCol}>{index + 1}</Text>
+                <Text style={styles.paymentCol}>
+                  {item.verifiedBy} ({item.userName})
+                </Text>
+                <Text style={styles.paymentCol}>
+                  {new Date(item.createdAt).toLocaleString()}
+                </Text>
+                <TouchableOpacity
+                  style={styles.viewBtn}
+                  onPress={() => handleViewVerification(item)}
+                >
+                  <Text style={styles.viewBtnText}>View</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          ) : (
+            <View style={styles.noDataContainer}>
+              <Text style={styles.noDataText}>
+                No Field Verification Available!
+              </Text>
+            </View>
+          )}
         </Section>
 
         {/* Memo Details */}
@@ -344,12 +369,12 @@ const Details = ({ route }) => {
 
         {/* Buttons */}
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 15 }}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.tradeLicenseBtn, { flex: 1 }]}
             onPress={() => setShowTradeLicenseModal(true)}
           >
             <Text style={styles.tradeLicenseText}>View Water</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity
             style={[styles.tradeLicenseBtn, { flex: 1 }]}
             onPress={() => setShowDemandModal(true)}
@@ -387,12 +412,12 @@ const Details = ({ route }) => {
         </View>
       </ScrollView>
       {/* Modals */}
-      <ViewTradeLicenseModal
+      {/* <ViewTradeLicenseModal
         visible={showTradeLicenseModal}
         onClose={() => setShowTradeLicenseModal(false)}
         tradeDetails={tradeDetails}
         id={id}
-      />
+      /> */}
       <ViewDemandModal
         visible={showDemandModal}
         onClose={() => setShowDemandModal(false)}

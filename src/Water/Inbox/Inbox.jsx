@@ -11,7 +11,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { Dropdown } from 'react-native-element-dropdown';
-import HeaderNavigation from '../Components/HeaderNavigation';
+import HeaderNavigation from '../../Components/HeaderNavigation';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { MaterialIcons } from '@expo/vector-icons';
 import {
@@ -19,11 +19,12 @@ import {
   responsiveWidth,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
-import { BASE_URL } from '../config';
-import Colors from '../Constants/Colors';
-import { showToast } from '../utils/toast';
+import { WATER_API_ROUTES } from '../../api/apiRoutes';
+import Colors from '../../Constants/Colors';
+import { showToast } from '../../utils/toast';
+import { getToken } from '../../utils/auth';
 
-const FieldVarification = ({ navigation }) => {
+const Inbox = ({ navigation }) => {
   const wardData = [
     { label: 'Select Ward', value: '1' },
     { label: 'Ward 2', value: '2' },
@@ -37,14 +38,13 @@ const FieldVarification = ({ navigation }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const storedToken = await AsyncStorage.getItem('token');
-        const token = storedToken ? JSON.parse(storedToken) : null;
+        const token = await getToken();
         setToken(token);
 
         if (!token) return console.warn('No token found');
 
         const response = await axios.post(
-          `${BASE_URL}/api/property/inbox`,
+          WATER_API_ROUTES.INBOX,
           {},
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -52,7 +52,7 @@ const FieldVarification = ({ navigation }) => {
         );
 
         setData(response.data?.data?.data || []);
-        // console.log('data Field Verification', data);
+        console.log('data Field Verification', data);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -60,10 +60,6 @@ const FieldVarification = ({ navigation }) => {
 
     fetchData();
   }, []);
-
-  const handleSearch = () => {
-    // Add your search logic here
-  };
 
   const copyToClipboard = safNo => {
     if (!safNo) {
@@ -77,26 +73,46 @@ const FieldVarification = ({ navigation }) => {
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.row}>
+        <Text style={styles.cardLabel}>Application No.:</Text>
+        <Text style={styles.value}>{item?.applicationNo || '-'}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>Apply Date:</Text>
+        <Text style={styles.value}>{item?.applyDate || '-'}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>Forward Date:</Text>
+        <Text style={styles.value}>{item?.receivingDate || '-'}</Text>
+      </View>
+
+      <View style={styles.row}>
         <Text style={styles.cardLabel}>Ward No.:</Text>
-        <Text style={styles.value}>{item?.wardNo}</Text>
+        <Text style={styles.value}>{item?.wardNo || '-'}</Text>
       </View>
+
       <View style={styles.row}>
-        <Text style={styles.cardLabel}>Assessment Type:</Text>
-        <Text style={styles.value}>{item?.assessmentType}</Text>
+        <Text style={styles.cardLabel}>New Ward No.:</Text>
+        <Text style={styles.value}>{item?.newWardNo || '-'}</Text>
       </View>
-      <View style={styles.row}>
-        <Text style={styles.cardLabel}>Property Type:</Text>
-        <Text style={styles.value}>{item?.propertyType}</Text>
-      </View>
+
       <View style={styles.row}>
         <Text style={styles.cardLabel}>Applicant Name:</Text>
-        <Text style={styles.value}>{item?.ownerName}</Text>
+        <Text style={styles.value}>{item?.ownerName || '-'}</Text>
       </View>
+
+      {/* <View style={styles.row}>
+        <Text style={styles.cardLabel}>Guardian Name:</Text>
+        <Text style={styles.value}>{item?.guardianName || '-'}</Text>
+      </View> */}
+
       <View style={styles.row}>
         <Text style={styles.cardLabel}>Mobile No.:</Text>
-        <Text style={styles.value}>{item?.mobileNo}</Text>
+        <Text style={styles.value}>{item?.mobileNo || '-'}</Text>
       </View>
-      <View style={styles.row}>
+
+      {/* <View style={styles.row}>
         <Text style={styles.cardLabel}>SAF No.:</Text>
         <TouchableOpacity
           onPress={() => copyToClipboard(item?.safNo)}
@@ -104,29 +120,44 @@ const FieldVarification = ({ navigation }) => {
         >
           <Text style={{ fontSize: 10, color: '#007bff' }}>📋</Text>
         </TouchableOpacity>
-        <Text style={styles.value}>{item?.safNo}</Text>
+        <Text style={styles.value}>{item?.safNo || '-'}</Text>
+      </View> */}
+
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>Address:</Text>
+        <Text style={styles.value}>{item?.address || '-'}</Text>
       </View>
 
       {/* <View style={styles.row}>
-        <Text style={styles.cardLabel}>Holding No.:</Text>
-        <Text style={styles.value}>{item?.propertyAddress}</Text>
+        <Text style={styles.cardLabel}>New Holding No.:</Text>
+        <Text style={styles.value}>{item?.newHoldingNo || '-'}</Text>
       </View> */}
+
       <View style={styles.row}>
-        <Text style={styles.cardLabel}>Property Address:</Text>
-        <Text style={styles.value}>{item?.propAddress}</Text>
+        <Text style={styles.cardLabel}>Payment Status:</Text>
+        <Text style={styles.value}>
+          {item?.paymentStatus === 1 ? 'Paid' : 'Unpaid'}
+        </Text>
       </View>
+
       <View style={styles.row}>
-        <Text style={styles.cardLabel}>Apply Date:</Text>
-        <Text style={styles.value}>{item?.applyDate}</Text>
+        <Text style={styles.cardLabel}>Is BTC:</Text>
+        <Text style={styles.value}>{item?.isBtc ? 'Yes' : 'No'}</Text>
       </View>
+
       <View style={styles.row}>
-        <Text style={styles.cardLabel}>Forward Date:</Text>
-        <Text style={styles.value}>{item?.receivingDate}</Text>
+        <Text style={styles.cardLabel}>Is Document Uploaded:</Text>
+        <Text style={styles.value}>{item?.isDocUpload ? 'Yes' : 'No'}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.cardLabel}>Current Role ID:</Text>
+        <Text style={styles.value}>{item?.currentRoleId || '-'}</Text>
       </View>
 
       <TouchableOpacity
         style={styles.button1}
-        onPress={() => navigation.navigate('SurveyPage', { id: item.id })}
+        onPress={() => navigation.navigate('WaterSurvey', { id: item?.id })}
       >
         <Text style={styles.surveyButtonText}>Survey</Text>
       </TouchableOpacity>
@@ -172,7 +203,7 @@ const FieldVarification = ({ navigation }) => {
 
       {/* FlatList for Application List */}
       <View style={styles.applicationList}>
-        <Text style={styles.title}>Application List</Text>
+        <Text style={styles.title}>Water Application List</Text>
         <FlatList
           data={data}
           keyExtractor={(item, index) => index.toString()}
@@ -196,7 +227,7 @@ const FieldVarification = ({ navigation }) => {
   );
 };
 
-export default FieldVarification;
+export default Inbox;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white' },

@@ -44,19 +44,28 @@ export const HOLDIGN_API_ROUTES ={
   PAY_DEMAND_API:`${BASE_URL}/api/property/pay-prop-demand`
 };
 
-export const WATER_API_ROUTES ={
-  WATER_SEARCH_API:`${BASE_URL}/api/water/app/search`,
-  WATER_DETAILS_API:`${BASE_URL}/api/water/app/dtl`,
-  WATER_DUE_API:`${BASE_URL}/api/water/app/due`,
-  PAY_DEMAND_API:`${BASE_URL}/api/water/app/pay-demand`,
-  PAYMENT_RECEIPT_API:`${BASE_URL}/api/water/app/payment-receipt`,
-  WATER_DOC_LIST:`${BASE_URL}/api/water/app/get-uploaded-doc-list`,
-  WATER_REMARKS_API:`${BASE_URL}/api/water/app/post-next`,
-  MASTER_DATA_API:`${BASE_URL}/api/water/app/master-data`,
-  TEST_REQUEST_API :`${BASE_URL}/api/water/app/test-request`,
-   APPLY_CONNECTION_API :`${BASE_URL}/api/water/app/apply-connection`,
- REVIEW_TAX_API :`${BASE_URL}/api/water/app/review-tax`,
+export const Water_Api = `${BASE_URL}/api/water/app`;
+
+export const WATER_API_ROUTES = {
+  WATER_SEARCH: `${Water_Api}/search`,
+  WATER_DETAILS: `${Water_Api}/dtl`,
+  WATER_DUE: `${Water_Api}/due`,
+  PAY_DEMAND: `${Water_Api}/pay-demand`,
+  PAYMENT_RECEIPT: `${Water_Api}/payment-receipt`,
+  WATER_DOC_LIST: `${Water_Api}/get-uploaded-doc-list`,
+  WATER_REMARKS: `${Water_Api}/post-next`,
+  MASTER_DATA: `${Water_Api}/master-data`,
+  TEST_REQUEST: `${Water_Api}/test-request`,
+  APPLY_CONNECTION: `${Water_Api}/apply-connection`,
+  REVIEW_TAX: `${Water_Api}/review-tax`,
+  INBOX: `${Water_Api}/inbox`,
+  POST_NEXT: `${Water_Api}/post-next`,
+  TEST_REQUEST:`${Water_Api}/test-request`,
+ CONSUMER_FIELD_VERIFICATION_API: `${Water_Api}/field-verification`,
+  GET_FIELD_VERIFICATION_API: `${Water_Api}/get-field-verification`,
+
 }
+
 
 export const CUSTOMER_API ={
   CUSTOMER_DETAILS_API:`${BASE_URL}/api/water/consumer/dtl`,
@@ -64,6 +73,8 @@ export const CUSTOMER_API ={
   CUSTOMER_DUE_API:`${BASE_URL}/api/water/consumer/due`,
   CUSTOMER_PAYMENT_RECIPT_API:`${BASE_URL}/api/water/app/payment-receipt`,
   CUSTOMER_PAY_DUE_API:`${BASE_URL}/api/water/consumer/pay-due`,
-
+  CONSUMER_GENERATE_DEMAND_API:`${BASE_URL}/api/water/consumer/generate-demand`,
 }
+
+
   

@@ -23,8 +23,10 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { getToken } from '../utils/auth';
 import { WORK_FLOW_PERMISSION, API_ROUTES } from '../api/apiRoutes';
+import GenerateDemandModal from './Model/GenerateDemandModal';
 
 const Details = ({ route }) => {
+  const [modalVisible, setModalVisible] = useState(false);
   const [showTradeLicenseModal, setShowTradeLicenseModal] = useState(false);
   const [showDemandModal, setShowDemandModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -46,6 +48,7 @@ const Details = ({ route }) => {
   const [customerDeuDetails, setCustomerDueDetails] = useState('');
   const [selectedReceiptId, setSelectedReceiptId] = useState(null);
   const [receiptDatas, setReceiptData] = useState(null);
+  const [connectionDetails, setConnectionDetails] = useState({});
 
   const id = route?.params?.id;
   const navigation = useNavigation();
@@ -64,8 +67,8 @@ const Details = ({ route }) => {
           { headers: { Authorization: `Bearer ${token}` } },
         );
 
+        setConnectionDetails(tradeRes.data.data.connectionDtl || {});
         const paymentIds = paymentDtl.map(item => item.id);
-        console.log('Full Details', paymentIds);
 
         if (tradeRes?.data?.status && tradeRes.data.data) {
           setTradeDetails(tradeRes.data.data);
@@ -76,8 +79,7 @@ const Details = ({ route }) => {
         }
 
         const workflowId = tradeRes?.data?.data?.workflowId || 0;
-        // console.log('Customer Details Api', tradeRes);
-        // Run other APIs in parallel
+
         const [customerDue, workflowRes, paymentRes, receiptRes, documentRes] =
           await Promise.all([
             axios.post(
@@ -501,9 +503,9 @@ const Details = ({ route }) => {
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 15 }}>
           <TouchableOpacity
             style={[styles.tradeLicenseBtn, { flex: 1 }]}
-            onPress={() => setShowTradeLicenseModal(true)}
+            onPress={() => setModalVisible(true)}
           >
-            <Text style={styles.tradeLicenseText}>View Trade License</Text>
+            <Text style={styles.tradeLicenseText}>Genetrate Demand</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tradeLicenseBtn, { flex: 1 }]}
@@ -525,13 +527,7 @@ const Details = ({ route }) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-
       {/* Modals */}
-      <ViewTradeLicenseModal
-        visible={showTradeLicenseModal}
-        onClose={() => setShowTradeLicenseModal(false)}
-        tradeDetails={tradeDetails}
-      />
       <ViewDemandModal
         visible={showDemandModal}
         onClose={() => setShowDemandModal(false)}
@@ -539,7 +535,6 @@ const Details = ({ route }) => {
         tradeDetails1={tradeDetails}
         customerDeuDetails={customerDeuDetails}
       />
-
       <PaymentModal
         visible={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
@@ -557,6 +552,12 @@ const Details = ({ route }) => {
         visible={showReceipt}
         onClose={() => setShowReceipt(false)}
         receiptData={receiptDatas}
+      />
+      <GenerateDemandModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        connectionDetails={connectionDetails}
+        id={id}
       />
     </View>
   );

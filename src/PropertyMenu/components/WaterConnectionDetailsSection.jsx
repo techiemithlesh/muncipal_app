@@ -25,8 +25,8 @@ const WaterConnectionDetailsSection = ({
       <Text style={styles.label}>Water Connection No</Text>
       <TextInput
         style={styles.input}
-        placeholder="Water Connection No"
-        placeholderTextColor="#000"
+        placeholder="con number"
+        placeholderTextColor="grey"
         value={waterConnectionNo}
         onChangeText={setWaterConnectionNo}
         editable={!isDisabled}
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#555',
+    color: '#000000ff',
     marginBottom: 5,
   },
   input: {

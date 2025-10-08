@@ -49,7 +49,7 @@ const OwnerDetailsSection = ({
       <TextInput
         style={styles.input}
         placeholder="Owner Name"
-        placeholderTextColor="black"
+        placeholderTextColor="grey"
         value={ownerName}
         onChangeText={setOwnerName}
         editable={!isOwnerDisabled}
@@ -201,7 +201,7 @@ export default OwnerDetailsSection;
 const styles = StyleSheet.create({
   label: {
     fontSize: 14,
-    color: '#555',
+    color: '#000000ff',
     marginBottom: 5,
   },
   input: {
@@ -210,10 +210,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: '#fff',
     marginBottom: 12,
     fontSize: 16,
-    color: '#333',
   },
   dropdown: {
     height: 45,

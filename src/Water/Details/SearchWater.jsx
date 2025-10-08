@@ -1,6 +1,5 @@
 // Search.jsx
 import React, { useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   StyleSheet,
   Text,
@@ -94,13 +93,9 @@ const Search = ({ navigation }) => {
         wardId: value ? [value] : [],
       };
 
-      const response = await axios.post(
-        WATER_API_ROUTES.WATER_SEARCH_API,
-        body,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const response = await axios.post(WATER_API_ROUTES.WATER_SEARCH, body, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (response.data?.status) {
         const results = response.data.data?.data ?? [];
@@ -241,20 +236,46 @@ const styles = StyleSheet.create({
   seacrhCont: {
     paddingVertical: responsiveHeight(2),
     paddingHorizontal: responsiveWidth(4),
-    marginVertical: responsiveHeight(3),
+    marginVertical: responsiveHeight(2),
     marginHorizontal: responsiveWidth(3),
-    borderWidth: 1,
-    borderLeftWidth: 0,
     borderColor: Colors.borderColor,
-    backgroundColor: '#fff',
+    borderWidth: 1, // optional, adds border around
+    borderRadius: 5, // makes shadow and border look nice
+    height: 200,
+
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 }, // shadow direction
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    minHeight: responsiveHeight(10),
+    // Android shadow
+    elevation: 5,
+    backgroundColor: '#fff', // required on Android to see elevation
   },
+
   searchhead: {
     backgroundColor: Colors.headignColor,
-    paddingVertical: responsiveHeight(2),
-    paddingHorizontal: responsiveWidth(2),
-    marginBottom: responsiveHeight(2),
-    elevation: 3,
+    paddingVertical: responsiveHeight(1),
+    paddingHorizontal: responsiveWidth(1),
+    marginBottom: responsiveHeight(1),
+    justifyContent: 'center',
+    alignItems: 'center',
+
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 }, // makes shadow go down
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+
+    // Android shadow
+    elevation: 5,
+
+    // Optional: rounded corners to make shadow fully visible
+    borderRadius: 5,
+    overflow: 'visible', // ensures shadow isn't clipped
   },
+
   text: {
     color: Colors.background,
     fontSize: responsiveFontSize(2),
@@ -283,8 +304,8 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: Colors.borderColor,
-    paddingVertical: responsiveHeight(1.8),
-    paddingHorizontal: responsiveWidth(10),
+    paddingVertical: responsiveHeight(1),
+    // paddingHorizontal: responsiveWidth(1),
     borderRadius: responsiveWidth(2),
     alignItems: 'center',
     marginTop: responsiveHeight(2),

@@ -56,7 +56,7 @@ const AddressSection = ({
       <TextInput
         style={styles.input}
         placeholder="Property Address *"
-        placeholderTextColor="#000"
+        placeholderTextColor="grey"
         value={address}
         onChangeText={setAddress}
         editable={!isDisabled}
@@ -66,7 +66,7 @@ const AddressSection = ({
       <TextInput
         style={styles.input}
         placeholder="City *"
-        placeholderTextColor="#000"
+        placeholderTextColor="grey"
         value={city}
         onChangeText={setCity}
         editable={!isDisabled}
@@ -76,7 +76,7 @@ const AddressSection = ({
       <TextInput
         style={styles.input}
         placeholder="District *"
-        placeholderTextColor="#000"
+        placeholderTextColor="grey"
         value={district}
         onChangeText={setDistrict}
         editable={!isDisabled}
@@ -86,7 +86,7 @@ const AddressSection = ({
       <TextInput
         style={styles.input}
         placeholder="State *"
-        placeholderTextColor="#000"
+        placeholderTextColor="grey"
         value={stateValue}
         onChangeText={setStateValue}
         editable={!isDisabled}
@@ -96,7 +96,7 @@ const AddressSection = ({
       <TextInput
         style={styles.input}
         placeholder="Pincode *"
-        placeholderTextColor="#000"
+        placeholderTextColor="grey"
         value={pincode}
         onChangeText={setPincode}
         keyboardType="numeric"

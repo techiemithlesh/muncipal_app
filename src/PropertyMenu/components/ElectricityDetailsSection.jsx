@@ -22,9 +22,9 @@ const ElectricityDetailsSection = ({
       <Text style={styles.label}>Electricity K. No *</Text>
       <TextInput
         style={styles.input}
-        placeholder="Electricity K. No (e.g. xxxx xxxx xxxx)"
+        placeholder="xxxx xxxx xxxx"
+        placeholderTextColor="grey"
         keyboardType="numeric"
-        placeholderTextColor="black"
         maxLength={14}
         value={kno}
         onChangeText={setKno}
@@ -34,9 +34,9 @@ const ElectricityDetailsSection = ({
       <Text style={styles.label}>ACC No *</Text>
       <TextInput
         style={styles.input}
-        placeholder="ACC No"
+        placeholder="xxxx xxxx xxxx"
+        placeholderTextColor="grey"
         keyboardType="numeric"
-        placeholderTextColor="black"
         value={accNo}
         onChangeText={setAccNo}
         editable={!isDisabled}
@@ -45,8 +45,8 @@ const ElectricityDetailsSection = ({
       <Text style={styles.label}>BIND/BOOK No</Text>
       <TextInput
         style={styles.input}
-        placeholder="BIND/BOOK No"
-        placeholderTextColor="black"
+        placeholder="xxxx xxxx xxxx"
+        placeholderTextColor="grey"
         value={bindBookNo}
         onChangeText={setBindBookNo}
         editable={!isDisabled}
@@ -58,7 +58,6 @@ const ElectricityDetailsSection = ({
         data={selectelectcate}
         labelField="label"
         valueField="value"
-        placeholder="Electricity Category"
         value={electricityCategory}
         onChange={item => setElectricityCategory(item.value)}
         disabled={isDisabled}

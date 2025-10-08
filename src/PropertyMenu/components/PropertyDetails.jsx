@@ -37,8 +37,8 @@ const PropertyDetails = ({
       <TextInput
         ref={khataNoRef}
         style={[styles.input, errors.khataNo && styles.inputError]}
-        placeholder="khata no"
-        placeholderTextColor="#000"
+        placeholder="xxxx xxxx xxxx"
+        placeholderTextColor="grey"
         value={khataNo}
         onChangeText={text => {
           setKhataNo(text);
@@ -55,8 +55,8 @@ const PropertyDetails = ({
       <TextInput
         ref={plotNoRef}
         style={[styles.input, errors.plotNo && styles.inputError]}
-        placeholder="Plot no"
-        placeholderTextColor="#000"
+        placeholder="ASD12"
+        placeholderTextColor="grey"
         value={plotNo}
         onChangeText={text => {
           setPlotNo(text);
@@ -73,8 +73,8 @@ const PropertyDetails = ({
       <TextInput
         ref={villageNameRef}
         style={[styles.input, errors.villageName && styles.inputError]}
-        placeholder="Village Name"
-        placeholderTextColor="#000"
+        placeholder="village"
+        placeholderTextColor="grey"
         value={villageName}
         onChangeText={text => {
           setVillageName(text);
@@ -92,7 +92,7 @@ const PropertyDetails = ({
         ref={plotAreaRef}
         style={[styles.input, errors.plotArea && styles.inputError]}
         placeholder="100.00"
-        placeholderTextColor="#000"
+        placeholderTextColor="grey"
         value={plotArea}
         onChangeText={text => {
           setPlotArea(text);
@@ -115,7 +115,7 @@ const PropertyDetails = ({
         ref={roadWidthRef}
         style={[styles.input, errors.roadWidth && styles.inputError]}
         placeholder="Road Width"
-        placeholderTextColor="#000"
+        placeholderTextColor="grey"
         value={roadWidth}
         onChangeText={text => {
           setRoadWidth(text);
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#555',
+    color: '#000000ff',
     marginBottom: 5,
   },
   input: {

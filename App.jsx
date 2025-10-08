@@ -6,7 +6,10 @@ import { AlertNotificationRoot } from 'react-native-alert-notification';
 import { MasterDataProvider } from './src/Context/MasterDataContext';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from './src/utils/toastConfig';
-
+// Water Url Screen
+import WaterInbox from './src/Water/Inbox/Inbox';
+import WaterSurvey from './src/Water/Inbox/WaterSurvey';
+import SubmitSurey from './src/Water/Inbox/SubmitSurey';
 // Screens
 import DashBoard from './src/Screen/DashBoard';
 import StaffCard from './src/Screen/StaffCard';
@@ -266,6 +269,24 @@ const App = () => {
               <Stack.Screen
                 name="SubmitSummaryPage"
                 component={SubmitSummaryPage}
+                options={{ headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="WaterInbox"
+                component={WaterInbox}
+                options={{ headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="WaterSurvey"
+                component={WaterSurvey}
+                options={{ headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="SubmitSurey"
+                component={SubmitSurey}
                 options={{ headerShown: false }}
               />
             </Stack.Navigator>

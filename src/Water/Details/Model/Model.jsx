@@ -705,7 +705,7 @@ export const PaymentModal = ({ visible, onClose, tradeDetails, id }) => {
       console.log('Processing payment:', paymentData);
 
       const response = await axios.post(
-        WATER_API_ROUTES.PAY_DEMAND_API,
+        WATER_API_ROUTES.PAY_DEMAND,
         paymentData,
         {
           headers: {

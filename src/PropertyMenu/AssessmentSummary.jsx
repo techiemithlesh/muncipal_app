@@ -32,10 +32,48 @@ const Section = ({ title, children }) => (
 
 const AssessmentSummary = ({ route, navigation }) => {
   const data = route.params?.data || {};
-  console.log('data  AssessmentSummary', data);
-  const ownerDetails = data.ownerDetails || [];
+  console.log('data  AssessmentSummary', route.params?.masterData || {});
+  const ownerDetails = data.ownerDtl || [];
   console.log('owner Datails', ownerDetails);
   const [loading, setLoading] = useState(false);
+
+  const masterData = route.params?.masterData || {};
+  const getMasterName = (list, id, labelKey) => {
+    if (!Array.isArray(list)) return '';
+    const item = list.find(i => i.id === id);
+    return item ? item[labelKey] : '';
+  };
+
+  // Map floor details with names
+  const floorss = (data.floorDtl || []).map(floor => ({
+    floorName: getMasterName(
+      masterData.floorType,
+      floor.floorMasterId,
+      'floorName',
+    ),
+    usageType: getMasterName(
+      masterData.usageType,
+      floor.usageTypeMasterId,
+      'usageTypeName',
+    ),
+    occupancyType: getMasterName(
+      masterData.occupancyType,
+      floor.occupancyTypeMasterId,
+      'occupancyName',
+    ),
+    constructionType: getMasterName(
+      masterData.constructionType,
+      floor.constructionTypeMasterId,
+      'constructionType',
+    ),
+    builtUpArea: floor.builtupArea,
+    fromDate: floor.dateFrom,
+    uptoDate: floor.dateUpto1,
+  }));
+  console.log('floors details', floorss);
+
+  // Example usage:
+  // const floors = mapFloorData(data.floorDtl, masterData);
 
   function convertToYearMonth(date) {
     if (!date) return '2024-01';
@@ -99,13 +137,21 @@ const AssessmentSummary = ({ route, navigation }) => {
     setLoading(true);
     try {
       const token = await getToken();
+
       const payload = {
         assessmentType: 'New Assessment',
+        waterConnDate: data.waterConnDate,
+        waterConnNo: data.waterConnNo,
+
+        electAccNo: data.electAccNo,
+        electBindBookNo: data.electBindBookNo,
+        electConsCategory: data.electConsCategory,
+        electConsumerNo: data.electConsumerNo,
         zoneMstrId: String(data.zoneMstrId),
         wardMstrId: data.wardMstrId,
         newWardMstrId: String(data.newWardMstrId),
         ownershipTypeMstrId: data.ownershipTypeId || 1,
-        propTypeMstrId: data.propertyTypeId || 1,
+        propTypeMstrId: data.propTypeMstrId,
         zoneMstrId: String(data.zoneMstrId),
         appartmentDetailsId: String(data.appartmentDetailsId || ''),
         flatRegistryDate: data.flatRegistryDate,
@@ -151,7 +197,7 @@ const AssessmentSummary = ({ route, navigation }) => {
           id: owner.id || index + 1,
           ownerName: owner.ownerName || 'NA',
           guardianName: owner.guardianName || '',
-          relationType: owner.relation || '',
+          relationType: owner.relationType || '',
           adharNo: owner.aadhaar || '',
           mobileNo: owner.mobile || '1234567890',
           email: owner.email || '',
@@ -190,7 +236,7 @@ const AssessmentSummary = ({ route, navigation }) => {
               ],
       };
 
-      console.log('Final payload:', payload);
+      console.log('Final payload:', JSON.stringify(payload, null, 2));
       const response = await axios.post(SAF_API_ROUTES.APPLY_SAF, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -221,7 +267,6 @@ const AssessmentSummary = ({ route, navigation }) => {
             <Row label="ID" value={data.id} />
           </Section>
         )}
-
         <Section title="Property Details">
           <View style={styles.ownerCard}>
             <Row label="Assessment Type" value="New Assessment" />
@@ -233,14 +278,13 @@ const AssessmentSummary = ({ route, navigation }) => {
             <Row label="Road Width (ft)" value={data.roadWidth} />
           </View>
         </Section>
-
         <Section title="Property Address">
           <View style={styles.ownerCard}>
-            <Row label="Property Address" value={data.propertyAddress} />
-            <Row label="City" value={data.city} />
-            <Row label="District" value={data.district} />
-            <Row label="State" value={data.state} />
-            <Row label="Pincode" value={data.pincode} />
+            <Row label="Property Address" value={data.propAddress} />
+            <Row label="City" value={data.propCity} />
+            <Row label="District" value={data.propDist} />
+            <Row label="State" value={data.propState} />
+            <Row label="Pincode" value={data.propState} />
             <Row
               label="Is Correspondence Address Different?"
               value={data.correspondingAddress ? 'Yes' : 'No'}
@@ -259,7 +303,6 @@ const AssessmentSummary = ({ route, navigation }) => {
             )}
           </View>
         </Section>
-
         <Section title="Owner Details">
           {(ownerDetails || []).map(
             (
@@ -268,13 +311,13 @@ const AssessmentSummary = ({ route, navigation }) => {
                 guardianName,
                 gender,
                 dob,
-                mobile,
+                mobileNo,
+                relationType,
+                adharNo,
                 email,
-                relation,
-                aadhaar,
                 pan,
-                armedForces,
-                speciallyAbled,
+                isArmedForce,
+                isSpeciallyAbled,
               },
               index,
             ) => (
@@ -286,49 +329,48 @@ const AssessmentSummary = ({ route, navigation }) => {
                 <Row label="Guardian Name" value={guardianName} />
                 <Row label="Gender" value={gender} />
                 <Row label="DOB" value={dob} />
-                <Row label="Mobile No." value={mobile} />
+                <Row label="Mobile No." value={mobileNo} />
                 <Row label="Email" value={email} />
-                <Row label="Relation" value={relation} />
-                <Row label="Aadhaar No." value={aadhaar} />
+                <Row label="Relation" value={relationType} />
+                <Row label="Aadhaar No." value={adharNo} />
                 <Row label="PAN No." value={pan} />
-                <Row label="Is Armed Force?" value={armedForces} />
-                <Row label="Is Specially Abled?" value={speciallyAbled} />
+                <Row label="Is Armed Force?" value={isArmedForce} />
+                <Row label="Is Specially Abled?" value={isSpeciallyAbled} />
               </View>
             ),
           )}
         </Section>
-
         <Section title="Electricity Details">
           <View style={styles.ownerCard}>
-            <Row label="KNO" value={data.kno} />
-            <Row label="ACC No" value={data.accNo} />
-            <Row label="BIND/BOOK No" value={data.bindBookNo} />
-            <Row
-              label="Electricity Category"
-              value={data.electricityCategory}
-            />
+            <Row label="KNO" value={data.electAccNo} />
+            <Row label="ACC No" value={data.electAccNo} />
+            <Row label="BIND/BOOK No" value={data.electBindBookNo} />
+            <Row label="Electricity Category" value={data.electConsCategory} />
           </View>
         </Section>
-
         <Section title="Water Connection Details">
           <View style={styles.ownerCard}>
-            <Row label="Water Connection No" value={data.waterConnectionNo} />
+            <Row label="Water Connection No" value={data.waterConnNo} />
             <Row
               label="Water Connection Date"
               value={
-                data.waterConnectionDate
-                  ? new Date(data.waterConnectionDate).toLocaleDateString(
-                      'en-GB',
-                    )
+                data.waterConnDate
+                  ? new Date(data.waterConnDate).toLocaleDateString('en-GB')
                   : ''
               }
             />
           </View>
         </Section>
-
         <Section title="Extra Charges">
           <View style={styles.ownerCard}>
-            <Row label="Have Mobile Tower?" value={data.mobileTower} />
+            <Row
+              label="Have Mobile Tower?"
+              value={
+                data.isMobileTower === '1' || data.isMobileTower === 1
+                  ? 'Yes'
+                  : 'No'
+              }
+            />
             {data.mobileTower === 'yes' && (
               <>
                 <Row label="Tower Area" value={data.towerArea} />
@@ -344,7 +386,14 @@ const AssessmentSummary = ({ route, navigation }) => {
                 />
               </>
             )}
-            <Row label="Have Hoarding Board(s)?" value={data.hoarding} />
+            <Row
+              label="Have Hoarding Board(s)?"
+              value={
+                data.isHoardingBoard === '1' || data.isHoardingBoard === 1
+                  ? 'Yes'
+                  : 'No'
+              }
+            />
             {data.hoarding === 'yes' && (
               <>
                 <Row label="Hoarding Area" value={data.hoardingArea} />
@@ -360,7 +409,14 @@ const AssessmentSummary = ({ route, navigation }) => {
                 />
               </>
             )}
-            <Row label="Have Petrol Pump?" value={data.petrolPump} />
+            <Row
+              label="Have Petrol Pump?"
+              value={
+                data.isPetrolPump === '1' || data.isPetrolPump === 1
+                  ? 'Yes'
+                  : 'No'
+              }
+            />
             {data.petrolPump === 'yes' && (
               <>
                 <Row label="Pump Area" value={data.pumpArea} />
@@ -378,8 +434,13 @@ const AssessmentSummary = ({ route, navigation }) => {
             )}
             <Row
               label="Have Rainwater Harvesting?"
-              value={data.rainHarvesting}
+              value={
+                data.isWaterHarvesting === '1' || data.isWaterHarvesting === 1
+                  ? 'Yes'
+                  : 'No'
+              }
             />
+
             {data.rainHarvesting === 'yes' && (
               <Row
                 label="Completion Date"
@@ -393,45 +454,35 @@ const AssessmentSummary = ({ route, navigation }) => {
           </View>
         </Section>
 
-        {Array.isArray(data.floors) && data.floors.length > 0 && (
-          <Section title="Floor Details">
-            {data.floors.map((floor, index) => {
-              console.log(floor, 'floor');
-              return (
-                <View key={index} style={styles.ownerCard}>
-                  <Text style={{ fontWeight: '600', marginBottom: 4 }}>
-                    Floor {index + 1}
-                  </Text>
-                  <Row label="Floor Name" value={floor.floorName} />
-                  <Row label="Usage Type" value={floor.usageType} />
-                  <Row label="Occupancy Type" value={floor.occupancyType} />
-                  <Row
-                    label="Construction Type"
-                    value={floor.constructionType}
-                  />
-                  <Row label="Built-Up Area" value={floor.builtUpArea} />
-                  <Row
-                    label="From Date"
-                    value={
-                      floor.fromDate
-                        ? parseDate(floor.fromDate).toLocaleDateString('en-GB')
-                        : ''
-                    }
-                  />
+        {floorss.map((floor, index) => (
+          <View key={index} style={styles.ownerCard}>
+            <Text style={{ fontWeight: '600', marginBottom: 4 }}>
+              Floor {index + 1}
+            </Text>
 
-                  <Row
-                    label="Upto Date"
-                    value={
-                      floor.uptoDate
-                        ? parseDate(floor.uptoDate).toLocaleDateString('en-GB')
-                        : ''
-                    }
-                  />
-                </View>
-              );
-            })}
-          </Section>
-        )}
+            <Row label="Floor Name" value={floor.floorName} />
+            <Row label="Usage Type" value={floor.usageType} />
+            <Row label="Occupancy Type" value={floor.occupancyType} />
+            <Row label="Construction Type" value={floor.constructionType} />
+            <Row label="Built-Up Area" value={floor.builtUpArea} />
+            <Row
+              label="From Date"
+              value={
+                floor.fromDate
+                  ? parseDate(floor.fromDate).toLocaleDateString('en-GB')
+                  : ''
+              }
+            />
+            <Row
+              label="Upto Date"
+              value={
+                floor.uptoDate
+                  ? parseDate(floor.uptoDate).toLocaleDateString('en-GB')
+                  : ''
+              }
+            />
+          </View>
+        ))}
 
         <View style={{ margin: 20 }}>
           {loading ? (

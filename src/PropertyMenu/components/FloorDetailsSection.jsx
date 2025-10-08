@@ -39,7 +39,8 @@ const FloorDetailsSection = ({
               data={floorNameOptions}
               labelField="label"
               valueField="value"
-              placeholder="Select Floor Name"
+              placeholder="Select"
+              placeholderStyle={{ color: 'grey' }}
               value={floor.floorName}
               onChange={item =>
                 !isDisabled && updateFloorDetail(index, 'floorName', item.value)

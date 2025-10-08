@@ -40,6 +40,8 @@ export const scrollToInput = (inputRef, scrollViewRef, offset = -100) => {
 
 
 export const handleValidation = ({
+  holdingNo,
+holdingNoRef,
   totalArea,
   landmark,
   pin,
@@ -64,6 +66,7 @@ export const handleValidation = ({
   wardNo2Ref,
   scrollViewRef,
   scrollToInput,
+
   setError,
 }) => {
   // Clear previous errors
@@ -83,6 +86,13 @@ export const handleValidation = ({
     scrollToInput(connectionThroughRef, scrollViewRef);
     return false;
   }
+
+if (connectionThrough === 1 && !holdingNo) {
+  setError({ holdingNo: 'Holding number is required when Connection Through is 2' });
+  scrollToInput(holdingNoRef, scrollViewRef);
+  return false;
+}
+
 
   // Check Property Type
   if (!propertyType) {

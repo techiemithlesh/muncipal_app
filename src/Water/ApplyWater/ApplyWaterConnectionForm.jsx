@@ -26,6 +26,9 @@ import { getToken } from '../../utils/auth';
 import { useNavigation } from '@react-navigation/native';
 import { scrollToInput, handleValidation } from './validation';
 import { WATER_API_ROUTES } from '../../api/apiRoutes';
+import { callTestRequest } from './applyTestRequest';
+import { showToast } from '../../utils/toast';
+
 const ApplyWaterConnectionForm = () => {
   const [focusedField, setFocusedField] = useState(null);
   const [data, setData] = useState({});
@@ -66,6 +69,8 @@ const ApplyWaterConnectionForm = () => {
   const navigation = useNavigation();
 
   const totalAreaRef = useRef(null);
+  const holdingNoRef = useRef(null);
+
   const landmarRef = useRef(null);
   const pincodeRef = useRef(null);
   const addressRef = useRef(null);
@@ -132,7 +137,7 @@ const ApplyWaterConnectionForm = () => {
       try {
         const token = await getToken();
         const response = await axios.post(
-          WATER_API_ROUTES.MASTER_DATA_API,
+          WATER_API_ROUTES.MASTER_DATA,
           {},
           {
             headers: {
@@ -241,7 +246,7 @@ const ApplyWaterConnectionForm = () => {
       setPipelineType(pipelineTypeOptions[0].value);
     }
   }, [pipelineTypeOptions]);
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const isValid = handleValidation({
       totalArea,
       landmark,
@@ -276,26 +281,70 @@ const ApplyWaterConnectionForm = () => {
 
     if (!isValid) return;
 
-    const payload = {
-      typeOfConnection,
-      connectionThrough: connectionThroughValue,
-      propertyType,
-      ownerType,
-      wardNo,
-      newWardNo: wardNo2,
-      newWardOptions,
-      totalArea,
-      landmark,
-      pin,
-      address,
-      applicants,
-      pipelineType,
-      categoryType,
-      safNo,
-    };
-    console.log('Payload to submit:', payload);
+    // const payload = {
+    //   typeOfConnection,
+    //   connectionThrough: connectionThroughValue,
+    //   propertyType,
+    //   ownerType,
+    //   wardNo,
+    //   newWardNo: wardNo2,
+    //   newWardOptions,
+    //   totalArea,
+    //   landmark,
+    //   pin,
+    //   address,
+    //   applicants,
+    //   pipelineType,
+    //   categoryType,
+    //   safNo,
+    // };
 
-    navigation.navigate('SubmitApply', { formData: payload, masterData: data });
+    const payload = {
+      category: categoryType,
+      pipelineTypeId: pipelineType.toString(),
+      connectionTypeId: typeOfConnection.toString(),
+      // connectionThroughId: parseInt(connectionThrough),
+      connectionThroughId:
+        connectionThroughValue != null
+          ? parseInt(connectionThroughValue)
+          : null,
+      propertyTypeId: propertyType,
+      ownershipTypeId: ownerType.toString(),
+      wardMstrId: wardNo.toString(),
+      newWardMstrId: wardNo2.toString(),
+      areaSqft: totalArea,
+      address: address,
+      landmark: landmark,
+      pinCode: pin,
+      holdingNo: holdingNo || '',
+
+      ownerDtl: applicants.map((applicant, index) => ({
+        id: applicant.id || index + 1,
+        ownerName: applicant.ownerName || '',
+        guardianName: applicant.guardianName || '',
+        dob: applicant.dob,
+        mobileNo: applicant.mobileNo || '',
+        email: applicant.email || '',
+      })),
+    };
+    try {
+      const result = await callTestRequest(payload);
+      console.log('call Test Api', result);
+
+      if (result.status) {
+        showToast('success', result.message || 'Valid Request');
+      } else {
+        showToast('error', result.message || 'Invalid Request');
+      }
+
+      navigation.navigate('SubmitApply', {
+        formData: payload,
+        masterData: data,
+      });
+    } catch (error) {
+      showToast('error', 'Something went wrong');
+      console.error(error);
+    }
   };
 
   return (
@@ -468,6 +517,7 @@ const ApplyWaterConnectionForm = () => {
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Holding No</Text>
                 <TextInput
+                  useRef={holdingNoRef}
                   style={[
                     styles.input,
                     focusedField === 'holdingNo' && styles.inputFocused,
@@ -478,6 +528,9 @@ const ApplyWaterConnectionForm = () => {
                   onFocus={() => setFocusedField('holdingNo')}
                   onBlur={() => setFocusedField(null)}
                 />
+                {error.holdingNo && (
+                  <Text style={{ color: 'red' }}>{error.holdingNo}</Text>
+                )}
               </View>
             )}
           </View>
