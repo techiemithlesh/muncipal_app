@@ -15,7 +15,11 @@ export const fetchFieldVerificationData = async id => {
         },
       },
     );
-
+    // console.log('📦 Field Verification Data:', response.data.tcVerifiedData);
+    // console.log(
+    //   'Fetched Field Verification Data:',
+    //   response.data.tcVerifiedData,
+    // );
     return response.data;
   } catch (error) {
     console.error('Error fetching field verification data:', error);

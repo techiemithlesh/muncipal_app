@@ -55,6 +55,7 @@ const ApplyWaterConnectionForm = () => {
   const [categoryTypeOptions, setCategoryTypeOptions] = useState([]);
   const [pipelineType, setPipelineType] = useState(null);
   const [pipelineTypeOptions, setPipelineTypeOptions] = useState([]);
+  const [wardOptions, setWardOptions] = useState([]);
   const [safNo, setSafNo] = useState('');
   const [holdingNo, setHoldingNo] = useState('');
   const [applicants, setApplicants] = useState([
@@ -92,8 +93,8 @@ const ApplyWaterConnectionForm = () => {
   const wardNoRef = useRef(null);
   const wardNo2Ref = useRef(null);
   const applicantRefs = useRef([]);
-  const wardOptions =
-    wardList?.map(item => ({ label: item.wardNo, value: item.id })) || [];
+  // const wardOptions =
+  //   wardList?.map(item => ({ label: item.wardNo, value: item.id })) || [];
   // console.log('master data', wardOptions);
 
   // Fetch new ward options based on old ward
@@ -188,12 +189,15 @@ const ApplyWaterConnectionForm = () => {
               value: item.id,
             })) || [],
           );
-          setNewWardOptions(
+          setWardOptions(
             masterData?.wardList?.map(item => ({
-              label: item.wardList,
+              label: item.wardNo,
               value: item.id,
             })) || [],
           );
+
+          // newWardOptions will come from API when old ward is selected
+          setNewWardOptions([]);
         }
       } catch (error) {
         console.error('Error fetching master data:', error);

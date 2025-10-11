@@ -51,7 +51,9 @@ const Inbox = ({ navigation }) => {
           },
         );
 
-        setData(response.data?.data?.data || []);
+        const newData = response.data?.data?.data || [];
+        setData(newData);
+        console.log('Fetched Data Count:', newData.length);
         console.log('data Field Verification', data);
       } catch (error) {
         console.error('Error fetching data:', error);

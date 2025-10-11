@@ -21,6 +21,7 @@ import axios from 'axios';
 import { getToken } from '../../utils/auth';
 import { WATER_API_ROUTES } from '../../api/apiRoutes';
 import { API_ROUTES } from '../../api/apiRoutes';
+import { getUserDetails } from '../../utils/auth';
 
 const Search = ({ navigation }) => {
   const [value, setValue] = useState(null); // selected ward id

@@ -34,6 +34,7 @@ const VerificationCard = ({
   calendarValue = new Date(),
   setCalendarValue = () => {},
   hideCorrectOption = false,
+  editable = true, // 👈 new prop (default true)
 }) => {
   const [showPicker, setShowPicker] = useState(false);
 
@@ -90,6 +91,7 @@ const VerificationCard = ({
             key={option}
             style={styles.radioOption}
             onPress={() => handleVerificationChange(option)}
+            disabled={!editable}
           >
             <View
               style={[
@@ -151,6 +153,7 @@ const VerificationCard = ({
               onChangeText={setInputValue}
               placeholder={inputPlaceholder}
               keyboardType="default"
+              editable={editable}
             />
           </View>
         )}
@@ -167,7 +170,7 @@ const VerificationCard = ({
             placeholder="Select"
             value={dropdownValue}
             onChange={item => setDropdownValue(item.value)}
-            disable={false}
+            disable={!editable}
           />
         )}
     </View>

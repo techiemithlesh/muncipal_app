@@ -17,6 +17,7 @@ export const useWaterMasterData = () => {
   const [selectedMap, setSelectedMap] = useState(null);
   const [tsMapOptions, setTsMapOptions] = useState([]);
   const [ferruleType, setFerruleType] = useState([]);
+  const [tcVerification, setTcVerification] = useState([]);
 
   const [error, setError] = useState(null);
   const [distributedPipelineTypeOptions, setDistributedPipelineTypeOptions] =
@@ -170,6 +171,8 @@ export const useWaterMasterData = () => {
               img: item.img, // Image URL for reference
             })) || [],
           );
+
+          // setTcVerification
           // console.log('ts map options', tsMapOptions);
         } else {
           console.warn('⚠️ Master data response invalid:', response?.data);
@@ -203,7 +206,7 @@ export const useWaterMasterData = () => {
       );
 
       if (response.data?.success) {
-        console.log('Verification Data:', response.data);
+        console.log('Verification Data:', response.data.tcVerification);
         return response.data; // ✅ Return data for further use
       } else {
         console.warn('API did not return success:', response.data);

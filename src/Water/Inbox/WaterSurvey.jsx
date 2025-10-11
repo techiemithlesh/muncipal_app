@@ -22,11 +22,15 @@ import HeaderNavigation from '../../Components/HeaderNavigation';
 import { useWaterMasterData } from './BackendData/FieldVerificarionData';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { fetchFieldVerificationData } from './BackendData/fetchFieldVerificationData';
+import { getUserDetails } from '../../utils/auth';
 
 const WaterSurvey = () => {
   const route = useRoute();
   const { id } = route.params || {};
   const navigation = useNavigation();
+
+  const [waterMeterChamber, setWaterMeterChamber] = useState('');
+  const [camberValue, setCamberValue] = useState('');
 
   console.log('🆔 Received ID:', id);
   const [selectedTsMap, setSelectedTsMap] = useState(null);
@@ -74,11 +78,24 @@ const WaterSurvey = () => {
   const [data, setData] = useState(null);
   const [loadingData, setLoading] = useState(true);
   const [fullPayload, setFullPayload] = useState(null);
+  const [tcVerifiedData, setTcVerifiedData] = useState(null);
 
-  const permissibleFerruleSizes = [
-    { label: '10 mm', value: '1' },
-    { label: '20 mm', value: '2' },
-  ];
+  const [roleId, setRoleId] = useState(null);
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const userDetails = await getUserDetails();
+        const roleIdValue = userDetails?.roleDtls?.[0]?.id;
+        setRoleId(roleIdValue);
+        console.log('Role ID:', roleIdValue);
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
 
   const {
     ferruleType,
@@ -106,7 +123,8 @@ const WaterSurvey = () => {
       try {
         const result = await fetchFieldVerificationData(id);
         setData(result?.data);
-        console.log('Fetched Data:', result);
+        setTcVerifiedData(result?.data?.tcVerifiedData);
+        console.log('Fetched Data:', result.data.tcVerifiedData);
       } catch (err) {
         console.error(err);
       } finally {
@@ -116,6 +134,75 @@ const WaterSurvey = () => {
 
     getData();
   }, [id]);
+  useEffect(() => {
+    if (roleId === 15 && tcVerifiedData && data) {
+      // Ward No
+      setWardVerification(
+        tcVerifiedData.wardNo === data.wardNo ? 'Correct' : 'Incorrect',
+      );
+
+      // New Ward No
+      setNewWardVerification(
+        tcVerifiedData.newWardNo === data.newWardNo ? 'Correct' : 'Incorrect',
+      );
+
+      // Property Type
+      setPropertyTypeVerification(
+        tcVerifiedData.propertyType === data.propertyType
+          ? 'Correct'
+          : 'Incorrect',
+      );
+
+      // Pipeline Type
+      setPipelineTypeVerification(
+        tcVerifiedData.pipelineType === data.pipelineType
+          ? 'Correct'
+          : 'Incorrect',
+      );
+
+      // Connection Type
+      setConnectionTypeVerification(
+        tcVerifiedData.connectionType === data.connectionType
+          ? 'Correct'
+          : 'Incorrect',
+      );
+
+      // Category
+      setCategoryVerification(
+        tcVerifiedData.category === data.category ? 'Correct' : 'Incorrect',
+      );
+
+      // Area of Plot
+      setAreaVerification(
+        tcVerifiedData.areaSqft === data.areaSqft ? 'Correct' : 'Incorrect',
+      );
+
+      // Prefill dropdown/input values for incorrect entries
+      setWardDropdown(tcVerifiedData.wardMstrId);
+      setNewWardDropdown(tcVerifiedData.newWardMstrId);
+      setPropertyTypeDropdown(tcVerifiedData.propertyTypeId);
+      setPipelineTypeDropdown(tcVerifiedData.pipelineTypeId);
+      setConnectionTypeDropdown(tcVerifiedData.connectionTypeId);
+      setCategoryDropdown(tcVerifiedData.categoryId);
+      setAreaInput(tcVerifiedData.areaSqft);
+      setPipelineTypeDropdown(tcVerifiedData.pipelineTypeId || null);
+      setConnectionTypeDropdown(tcVerifiedData.connectionTypeId || null);
+      setCategoryDropdown(tcVerifiedData.category || '');
+      setAreaInput(tcVerifiedData.areaSqft || '');
+      setPinelineSize(tcVerifiedData.distributedPipelineSize || '');
+      setfealureSize(tcVerifiedData.ferruleTypeId || '');
+      setSelectedPipelineType(tcVerifiedData.distributedPipelineType || '');
+      // If tcVerifiedData.permittedPipeDiameter = "20.00"
+      const initialPipeDelimeter = tcVerifiedData.permittedPipeDiameter
+        ? parseInt(tcVerifiedData.permittedPipeDiameter).toString()
+        : '';
+      setSelectedPipeDelimeter(initialPipeDelimeter);
+
+      setSelectedPipeQuality(tcVerifiedData.permittedPipeQuality || '');
+      setSelectedRoadType(tcVerifiedData.roadType || '');
+      setSelectedTsMap(tcVerifiedData.tsMapId || '');
+    }
+  }, [roleId, tcVerifiedData, data]);
 
   useEffect(() => {
     if (wardDropdown) {
@@ -133,6 +220,8 @@ const WaterSurvey = () => {
     const selectedTsMapObj = tsMapOptions.find(m => m.value === selectedTsMap);
 
     const payload = {
+      waterMeterChamber: waterMeterChamber,
+      camberValue: camberValue,
       connectionThroughId: data?.connectionThroughId,
       id: { id },
       wardNo: {
@@ -245,7 +334,7 @@ const WaterSurvey = () => {
         : null,
 
       pinelineSize: {
-        selfAssessedValue: { id: '', label: '6' },
+        selfAssessedValue: { id: pinelineSize, label: pinelineSize },
         verifiedValue:
           pinelineSizeVerification === 'Correct'
             ? { id: pinelineSize, label: pinelineSize }
@@ -312,6 +401,19 @@ const WaterSurvey = () => {
       },
 
       {
+        label: 'waterMeterChamber ',
+        self: '-', // or use self-assessed value if you want
+        verified: waterMeterChamber || '-', // take the input directly
+        status: waterMeterChamber ? 'Entered' : 'Not Entered',
+      },
+      {
+        label: 'camberValue ',
+        self: '-', // or use self-assessed value if you want
+        verified: camberValue || '-', // take the input directly
+        status: camberValue ? 'Entered' : 'Not Entered',
+      },
+
+      {
         label: 'Pipeline Disturbation Type',
         self: '-',
         verified: payload.pipelineDisturbationType?.label,
@@ -372,6 +474,7 @@ const WaterSurvey = () => {
           setSelectedVerification={setWardVerification}
           dropdownValue={wardDropdown}
           setDropdownValue={setWardDropdown}
+          editable={roleId !== 15}
         />
         <VerificationCard
           label="New Ward No."
@@ -382,6 +485,7 @@ const WaterSurvey = () => {
           dropdownValue={newWardDropdown}
           setDropdownValue={setNewWardDropdown}
           disabled={!wardDropdown}
+          editable={roleId !== 15}
         />
         <VerificationCard
           label="Property Type"
@@ -391,6 +495,7 @@ const WaterSurvey = () => {
           setSelectedVerification={setPropertyTypeVerification}
           dropdownValue={propertyTypeDropdown}
           setDropdownValue={setPropertyTypeDropdown}
+          editable={roleId !== 15}
         />
         <VerificationCard
           label="Pipeline Type"
@@ -400,6 +505,7 @@ const WaterSurvey = () => {
           setSelectedVerification={setPipelineTypeVerification}
           dropdownValue={pipelineTypeDropdown}
           setDropdownValue={setPipelineTypeDropdown}
+          editable={roleId !== 15}
         />
         <VerificationCard
           label="Connection Type"
@@ -409,6 +515,7 @@ const WaterSurvey = () => {
           setSelectedVerification={setConnectionTypeVerification}
           dropdownValue={connectionTypeDropdown}
           setDropdownValue={setConnectionTypeDropdown}
+          editable={roleId !== 15}
         />
         <VerificationCard
           label="Category"
@@ -418,6 +525,7 @@ const WaterSurvey = () => {
           setSelectedVerification={setCategoryVerification}
           dropdownValue={categoryDropdown}
           setDropdownValue={setCategoryDropdown}
+          editable={roleId !== 15}
         />
         {/*Connection Through - Skipped as per new design */}
 
@@ -432,6 +540,7 @@ const WaterSurvey = () => {
           setInputValue={setAreaInput}
           inputLabel="Enter Area (Sq ft):"
           inputPlaceholder="Enter area in square feet"
+          editable={roleId !== 15}
         />
 
         {/* Pipeline Size */}
@@ -445,6 +554,7 @@ const WaterSurvey = () => {
             value={pinelineSize}
             onChangeText={setPinelineSize}
             keyboardType="numeric"
+            editable={roleId !== 15}
           />
         </View>
 
@@ -473,6 +583,7 @@ const WaterSurvey = () => {
             placeholder="Select Pipeline Type"
             value={selectedPipelineType}
             onChange={item => setSelectedPipelineType(item.value)}
+            disable={roleId === 15}
           />
         </View>
 
@@ -499,6 +610,7 @@ const WaterSurvey = () => {
             placeholder="Select Pipe Quality"
             value={selectedPipeQuality}
             onChange={item => setSelectedPipeQuality(item.value)}
+            disable={roleId === 15}
           />
         </View>
 
@@ -512,8 +624,35 @@ const WaterSurvey = () => {
             placeholder="Select Road Type"
             value={selectedRoadType}
             onChange={item => setSelectedRoadType(item.value)}
+            disable={roleId === 15}
           />
         </View>
+
+        {roleId === 15 && (
+          <>
+            <View style={styles.section}>
+              <Text style={styles.sectionHeader}>Water Meter Chamber</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter Water Meter Chamber"
+                value={waterMeterChamber}
+                onChangeText={setWaterMeterChamber}
+                keyboardType="default"
+              />
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionHeader}>Camber</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter Camber"
+                value={camberValue}
+                onChangeText={setCamberValue}
+                keyboardType="default"
+              />
+            </View>
+          </>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Select TS Map</Text>

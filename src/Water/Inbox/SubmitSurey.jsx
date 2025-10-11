@@ -16,14 +16,17 @@ import axios from 'axios';
 import { WATER_API_ROUTES } from '../../api/apiRoutes';
 import { getToken } from '../../utils/auth';
 import Toast from 'react-native-toast-message';
+import { useNavigation } from '@react-navigation/native';
 
 const SubmitSurey = () => {
+  const navigation = useNavigation();
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [remarks, setRemarks] = useState('');
   const route = useRoute();
   const { data } = route.params || {}; // data passed from previous screen
   const { modalData } = route.params || {}; // data passed from previous screen
-  // console.log('Received data:', data);
+  console.log('Received data:', data);
 
   // const handleForward = async () => {
   //   await sendNextStatus('FORWARD'); // or 'F' if backend expects 'F'
@@ -62,6 +65,9 @@ const SubmitSurey = () => {
         text2Style: { fontSize: 18 },
       });
       setIsModalVisible(false);
+      setTimeout(() => {
+        navigation.navigate('WaterInbox');
+      }, 1000);
     } catch (error) {
       console.log('Response data:', error.response?.data);
 
@@ -83,6 +89,8 @@ const SubmitSurey = () => {
       field?.verifiedValue?.label ?? field?.selfAssessedValue?.label ?? null;
 
     const payload = {
+      gateValve: data?.camberValue ?? '',
+      waterLockArng: data?.waterMeterChamber ?? '',
       applicationId: data?.id?.id ?? data?.id,
       areaSqft: getValue(data?.area),
       category: getValue(data?.category),
@@ -107,8 +115,8 @@ const SubmitSurey = () => {
       propertyTypeId: getValue(data?.propertyType),
       roadType: data?.roadType?.verifiedValue?.id ?? data?.roadType?.id ?? null,
       tsMapId: data?.tsMap?.verifiedValue?.id ?? data?.tsMap?.id ?? null,
-      wardNo: getValue(data?.wardNo),
-      newWardNo: getValue(data?.newWardNo),
+      wardMstrId: getValue(data?.wardNo),
+      newWardMstrId: getValue(data?.newWardNo),
     };
     console.log('Constructed payload:', payload);
 
