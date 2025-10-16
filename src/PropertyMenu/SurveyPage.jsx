@@ -174,6 +174,7 @@ const SurveyPage = ({ route, navigation }) => {
       return floorInputValues[`${floorId}_${field}`] || '';
     }
   };
+  console.log('wardVerification', wardVerification);
 
   // Add more fields as needed
   const [floorType, setFloorType] = useState([]);
@@ -574,13 +575,13 @@ const SurveyPage = ({ route, navigation }) => {
   }, [id]);
 
   useEffect(() => {
-    if (wardVerification === 'Incorrect' && wardDropdown) {
-      fetchNewWardByOldWard(wardDropdown);
-    }
-    // else do nothing, keep existing options
+    fetchNewWardByOldWard(wardDropdown);
   }, [wardVerification, wardDropdown]);
-
   const fetchNewWardByOldWard = async wardId => {
+    console.log('Fetching new wards for old ward:', wardId || oldWard);
+
+    const oldWard = wardId || data?.wardMstrId;
+
     try {
       const token = await getToken();
       const headers = {
@@ -589,7 +590,7 @@ const SurveyPage = ({ route, navigation }) => {
       };
       const response = await axios.post(
         WARD_API.OLD_WARD_API,
-        { oldWardId: wardId },
+        { oldWardId: oldWard },
         { headers },
       );
 
@@ -1349,53 +1350,55 @@ const SurveyPage = ({ route, navigation }) => {
                   </View> */}
                 </View>
               )}
-              <View style={[styles.card, styles.shadow]}>
-                <ExtraChargesSection
-                  mobileTower={mobileTower}
-                  setMobileTower={setMobileTower}
-                  towerArea={towerArea}
-                  setTowerArea={setTowerArea}
-                  installationDate={installationDate}
-                  setInstallationDate={setInstallationDate}
-                  showInstallationDatePicker={showInstallationDatePicker}
-                  setShowInstallationDatePicker={setShowInstallationDatePicker}
-                  hoarding={hoarding}
-                  setHoarding={setHoarding}
-                  hoardingArea={hoardingArea}
-                  setHoardingArea={setHoardingArea}
-                  hoardingInstallationDate={hoardingInstallationDate}
-                  setHoardingInstallationDate={setHoardingInstallationDate}
-                  showHoardingInstallationDatePicker={
-                    showHoardingInstallationDatePicker
-                  }
-                  setShowHoardingInstallationDatePicker={
-                    setShowHoardingInstallationDatePicker
-                  }
-                  petrolPump={petrolPump}
-                  setPetrolPump={setPetrolPump}
-                  pumpArea={pumpArea}
-                  setPumpArea={setPumpArea}
-                  pumpInstallationDate={pumpInstallationDate}
-                  setPumpInstallationDate={setPumpInstallationDate}
-                  showPumpInstallationDatePicker={
-                    showPumpInstallationDatePicker
-                  }
-                  setShowPumpInstallationDatePicker={
-                    setShowPumpInstallationDatePicker
-                  }
-                  rainHarvesting={rainHarvesting}
-                  setRainHarvesting={setRainHarvesting}
-                  completionDate={completionDate}
-                  setCompletionDate={setCompletionDate}
-                  showDatePicker={showDatePicker}
-                  setShowDatePicker={setShowDatePicker}
-                  yesNoOptions={yesNoOptions}
-                  isRessessment={false}
-                  isMutation={false}
-                />
-              </View>
             </>
           )}
+
+        <View style={[styles.card, styles.shadow]}>
+          <ExtraChargesSection
+            propertyTypeId={
+              propertyDropdown ? propertyDropdown : data?.propertyTypeId
+            }
+            mobileTower={mobileTower}
+            setMobileTower={setMobileTower}
+            towerArea={towerArea}
+            setTowerArea={setTowerArea}
+            installationDate={installationDate}
+            setInstallationDate={setInstallationDate}
+            showInstallationDatePicker={showInstallationDatePicker}
+            setShowInstallationDatePicker={setShowInstallationDatePicker}
+            hoarding={hoarding}
+            setHoarding={setHoarding}
+            hoardingArea={hoardingArea}
+            setHoardingArea={setHoardingArea}
+            hoardingInstallationDate={hoardingInstallationDate}
+            setHoardingInstallationDate={setHoardingInstallationDate}
+            showHoardingInstallationDatePicker={
+              showHoardingInstallationDatePicker
+            }
+            setShowHoardingInstallationDatePicker={
+              setShowHoardingInstallationDatePicker
+            }
+            petrolPump={petrolPump}
+            setPetrolPump={setPetrolPump}
+            pumpArea={pumpArea}
+            setPumpArea={setPumpArea}
+            pumpInstallationDate={pumpInstallationDate}
+            setPumpInstallationDate={setPumpInstallationDate}
+            showPumpInstallationDatePicker={showPumpInstallationDatePicker}
+            setShowPumpInstallationDatePicker={
+              setShowPumpInstallationDatePicker
+            }
+            rainHarvesting={rainHarvesting}
+            setRainHarvesting={setRainHarvesting}
+            completionDate={completionDate}
+            setCompletionDate={setCompletionDate}
+            showDatePicker={showDatePicker}
+            setShowDatePicker={setShowDatePicker}
+            yesNoOptions={yesNoOptions}
+            isRessessment={false}
+            isMutation={false}
+          />
+        </View>
         <TouchableOpacity
           style={styles.previewButton}
           onPress={() => {
@@ -1854,138 +1857,142 @@ const SurveyPage = ({ route, navigation }) => {
                   ) : null;
                 })()}
                 {/* Other Property Features Section */}
-                {selectedPropertyLabel !== 'VACANT LAND' && (
-                  <View style={styles.tableContainer}>
-                    <Text style={styles.tableTitle}>
-                      Other Property Features
-                    </Text>
-                    <View style={styles.table}>
-                      <View style={styles.tableHeader}>
-                        <Text style={styles.tableHeaderText}>Field</Text>
-                        <Text style={styles.tableHeaderText}>Value</Text>
-                      </View>
 
-                      {/* Mobile Tower */}
-                      <View style={styles.tableRow}>
-                        <Text style={styles.tableCellLabel}>Mobile Tower</Text>
-                        <Text style={styles.tableCell}>
-                          {mobileTower || 'N/A'}
-                        </Text>
-                      </View>
-                      {mobileTower === 'yes' && (
-                        <>
-                          <View
-                            style={[styles.tableRow, styles.tableRowAlternate]}
-                          >
-                            <Text style={styles.tableCellLabel}>
-                              Tower Area
-                            </Text>
-                            <Text style={styles.tableCell}>
-                              {towerArea || 'N/A'}
-                            </Text>
-                          </View>
-                          <View style={styles.tableRow}>
-                            <Text style={styles.tableCellLabel}>
-                              Installation Date
-                            </Text>
-                            <Text style={styles.tableCell}>
-                              {installationDate
-                                ? formatDate(installationDate)
-                                : 'N/A'}
-                            </Text>
-                          </View>
-                        </>
-                      )}
+                <View style={styles.tableContainer}>
+                  <Text style={styles.tableTitle}>Other Property Features</Text>
+                  <View style={styles.table}>
+                    <View style={styles.tableHeader}>
+                      <Text style={styles.tableHeaderText}>Field</Text>
+                      <Text style={styles.tableHeaderText}>Value</Text>
+                    </View>
 
-                      {/* Hoarding */}
-                      <></>
-                      <View style={[styles.tableRow, styles.tableRowAlternate]}>
-                        <Text style={styles.tableCellLabel}>Hoarding</Text>
-                        <Text style={styles.tableCell}>
-                          {hoarding || 'N/A'}
-                        </Text>
-                      </View>
-                      {hoarding === 'yes' && (
-                        <>
-                          <View style={styles.tableRow}>
-                            <Text style={styles.tableCellLabel}>
-                              Hoarding Area
-                            </Text>
-                            <Text style={styles.tableCell}>
-                              {hoardingArea || 'N/A'}
-                            </Text>
-                          </View>
-                          <View
-                            style={[styles.tableRow, styles.tableRowAlternate]}
-                          >
-                            <Text style={styles.tableCellLabel}>
-                              Installation Date
-                            </Text>
-                            <Text style={styles.tableCell}>
-                              {hoardingInstallationDate
-                                ? formatDate(hoardingInstallationDate)
-                                : 'N/A'}
-                            </Text>
-                          </View>
-                        </>
-                      )}
-
-                      {/* Petrol Pump */}
-                      <View style={styles.tableRow}>
-                        <Text style={styles.tableCellLabel}>Petrol Pump</Text>
-                        <Text style={styles.tableCell}>
-                          {petrolPump || 'N/A'}
-                        </Text>
-                      </View>
-                      {petrolPump === 'yes' && (
-                        <>
-                          <View
-                            style={[styles.tableRow, styles.tableRowAlternate]}
-                          >
-                            <Text style={styles.tableCellLabel}>Pump Area</Text>
-                            <Text style={styles.tableCell}>
-                              {pumpArea || 'N/A'}
-                            </Text>
-                          </View>
-                          <View style={styles.tableRow}>
-                            <Text style={styles.tableCellLabel}>
-                              Installation Date
-                            </Text>
-                            <Text style={styles.tableCell}>
-                              {pumpInstallationDate
-                                ? formatDate(pumpInstallationDate)
-                                : 'N/A'}
-                            </Text>
-                          </View>
-                        </>
-                      )}
-
-                      {/* Rainwater Harvesting */}
-                      <View style={[styles.tableRow, styles.tableRowAlternate]}>
-                        <Text style={styles.tableCellLabel}>
-                          Rainwater Harvesting
-                        </Text>
-                        <Text style={styles.tableCell}>
-                          {rainHarvesting || 'N/A'}
-                        </Text>
-                      </View>
-                      {rainHarvesting === 'yes' && (
+                    {/* Mobile Tower */}
+                    <View style={styles.tableRow}>
+                      <Text style={styles.tableCellLabel}>Mobile Tower</Text>
+                      <Text style={styles.tableCell}>
+                        {mobileTower || 'N/A'}
+                      </Text>
+                    </View>
+                    {mobileTower === 'yes' && (
+                      <>
+                        <View
+                          style={[styles.tableRow, styles.tableRowAlternate]}
+                        >
+                          <Text style={styles.tableCellLabel}>Tower Area</Text>
+                          <Text style={styles.tableCell}>
+                            {towerArea || 'N/A'}
+                          </Text>
+                        </View>
                         <View style={styles.tableRow}>
                           <Text style={styles.tableCellLabel}>
-                            Completion Date
+                            Installation Date
                           </Text>
                           <Text style={styles.tableCell}>
-                            {completionDate
-                              ? new Date(completionDate)
-                                  .toISOString()
-                                  .split('T')[0]
+                            {installationDate
+                              ? formatDate(installationDate)
                               : 'N/A'}
                           </Text>
                         </View>
-                      )}
+                      </>
+                    )}
+
+                    {/* Hoarding */}
+                    <></>
+                    <View style={[styles.tableRow, styles.tableRowAlternate]}>
+                      <Text style={styles.tableCellLabel}>Hoarding</Text>
+                      <Text style={styles.tableCell}>{hoarding || 'N/A'}</Text>
                     </View>
+                    {hoarding === 'yes' && (
+                      <>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableCellLabel}>
+                            Hoarding Area
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {hoardingArea || 'N/A'}
+                          </Text>
+                        </View>
+                        <View
+                          style={[styles.tableRow, styles.tableRowAlternate]}
+                        >
+                          <Text style={styles.tableCellLabel}>
+                            Installation Date
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {hoardingInstallationDate
+                              ? formatDate(hoardingInstallationDate)
+                              : 'N/A'}
+                          </Text>
+                        </View>
+                      </>
+                    )}
+
+                    {selectedPropertyLabel !== 'VACANT LAND' && (
+                      <>
+                        <View style={styles.tableRow}>
+                          <Text style={styles.tableCellLabel}>Petrol Pump</Text>
+                          <Text style={styles.tableCell}>
+                            {petrolPump || 'N/A'}
+                          </Text>
+                        </View>
+                        {petrolPump === 'yes' && (
+                          <>
+                            <View
+                              style={[
+                                styles.tableRow,
+                                styles.tableRowAlternate,
+                              ]}
+                            >
+                              <Text style={styles.tableCellLabel}>
+                                Pump Area
+                              </Text>
+                              <Text style={styles.tableCell}>
+                                {pumpArea || 'N/A'}
+                              </Text>
+                            </View>
+                            <View style={styles.tableRow}>
+                              <Text style={styles.tableCellLabel}>
+                                Installation Date
+                              </Text>
+                              <Text style={styles.tableCell}>
+                                {pumpInstallationDate
+                                  ? formatDate(pumpInstallationDate)
+                                  : 'N/A'}
+                              </Text>
+                            </View>
+                          </>
+                        )}
+
+                        {/* Rainwater Harvesting */}
+                        <View
+                          style={[styles.tableRow, styles.tableRowAlternate]}
+                        >
+                          <Text style={styles.tableCellLabel}>
+                            Rainwater Harvesting
+                          </Text>
+                          <Text style={styles.tableCell}>
+                            {rainHarvesting || 'N/A'}
+                          </Text>
+                        </View>
+                        {rainHarvesting === 'yes' && (
+                          <View style={styles.tableRow}>
+                            <Text style={styles.tableCellLabel}>
+                              Completion Date
+                            </Text>
+                            <Text style={styles.tableCell}>
+                              {completionDate
+                                ? new Date(completionDate)
+                                    .toISOString()
+                                    .split('T')[0]
+                                : 'N/A'}
+                            </Text>
+                          </View>
+                        )}
+                      </>
+                    )}
+                    {/* Petrol Pump */}
                   </View>
-                )}
+                </View>
               </ScrollView>
 
               <View style={styles.modalButtonContainer}>

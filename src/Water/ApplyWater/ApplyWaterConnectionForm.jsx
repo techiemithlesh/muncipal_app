@@ -359,318 +359,325 @@ const ApplyWaterConnectionForm = () => {
         style={styles.container}
       >
         <ScrollView contentContainerStyle={styles.containe} ref={scrollViewRef}>
-          <Text style={styles.sectionTitle}>Apply Water Connection Form</Text>
-
           {/* Type of Connection & Connection Through */}
-          <View style={styles.row}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Type of Connection *</Text>
-              <View ref={typeOfConnectionWrapperRef}>
-                <Dropdown
-                  ref={typeOfConnectionRef}
-                  style={[
-                    styles.dropdown,
-                    focusedField === 'typeOfConnection' && styles.inputFocused,
-                    error.typeOfConnection && styles.inputError,
-                  ]}
-                  data={connectonType}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Select"
-                  value={typeOfConnection}
-                  onChange={item => setTypeOfConnection(item.value)}
-                  onFocus={() => setFocusedField('typeOfConnection')}
-                  onBlur={() => setFocusedField(null)}
-                />
-              </View>
-              {error.typeOfConnection && (
-                <Text style={{ color: 'red' }}>{error.typeOfConnection}</Text>
-              )}
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Connection Through *</Text>
-              <View ref={connectionThroughWrapperRef}>
-                <Dropdown
-                  ref={connectionThroughRef}
-                  style={[
-                    styles.dropdown,
-                    focusedField === 'connectionThrough' && styles.inputFocused,
-                    error.connectionThrough && styles.inputError,
-                  ]}
-                  data={connectionThrough}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Select"
-                  value={connectionThroughValue}
-                  onChange={item => setConnectionThroughValue(item.value)}
-                  onFocus={() => setFocusedField('connectionThrough')}
-                  onBlur={() => setFocusedField(null)}
-                />
-              </View>
-              {error.connectionThrough && (
-                <Text style={{ color: 'red' }}>{error.connectionThrough}</Text>
-              )}
-            </View>
-          </View>
-
-          {/* Property Type & Owner Type */}
-          <View style={styles.row}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Property Type *</Text>
-              <View ref={propertyTypeWrapperRef}>
-                <Dropdown
-                  ref={propertyTypeRef}
-                  style={[
-                    styles.dropdown,
-                    focusedField === 'propertyType' && styles.inputFocused,
-                    error.propertyType && styles.inputError,
-                  ]}
-                  data={propertyTypeOptions}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Select"
-                  value={propertyType}
-                  onChange={item => setPropertyType(item.value)}
-                />
-              </View>
-              {error.propertyType && (
-                <Text style={{ color: 'red' }}>{error.propertyType}</Text>
-              )}
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Owner Type *</Text>
-              <View ref={ownerTypeWrapperRef}>
-                <Dropdown
-                  ref={ownerTypeRef}
-                  style={[
-                    styles.dropdown,
-                    focusedField === 'ownerType' && styles.inputFocused,
-                    error.ownerType && styles.inputError,
-                  ]}
-                  data={ownershipType}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Select"
-                  value={ownerType}
-                  onChange={item => setOwnerType(item.value)}
-                />
-              </View>
-              {error.ownerType && (
-                <Text style={{ color: 'red' }}>{error.ownerType}</Text>
-              )}
-            </View>
-          </View>
-
-          <View style={styles.row}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Category Type</Text>
-              <Dropdown
-                style={[
-                  styles.dropdown,
-                  focusedField === 'categoryType' && styles.inputFocused,
-                ]}
-                data={categoryTypeOptions}
-                labelField="label"
-                valueField="value"
-                value={categoryType}
-                disable={selectedPropertyLabel !== 'Residential'} // editable only if Residential
-                onChange={item => setCategoryType(item.value)} // updates state
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Pipeline Type</Text>
-              <Dropdown
-                style={[
-                  styles.dropdown,
-                  focusedField === 'pipelineType' && styles.inputFocused,
-                ]}
-                data={pipelineTypeOptions}
-                labelField="label"
-                valueField="value"
-                value={pipelineType}
-                disable={selectedPropertyLabel !== 'Residential'} // editable only if Residential
-                onChange={item => setPipelineType(item.value)}
-              />
-            </View>
-          </View>
-
-          {/* SAF & Holding No */}
-          {/* Conditional SAF / Holding Input */}
-          <View style={styles.row}>
-            {selectedConnectionThrougn === 'SAF' && (
+          <View style={styles.applicantCard}>
+            <Text style={styles.sectionTitle}>Apply Water Connection Form</Text>
+            <View style={styles.fullWidthInputContainer}>
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>SAF No</Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    focusedField === 'safNo' && styles.inputFocused,
-                  ]}
-                  placeholder="Enter SAF No"
-                  value={safNo}
-                  onChangeText={setSafNo}
-                  onFocus={() => setFocusedField('safNo')}
-                  onBlur={() => setFocusedField(null)}
-                />
-              </View>
-            )}
-
-            {selectedConnectionThrougn === 'Holding Proof' && (
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Holding No</Text>
-                <TextInput
-                  useRef={holdingNoRef}
-                  style={[
-                    styles.input,
-                    focusedField === 'holdingNo' && styles.inputFocused,
-                  ]}
-                  placeholder="Enter Holding No"
-                  value={holdingNo}
-                  onChangeText={setHoldingNo}
-                  onFocus={() => setFocusedField('holdingNo')}
-                  onBlur={() => setFocusedField(null)}
-                />
-                {error.holdingNo && (
-                  <Text style={{ color: 'red' }}>{error.holdingNo}</Text>
+                <Text style={styles.label}>Type of Connection *</Text>
+                <View ref={typeOfConnectionWrapperRef}>
+                  <Dropdown
+                    ref={typeOfConnectionRef}
+                    style={[
+                      styles.dropdown,
+                      focusedField === 'typeOfConnection' &&
+                        styles.inputFocused,
+                      error.typeOfConnection && styles.inputError,
+                    ]}
+                    data={connectonType}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Select"
+                    value={typeOfConnection}
+                    onChange={item => setTypeOfConnection(item.value)}
+                    onFocus={() => setFocusedField('typeOfConnection')}
+                    onBlur={() => setFocusedField(null)}
+                  />
+                </View>
+                {error.typeOfConnection && (
+                  <Text style={{ color: 'red' }}>{error.typeOfConnection}</Text>
                 )}
               </View>
-            )}
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Connection Through *</Text>
+                <View ref={connectionThroughWrapperRef}>
+                  <Dropdown
+                    ref={connectionThroughRef}
+                    style={[
+                      styles.dropdown,
+                      focusedField === 'connectionThrough' &&
+                        styles.inputFocused,
+                      error.connectionThrough && styles.inputError,
+                    ]}
+                    data={connectionThrough}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Select"
+                    value={connectionThroughValue}
+                    onChange={item => setConnectionThroughValue(item.value)}
+                    onFocus={() => setFocusedField('connectionThrough')}
+                    onBlur={() => setFocusedField(null)}
+                  />
+                </View>
+                {error.connectionThrough && (
+                  <Text style={{ color: 'red' }}>
+                    {error.connectionThrough}
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            {/* Property Type & Owner Type */}
+            <View style={styles.fullWidthInputContainer}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Property Type *</Text>
+                <View ref={propertyTypeWrapperRef}>
+                  <Dropdown
+                    ref={propertyTypeRef}
+                    style={[
+                      styles.dropdown,
+                      focusedField === 'propertyType' && styles.inputFocused,
+                      error.propertyType && styles.inputError,
+                    ]}
+                    data={propertyTypeOptions}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Select"
+                    value={propertyType}
+                    onChange={item => setPropertyType(item.value)}
+                  />
+                </View>
+                {error.propertyType && (
+                  <Text style={{ color: 'red' }}>{error.propertyType}</Text>
+                )}
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Owner Type *</Text>
+                <View ref={ownerTypeWrapperRef}>
+                  <Dropdown
+                    ref={ownerTypeRef}
+                    style={[
+                      styles.dropdown,
+                      focusedField === 'ownerType' && styles.inputFocused,
+                      error.ownerType && styles.inputError,
+                    ]}
+                    data={ownershipType}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Select"
+                    value={ownerType}
+                    onChange={item => setOwnerType(item.value)}
+                  />
+                </View>
+                {error.ownerType && (
+                  <Text style={{ color: 'red' }}>{error.ownerType}</Text>
+                )}
+              </View>
+            </View>
+
+            <View style={styles.fullWidthInputContainer}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Category Type</Text>
+                <Dropdown
+                  style={[
+                    styles.dropdown,
+                    focusedField === 'categoryType' && styles.inputFocused,
+                  ]}
+                  data={categoryTypeOptions}
+                  labelField="label"
+                  valueField="value"
+                  value={categoryType}
+                  disable={selectedPropertyLabel !== 'Residential'} // editable only if Residential
+                  onChange={item => setCategoryType(item.value)} // updates state
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Pipeline Type</Text>
+                <Dropdown
+                  style={[
+                    styles.dropdown,
+                    focusedField === 'pipelineType' && styles.inputFocused,
+                  ]}
+                  data={pipelineTypeOptions}
+                  labelField="label"
+                  valueField="value"
+                  value={pipelineType}
+                  disable={selectedPropertyLabel !== 'Residential'} // editable only if Residential
+                  onChange={item => setPipelineType(item.value)}
+                />
+              </View>
+            </View>
+
+            {/* SAF & Holding No */}
+            {/* Conditional SAF / Holding Input */}
+            <View style={styles.fullWidthInputContainer}>
+              {selectedConnectionThrougn === 'SAF' && (
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>SAF No</Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      focusedField === 'safNo' && styles.inputFocused,
+                    ]}
+                    placeholder="Enter SAF No"
+                    value={safNo}
+                    onChangeText={setSafNo}
+                    onFocus={() => setFocusedField('safNo')}
+                    onBlur={() => setFocusedField(null)}
+                  />
+                </View>
+              )}
+
+              {selectedConnectionThrougn === 'Holding Proof' && (
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Holding No</Text>
+                  <TextInput
+                    useRef={holdingNoRef}
+                    style={[
+                      styles.input,
+                      focusedField === 'holdingNo' && styles.inputFocused,
+                    ]}
+                    placeholder="Enter Holding No"
+                    value={holdingNo}
+                    onChangeText={setHoldingNo}
+                    onFocus={() => setFocusedField('holdingNo')}
+                    onBlur={() => setFocusedField(null)}
+                  />
+                  {error.holdingNo && (
+                    <Text style={{ color: 'red' }}>{error.holdingNo}</Text>
+                  )}
+                </View>
+              )}
+            </View>
           </View>
 
           {/* Ward Details */}
-          <Text style={styles.sectionTitle}>Applicant Property Details</Text>
-          <View style={styles.row}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Ward No. *</Text>
-              <View ref={wardNoWrapperRef}>
-                <Dropdown
-                  ref={wardNoRef}
-                  style={[
-                    styles.dropdown,
-                    focusedField === 'wardNo' && styles.inputFocused,
-                    error.wardNo && styles.inputError,
-                  ]}
-                  data={wardOptions}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Select"
-                  value={wardNo}
-                  onChange={item => setWardNo(item.value)}
-                />
+          <View style={styles.applicantCard}>
+            <Text style={styles.sectionTitle}>Applicant Property Details</Text>
+            <View style={styles.fullWidthInputContainer}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Ward No. *</Text>
+                <View ref={wardNoWrapperRef}>
+                  <Dropdown
+                    ref={wardNoRef}
+                    style={[
+                      styles.dropdown,
+                      focusedField === 'wardNo' && styles.inputFocused,
+                      error.wardNo && styles.inputError,
+                    ]}
+                    data={wardOptions}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Select"
+                    value={wardNo}
+                    onChange={item => setWardNo(item.value)}
+                  />
+                </View>
+                {error.wardNo && (
+                  <Text style={{ color: 'red' }}>{error.wardNo}</Text>
+                )}
               </View>
-              {error.wardNo && (
-                <Text style={{ color: 'red' }}>{error.wardNo}</Text>
-              )}
-            </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>New Ward No *</Text>
-              <View ref={wardNo2WrapperRef}>
-                <Dropdown
-                  ref={wardNo2Ref}
-                  style={[
-                    styles.dropdown,
-                    focusedField === 'wardNo2' && styles.inputFocused,
-                    error.wardNo2 && styles.inputError,
-                  ]}
-                  data={newWardOptions}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Select"
-                  value={wardNo2}
-                  onChange={item => setWardNo2(item.value)}
-                />
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>New Ward No *</Text>
+                <View ref={wardNo2WrapperRef}>
+                  <Dropdown
+                    ref={wardNo2Ref}
+                    style={[
+                      styles.dropdown,
+                      focusedField === 'wardNo2' && styles.inputFocused,
+                      error.wardNo2 && styles.inputError,
+                    ]}
+                    data={newWardOptions}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Select"
+                    value={wardNo2}
+                    onChange={item => setWardNo2(item.value)}
+                  />
+                </View>
+                {error.wardNo2 && (
+                  <Text style={{ color: 'red' }}>{error.wardNo2}</Text>
+                )}
               </View>
-              {error.wardNo2 && (
-                <Text style={{ color: 'red' }}>{error.wardNo2}</Text>
-              )}
             </View>
-          </View>
 
-          {/* Total Area, Landmark, Pin & Address */}
-          <View style={styles.row}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Area (in Sq. Ft) *</Text>
+            {/* Total Area, Landmark, Pin & Address */}
+            <View style={styles.fullWidthInputContainer}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Area (in Sq. Ft) *</Text>
+                <TextInput
+                  ref={totalAreaRef}
+                  style={[
+                    styles.input,
+                    focusedField === 'totalArea' && styles.inputFocused,
+                    error.totalArea && styles.inputError,
+                  ]}
+                  placeholder="Enter Total Area"
+                  value={totalArea}
+                  onChangeText={setTotalArea}
+                  onFocus={() => setFocusedField('totalArea')}
+                  onBlur={() => setFocusedField(null)}
+                  keyboardType="numeric"
+                />
+                {error.totalArea && (
+                  <Text style={{ color: 'red' }}>{error.totalArea}</Text>
+                )}
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Landmark *</Text>
+                <TextInput
+                  ref={landmarRef}
+                  style={[
+                    styles.input,
+                    focusedField === 'landmark' && styles.inputFocused,
+                    error.landmark && styles.inputError,
+                  ]}
+                  placeholder="Enter Landmark"
+                  value={landmark}
+                  onChangeText={setLandmark}
+                  onFocus={() => setFocusedField('landmark')}
+                  onBlur={() => setFocusedField(null)}
+                />
+                {error.landmark && (
+                  <Text style={{ color: 'red' }}>{error.landmark}</Text>
+                )}
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Pin *</Text>
+                <TextInput
+                  ref={pincodeRef}
+                  style={[
+                    styles.input,
+                    focusedField === 'pin' && styles.inputFocused,
+                    error.pin && styles.inputError,
+                  ]}
+                  placeholder="Enter Pin"
+                  value={pin}
+                  onChangeText={setPin}
+                  onFocus={() => setFocusedField('pin')}
+                  onBlur={() => setFocusedField(null)}
+                  keyboardType="numeric"
+                  maxLength={6}
+                />
+                {error.pin && <Text style={{ color: 'red' }}>{error.pin}</Text>}
+              </View>
+            </View>
+
+            <View style={styles.fullWidthInputContainer}>
+              <Text style={styles.label}>Address *</Text>
               <TextInput
-                ref={totalAreaRef}
+                ref={addressRef}
                 style={[
                   styles.input,
-                  focusedField === 'totalArea' && styles.inputFocused,
-                  error.totalArea && styles.inputError,
+                  focusedField === 'address' && styles.inputFocused,
+                  error.address && styles.inputError,
                 ]}
-                placeholder="Enter Total Area"
-                value={totalArea}
-                onChangeText={setTotalArea}
-                onFocus={() => setFocusedField('totalArea')}
+                placeholder="Enter Address"
+                value={address}
+                onChangeText={setAddress}
+                onFocus={() => setFocusedField('address')}
                 onBlur={() => setFocusedField(null)}
-                keyboardType="numeric"
               />
-              {error.totalArea && (
-                <Text style={{ color: 'red' }}>{error.totalArea}</Text>
+              {error.address && (
+                <Text style={{ color: 'red' }}>{error.address}</Text>
               )}
             </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Landmark *</Text>
-              <TextInput
-                ref={landmarRef}
-                style={[
-                  styles.input,
-                  focusedField === 'landmark' && styles.inputFocused,
-                  error.landmark && styles.inputError,
-                ]}
-                placeholder="Enter Landmark"
-                value={landmark}
-                onChangeText={setLandmark}
-                onFocus={() => setFocusedField('landmark')}
-                onBlur={() => setFocusedField(null)}
-              />
-              {error.landmark && (
-                <Text style={{ color: 'red' }}>{error.landmark}</Text>
-              )}
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Pin *</Text>
-              <TextInput
-                ref={pincodeRef}
-                style={[
-                  styles.input,
-                  focusedField === 'pin' && styles.inputFocused,
-                  error.pin && styles.inputError,
-                ]}
-                placeholder="Enter Pin"
-                value={pin}
-                onChangeText={setPin}
-                onFocus={() => setFocusedField('pin')}
-                onBlur={() => setFocusedField(null)}
-                keyboardType="numeric"
-                maxLength={6}
-              />
-              {error.pin && <Text style={{ color: 'red' }}>{error.pin}</Text>}
-            </View>
-          </View>
-
-          <View style={styles.fullWidthInputContainer}>
-            <Text style={styles.label}>Address *</Text>
-            <TextInput
-              ref={addressRef}
-              style={[
-                styles.input,
-                focusedField === 'address' && styles.inputFocused,
-                error.address && styles.inputError,
-              ]}
-              placeholder="Enter Address"
-              value={address}
-              onChangeText={setAddress}
-              onFocus={() => setFocusedField('address')}
-              onBlur={() => setFocusedField(null)}
-            />
-            {error.address && (
-              <Text style={{ color: 'red' }}>{error.address}</Text>
-            )}
           </View>
 
           {/* Applicants */}
@@ -679,7 +686,7 @@ const ApplyWaterConnectionForm = () => {
             <View key={index} style={styles.applicantCard}>
               <Text style={styles.applicantTitle}>Applicant {index + 1}</Text>
 
-              <View style={styles.row}>
+              <View style={styles.fullWidthInputContainer}>
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>Owner Name *</Text>
                   <TextInput
@@ -723,7 +730,7 @@ const ApplyWaterConnectionForm = () => {
                 </View>
               </View>
 
-              <View style={styles.row}>
+              <View style={styles.fullWidthInputContainer}>
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>Mobile No. *</Text>
                   <TextInput
@@ -771,7 +778,6 @@ const ApplyWaterConnectionForm = () => {
               {/* New DOB Field */}
               <View style={styles.row}>
                 <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Date of Birth (YYYY/MM/DD)</Text>
                   <Text style={styles.label}>Date of Birth</Text>
                   <TouchableOpacity
                     style={styles.input}
@@ -842,7 +848,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 12,
   },
-  inputContainer: { flex: 1, marginRight: 8 },
+  inputContainer: {
+    flex: 1,
+    marginRight: 8,
+    width: '100%',
+  },
+
   fullWidthInputContainer: { flex: 1, marginBottom: 12 },
   label: { marginBottom: 4 },
   input: { borderWidth: 1, borderColor: '#ccc', padding: 8, borderRadius: 6 },
@@ -886,6 +897,19 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   submitButtonText: { color: '#fff', fontWeight: 'bold', fontSize: rf(2) },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginVertical: 10,
+    // marginHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4, // For Android shadow
+    overflow: 'hidden',
+    padding: 20,
+  },
 });
 
 export default ApplyWaterConnectionForm;

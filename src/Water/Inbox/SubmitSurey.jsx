@@ -39,7 +39,7 @@ const SubmitSurey = () => {
   const handleForward = async status => {
     try {
       const token = await getToken();
-      console.log('Sending forward with remarks:', token);
+      // console.log('Sending forward with remarks:', token);
       const payload = {
         id: data?.id?.id ?? data?.id,
         remarks: remarks || '',

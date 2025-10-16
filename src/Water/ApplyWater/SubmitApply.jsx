@@ -12,7 +12,9 @@ import Colors from '../../Constants/Colors';
 import { WATER_API_ROUTES } from '../../api/apiRoutes';
 import axios from 'axios';
 import { getToken } from '../../utils/auth';
+import { useNavigation } from '@react-navigation/native';
 const SubmitApply = ({ route }) => {
+  const navigation = useNavigation();
   const { formData, masterData } = route.params;
   console.log('Form Data:', formData);
   // const {}
@@ -89,17 +91,13 @@ const SubmitApply = ({ route }) => {
       })),
     };
 
-    // Insert safNo conditionally
-    if (formData.connectionThrough === 2) {
-      payload.safNo = formData.safNo;
-    }
-
-    // Insert safNo conditionally into the payload
-    if (formData.connectionThroughId.toString() === '2') {
+    // Add safNo if connectionThrough = 2
+    if (formData.connectionThroughId?.toString() === '2') {
       payload.safNo = formData.safNo;
     }
 
     console.log('Submitting payload:', payload);
+
     try {
       const token = await getToken();
 
@@ -114,14 +112,32 @@ const SubmitApply = ({ route }) => {
         },
       );
 
-      console.log('Submitting to:', WATER_API_ROUTES.APPLY_CONNECTION_API);
-      console.log('Payload:', payload);
-      console.log('Response Data:', response.data);
+      console.log('Response:', response.data);
 
       if (response.data.status) {
-        Alert.alert('Success', 'Your form has been successfully submitted!');
+        Alert.alert(
+          '✅ Success',
+          'Your form has been successfully submitted!',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.navigate('SearchWater'),
+            },
+          ],
+          { cancelable: false },
+        );
       } else {
-        Alert.alert('Authentication Failed', 'Please login again.');
+        Alert.alert(
+          'Authentication Failed',
+          'Please login again.',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.navigate('SearchWater'),
+            },
+          ],
+          { cancelable: false },
+        );
       }
     } catch (error) {
       console.error('Full error:', error);
@@ -131,7 +147,17 @@ const SubmitApply = ({ route }) => {
         error.message ||
         'An unexpected error occurred.';
 
-      Alert.alert('Submission Failed', message);
+      Alert.alert(
+        'Submission Failed',
+        message,
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('SearchWater'),
+          },
+        ],
+        { cancelable: false },
+      );
     }
   };
 

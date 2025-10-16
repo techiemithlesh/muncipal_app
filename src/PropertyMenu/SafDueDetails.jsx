@@ -70,9 +70,10 @@ const SafDueDetails = ({ route, navigation }) => {
   const paymentTypeData = [{ label: 'Full', value: 'Full' }];
 
   const paymentModeData = [
-    { label: 'Online', value: 'Online' },
+    { label: 'DD', value: 'DD' },
     { label: 'Cash', value: 'Cash' },
-    { label: 'UPI', value: 'UPI' },
+    { label: 'NEFT', value: 'NEFT' },
+    { label: 'Cheque', value: 'ChEQUE' },
   ];
   const [isVisible, setIsVisible] = useState(false);
   const [selectedData, setSelectedData] = useState(null);
@@ -313,7 +314,7 @@ const SafDueDetails = ({ route, navigation }) => {
         },
       );
 
-      console.log('Payment API response:', response.data);
+      // console.log('Payment API response:', response.data);
 
       if (response.data.status === true) {
         console.log(
@@ -324,6 +325,12 @@ const SafDueDetails = ({ route, navigation }) => {
           'Success',
           response.data.message || 'Payment Successfully Done',
         );
+        fetchSafDetails(); // Refresh details after payment
+        viewdemand(id); // Refresh document list
+
+        setModalVisible(true);
+        handleViewReceipt(response.data.data?.tranId);
+
         return { success: true, tranId: response.data.data?.tranId };
       } else {
         Alert.alert('Payment Error', response.data.message || 'Payment failed');
@@ -1087,9 +1094,9 @@ const SafDueDetails = ({ route, navigation }) => {
           onPress={() => documentview(id)}
           style={styles.viewButton}
         >
-          <Text style={styles.viewButtonText}>👁️ View</Text>
+          <Text style={styles.viewButtonText}>👁️ View Document</Text>
         </TouchableOpacity>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() =>
             navigation.navigate('ApplyAssessmentComponentized', {
               id: id,
@@ -1121,8 +1128,8 @@ const SafDueDetails = ({ route, navigation }) => {
               ? '(Not Available for Vacant Land)'
               : ''}
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </TouchableOpacity> */}
+        {/* <TouchableOpacity
           onPress={() =>
             navigation.navigate('ApplyAssessmentComponentized', {
               id: id,
@@ -1139,7 +1146,7 @@ const SafDueDetails = ({ route, navigation }) => {
           style={styles.viewButton}
         >
           <Text style={styles.viewButtonText}>🔄 Mutation</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         {safData?.paymentStatus == 0 && (
           <TouchableOpacity
             onPress={() => {
@@ -2209,7 +2216,7 @@ const styles = StyleSheet.create({
   },
 
   tableCell: {
-    minWidth: 80,
+    width: 120,
     padding: 4,
     textAlign: 'center',
     borderRightWidth: 0.5,
@@ -2442,6 +2449,9 @@ const styles = StyleSheet.create({
   value: {
     fontWeight: 'bold',
     color: '#000',
+    width: '50%',
+    display: 'flex',
+    textAlign: 'right',
   },
   penaltyBox: {
     backgroundColor: '#ffe6e6',

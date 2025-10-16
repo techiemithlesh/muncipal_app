@@ -4,6 +4,7 @@ import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const ExtraChargesSection = ({
+  propertyTypeId,
   mobileTower,
   setMobileTower,
   towerArea,
@@ -221,161 +222,166 @@ const ExtraChargesSection = ({
           )}
         </View>
       )}
-      <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
-        Is property a Petrol Pump ? *
-      </Text>
-      <Dropdown
-        style={{
-          height: 45,
-          borderColor: '#ccc',
-          borderWidth: 1,
-          borderRadius: 8,
-          paddingHorizontal: 12,
-          backgroundColor: '#fff',
-          marginBottom: 12,
-          justifyContent: 'center',
-        }}
-        data={yesNoOptions}
-        labelField="label"
-        valueField="value"
-        placeholder="Is property a Petrol Pump ? *"
-        value={petrolPump}
-        onChange={item => setPetrolPump(item.value)}
-        disable={isDisabled}
-      />
-      {petrolPump === 'yes' && (
-        <View style={{ marginBottom: 12 }}>
+
+      {propertyTypeId != 4 && (
+        <>
           <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
-            Total Area of Petrol Pump (in Sq. Ft.) *
+            Is property a Petrol Pump ? *
           </Text>
-          <TextInput
+          <Dropdown
             style={{
-              borderWidth: 1,
+              height: 45,
               borderColor: '#ccc',
+              borderWidth: 1,
               borderRadius: 8,
               paddingHorizontal: 12,
-              paddingVertical: 10,
               backgroundColor: '#fff',
               marginBottom: 12,
-              fontSize: 16,
-              color: '#333',
+              justifyContent: 'center',
             }}
-            placeholder="Total Area of Petrol Pump (in Sq. Ft.) *"
-            value={pumpArea}
-            onChangeText={setPumpArea}
-            placeholderTextColor="#000"
-            editable={!isDisabled}
+            data={yesNoOptions}
+            labelField="label"
+            valueField="value"
+            placeholder="Is property a Petrol Pump ? *"
+            value={petrolPump}
+            onChange={item => setPetrolPump(item.value)}
+            disable={isDisabled}
           />
-          <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
-            Date of Installation *
-          </Text>
-          <TouchableOpacity
-            style={{
-              borderWidth: 1,
-              borderColor: '#ccc',
-              borderRadius: 8,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
-              backgroundColor: '#fff',
-              marginBottom: 12,
-              justifyContent: 'center',
-            }}
-            onPress={() =>
-              !isDisabled && setShowPumpInstallationDatePicker(true)
-            }
-          >
-            <Text style={{ color: pumpInstallationDate ? '#000' : '#999' }}>
-              {pumpInstallationDate
-                ? new Date(pumpInstallationDate).toLocaleDateString('en-GB')
-                : 'Date of Installation *'}
-            </Text>
-          </TouchableOpacity>
-          {showPumpInstallationDatePicker && !isDisabled && (
-            <DateTimePicker
-              value={
-                pumpInstallationDate
-                  ? new Date(pumpInstallationDate)
-                  : new Date()
-              }
-              maximumDate={new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setShowPumpInstallationDatePicker(false);
-                if (event.type === 'set' && selectedDate) {
-                  setPumpInstallationDate(selectedDate.toISOString());
+          {petrolPump === 'yes' && (
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
+                Total Area of Petrol Pump (in Sq. Ft.) *
+              </Text>
+              <TextInput
+                style={{
+                  borderWidth: 1,
+                  borderColor: '#ccc',
+                  borderRadius: 8,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  backgroundColor: '#fff',
+                  marginBottom: 12,
+                  fontSize: 16,
+                  color: '#333',
+                }}
+                placeholder="Total Area of Petrol Pump (in Sq. Ft.) *"
+                value={pumpArea}
+                onChangeText={setPumpArea}
+                placeholderTextColor="#000"
+                editable={!isDisabled}
+              />
+              <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
+                Date of Installation *
+              </Text>
+              <TouchableOpacity
+                style={{
+                  borderWidth: 1,
+                  borderColor: '#ccc',
+                  borderRadius: 8,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  backgroundColor: '#fff',
+                  marginBottom: 12,
+                  justifyContent: 'center',
+                }}
+                onPress={() =>
+                  !isDisabled && setShowPumpInstallationDatePicker(true)
                 }
-              }}
-            />
+              >
+                <Text style={{ color: pumpInstallationDate ? '#000' : '#999' }}>
+                  {pumpInstallationDate
+                    ? new Date(pumpInstallationDate).toLocaleDateString('en-GB')
+                    : 'Date of Installation *'}
+                </Text>
+              </TouchableOpacity>
+              {showPumpInstallationDatePicker && !isDisabled && (
+                <DateTimePicker
+                  value={
+                    pumpInstallationDate
+                      ? new Date(pumpInstallationDate)
+                      : new Date()
+                  }
+                  maximumDate={new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowPumpInstallationDatePicker(false);
+                    if (event.type === 'set' && selectedDate) {
+                      setPumpInstallationDate(selectedDate.toISOString());
+                    }
+                  }}
+                />
+              )}
+            </View>
           )}
-        </View>
-      )}
-      <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
-        Rainwater harvesting provision ? *
-      </Text>
-      <Dropdown
-        style={{
-          height: 45,
-          borderColor: '#ccc',
-          borderWidth: 1,
-          borderRadius: 8,
-          paddingHorizontal: 12,
-          backgroundColor: '#fff',
-          marginBottom: 12,
-          justifyContent: 'center',
-        }}
-        data={yesNoOptions}
-        labelField="label"
-        valueField="value"
-        placeholder="Rainwater harvesting provision ? *"
-        value={rainHarvesting}
-        onChange={item => setRainHarvesting(item.value)}
-        disable={isDisabled}
-      />
-      {rainHarvesting === 'yes' && (
-        <View style={{ marginBottom: 12 }}>
           <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
-            Rainwater harvesting Completion Date *
+            Rainwater harvesting provision ? *
           </Text>
-          <TouchableOpacity
+          <Dropdown
             style={{
-              borderWidth: 1,
+              height: 45,
               borderColor: '#ccc',
+              borderWidth: 1,
               borderRadius: 8,
               paddingHorizontal: 12,
-              paddingVertical: 10,
               backgroundColor: '#fff',
               marginBottom: 12,
               justifyContent: 'center',
             }}
-            onPress={() => !isDisabled && setShowDatePicker(true)}
-          >
-            {/* <Text style={{ color: completionDate ? '#000' : '#999' }}>
+            data={yesNoOptions}
+            labelField="label"
+            valueField="value"
+            placeholder="Rainwater harvesting provision ? *"
+            value={rainHarvesting}
+            onChange={item => setRainHarvesting(item.value)}
+            disable={isDisabled}
+          />
+          {rainHarvesting === 'yes' && (
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ fontSize: 14, color: '#555', marginBottom: 5 }}>
+                Rainwater harvesting Completion Date *
+              </Text>
+              <TouchableOpacity
+                style={{
+                  borderWidth: 1,
+                  borderColor: '#ccc',
+                  borderRadius: 8,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  backgroundColor: '#fff',
+                  marginBottom: 12,
+                  justifyContent: 'center',
+                }}
+                onPress={() => !isDisabled && setShowDatePicker(true)}
+              >
+                {/* <Text style={{ color: completionDate ? '#000' : '#999' }}>
               {completionDate
                 ? completionDate.toLocaleDateString('en-GB')
                 : 'Completion Date of Petrol Pump *'}
             </Text> */}
-            <Text style={{ color: completionDate ? '#000' : '#999' }}>
-              {completionDate
-                ? new Date(completionDate).toLocaleDateString('en-GB')
-                : 'Completion Date of Petrol Pump *'}
-            </Text>
-          </TouchableOpacity>
-          {showDatePicker && !isDisabled && (
-            <DateTimePicker
-              value={completionDate ? new Date(completionDate) : new Date()}
-              maximumDate={new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setShowDatePicker(false);
-                if (event.type === 'set' && selectedDate) {
-                  setCompletionDate(selectedDate.toISOString()); // store as string
-                }
-              }}
-            />
+                <Text style={{ color: completionDate ? '#000' : '#999' }}>
+                  {completionDate
+                    ? new Date(completionDate).toLocaleDateString('en-GB')
+                    : 'Completion Date of Petrol Pump *'}
+                </Text>
+              </TouchableOpacity>
+              {showDatePicker && !isDisabled && (
+                <DateTimePicker
+                  value={completionDate ? new Date(completionDate) : new Date()}
+                  maximumDate={new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowDatePicker(false);
+                    if (event.type === 'set' && selectedDate) {
+                      setCompletionDate(selectedDate.toISOString()); // store as string
+                    }
+                  }}
+                />
+              )}
+            </View>
           )}
-        </View>
+        </>
       )}
     </View>
   );

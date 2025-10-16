@@ -302,50 +302,128 @@ const VerifiedStatus = ({ route }) => {
                 : []),
             ]}
           />
-          {floorIds.map((floor, index) => (
+          {submissionData?.propTypeMstrId != 4 && floorIds?.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Floor Details</Text>
+              {floorIds.map((floor, index) => (
+                <SubmissionCard
+                  key={index}
+                  title={`${floor.floorName} Details`}
+                  rows={[
+                    {
+                      label: 'Usage Type',
+                      value: floor.usageType,
+                      verifiedValue:
+                        submissionData[`Verified_Usage${floor.floorName}`],
+                    },
+                    {
+                      label: 'Occupancy Type',
+                      value: floor.occupancyName,
+                      verifiedValue:
+                        submissionData[`Verified_Occupancy${floor.floorName}`],
+                    },
+                    {
+                      label: 'Construction Type',
+                      value: floor.constructionType,
+                      verifiedValue:
+                        submissionData[
+                          `Verified_Construction${floor.floorName}`
+                        ],
+                    },
+                    {
+                      label: 'Built-up Area',
+                      value: floor.builtupArea,
+                      verifiedValue:
+                        submissionData[`Verified_BuiltUp${floor.floorName}`],
+                    },
+                    {
+                      label: 'Date From',
+                      value: floor.dateFrom,
+                      verifiedValue:
+                        submissionData[`Verified_DateFrom${floor.floorName}`],
+                    },
+                    {
+                      label: 'Date To',
+                      value: floor.dateUpto || '-',
+                      verifiedValue:
+                        submissionData[`Verified_DateTo${floor.floorName}`],
+                    },
+                  ]}
+                />
+              ))}
+            </>
+          )}
+
+          {submissionData && (
             <SubmissionCard
-              key={index}
-              title={`${floor.floorName} Details`}
+              title="Additional Details"
+              isHide={true}
               rows={[
+                // Mobile Tower
                 {
-                  label: 'Usage Type',
-                  value: floor.usageType,
-                  verifiedValue:
-                    submissionData[`Verified_Usage${floor.floorName}`],
+                  label: 'Mobile Tower',
+                  value: submissionData.mobileTower || 'N/A',
                 },
+                ...(submissionData.mobileTower === 'yes'
+                  ? [
+                      {
+                        label: 'Tower Area',
+                        value: submissionData.towerArea || 'N/A',
+                      },
+                      {
+                        label: 'Installation Date',
+                        value: submissionData.installationDate || 'N/A',
+                      },
+                    ]
+                  : []),
+
+                // Hoarding
                 {
-                  label: 'Occupancy Type',
-                  value: floor.occupancyName,
-                  verifiedValue:
-                    submissionData[`Verified_Occupancy${floor.floorName}`],
+                  label: 'Hoarding',
+                  value: submissionData.hoarding || 'N/A',
                 },
+                ...(submissionData.hoarding === 'yes'
+                  ? [
+                      {
+                        label: 'Hoarding Area',
+                        value: submissionData.hoardingArea || 'N/A',
+                      },
+                      {
+                        label: 'Hoarding Installation Date',
+                        value:
+                          submissionData.hoardingInstallationDate ||
+                          submissionData.installationDate ||
+                          'N/A',
+                      },
+                    ]
+                  : []),
+
+                // Rain Harvesting
                 {
-                  label: 'Construction Type',
-                  value: floor.constructionType,
-                  verifiedValue:
-                    submissionData[`Verified_Construction${floor.floorName}`],
+                  label: 'Rain Harvesting',
+                  value: submissionData.rainHarvesting || 'N/A',
                 },
+
+                // Petrol Pump
                 {
-                  label: 'Built-up Area',
-                  value: floor.builtupArea,
-                  verifiedValue:
-                    submissionData[`Verified_BuiltUp${floor.floorName}`],
+                  label: 'Petrol Pump',
+                  value: submissionData.petrolPump || 'N/A',
                 },
-                {
-                  label: 'Date From',
-                  value: floor.dateFrom,
-                  verifiedValue:
-                    submissionData[`Verified_DateFrom${floor.floorName}`],
-                },
-                {
-                  label: 'Date To',
-                  value: floor.dateUpto || '-',
-                  verifiedValue:
-                    submissionData[`Verified_DateTo${floor.floorName}`],
-                },
+                ...(submissionData.petrolPump === 'yes'
+                  ? [
+                      {
+                        label: 'Pump Area',
+                        value: submissionData.pumpArea || 'N/A',
+                      },
+                      {
+                        label: 'Pump Installation Date',
+                        value: submissionData.pumpInstallationDate || 'N/A',
+                      },
+                    ]
+                  : []),
               ]}
             />
-          ))}
+          )}
 
           {/* Floors & Remarks */}
           {!isULBUser && (
@@ -513,7 +591,7 @@ const VerifiedStatus = ({ route }) => {
   );
 };
 
-const SubmissionCard = ({ title, rows }) => (
+const SubmissionCard = ({ title, rows, isHide }) => (
   <View style={styles.tableCard}>
     <Text style={styles.tableTitle}>{title}</Text>
     <View style={[styles.tableRow, styles.tableHeader]}>
@@ -534,10 +612,12 @@ const SubmissionCard = ({ title, rows }) => (
         ]}
       >
         <Text style={styles.tableCellLabel}>{row.label}</Text>
+        {isHide == false && (
+          <Text style={styles.tableCellValue}>
+            {String(row.verifiedValue || 'N/A')}
+          </Text>
+        )}
         <Text style={styles.tableCellValue}>{String(row.value || 'N/A')}</Text>
-        <Text style={styles.tableCellValue}>
-          {String(row.verifiedValue || 'N/A')}
-        </Text>
       </View>
     ))}
   </View>

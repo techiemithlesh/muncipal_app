@@ -7,6 +7,8 @@ import {
   Button,
   Alert,
   ActivityIndicator,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import Colors from '../Constants/Colors';
 import axios from 'axios';
@@ -15,6 +17,8 @@ import { getToken } from '../utils/auth';
 import { showToast } from '../utils/toast';
 import HeaderNavigation from '../Components/HeaderNavigation';
 import { validateExtraChargesDates } from '../Validation/validation.';
+import Clipboard from '@react-native-clipboard/clipboard';
+// OR for newer versions:
 
 const Row = ({ label, value }) => (
   <View style={styles.row}>
@@ -31,6 +35,8 @@ const Section = ({ title, children }) => (
 );
 
 const AssessmentSummary = ({ route, navigation }) => {
+  const [copiedSafNo, setCopiedSafNo] = useState(''); // ✅ add this
+  const [modalVisible, setModalVisible] = useState(false);
   const data = route.params?.data || {};
   console.log('data  AssessmentSummary', route.params?.masterData || {});
   const ownerDetails = data.ownerDtl || [];
@@ -43,7 +49,23 @@ const AssessmentSummary = ({ route, navigation }) => {
     const item = list.find(i => i.id === id);
     return item ? item[labelKey] : '';
   };
+  const mappedProperty = {
+    ...data,
+    zone: getMasterName(masterData.zone, data.zoneMstrId, 'zoneName'),
+    ward: getMasterName(masterData.wardList, data.wardMstrId, 'wardNo'),
 
+    ownershipType: getMasterName(
+      masterData.ownershipType,
+      data.ownershipTypeMstrId,
+      'ownershipType',
+    ),
+
+    propertyType: getMasterName(
+      masterData.propertyType,
+      data.propTypeMstrId,
+      'propertyType',
+    ),
+  };
   // Map floor details with names
   const floorss = (data.floorDtl || []).map(floor => ({
     floorName: getMasterName(
@@ -54,8 +76,9 @@ const AssessmentSummary = ({ route, navigation }) => {
     usageType: getMasterName(
       masterData.usageType,
       floor.usageTypeMasterId,
-      'usageTypeName',
+      'usageType',
     ),
+
     occupancyType: getMasterName(
       masterData.occupancyType,
       floor.occupancyTypeMasterId,
@@ -75,29 +98,43 @@ const AssessmentSummary = ({ route, navigation }) => {
   // Example usage:
   // const floors = mapFloorData(data.floorDtl, masterData);
 
-  function convertToYearMonth(date) {
-    if (!date) return '2024-01';
+  // function convertToYearMonth(date) {
+  //   if (!date) return '2025-10'; // fallback to current month
 
-    // Handle MM/YYYY format
-    if (date.includes('/')) {
-      const parts = date.split('/');
-      if (parts.length === 2) {
-        const [month, year] = parts;
-        return `${year}-${month.padStart(2, '0')}`;
-      }
-    }
+  //   // If it's already in YYYY-MM format
+  //   if (/^\d{4}-\d{2}$/.test(date)) {
+  //     return date;
+  //   }
 
-    // Handle MM-YYYY format
-    if (date.includes('-')) {
-      const parts = date.split('-');
-      if (parts.length === 2) {
-        const [month, year] = parts;
-        return `${year}-${month.padStart(2, '0')}`;
-      }
-    }
+  //   // If it's a Date object
+  //   if (date instanceof Date) {
+  //     const year = date.getFullYear();
+  //     const month = String(date.getMonth() + 1).padStart(2, '0');
+  //     return `${year}-${month}`;
+  //   }
 
-    return '2024-01';
-  }
+  //   // If it's a full ISO date like "2025-10-01T00:00:00Z"
+  //   if (/^\d{4}-\d{2}-\d{2}/.test(date)) {
+  //     const [year, month] = date.split('-');
+  //     return `${year}-${month}`;
+  //   }
+
+  //   // If it's in MM/YYYY or MM-YYYY
+  //   if (date.includes('/') || date.includes('-')) {
+  //     const parts = date.split(/[-/]/);
+  //     if (parts.length === 2) {
+  //       const [part1, part2] = parts;
+  //       // If first part is year
+  //       if (part1.length === 4) {
+  //         return `${part1}-${part2.padStart(2, '0')}`;
+  //       } else {
+  //         return `${part2}-${part1.padStart(2, '0')}`;
+  //       }
+  //     }
+  //   }
+
+  //   return '2025-10';
+  // }
 
   const parseDate = str => {
     if (!str) return null;
@@ -213,15 +250,19 @@ const AssessmentSummary = ({ route, navigation }) => {
         })),
 
         floorDtl:
-          data.floors && data.floors.length > 0
-            ? data.floors.map(floor => ({
-                builtupArea: String(floor.builtUpArea || '100'),
-                dateFrom: convertToYearMonth(floor.fromDate) || '2024-01',
-                dateUpto1: convertToYearMonth(floor.uptoDate) || '2024-01',
-                floorMasterId: String(floor.floorName || '2'),
-                usageTypeMasterId: String(floor.usageType || '1'),
-                constructionTypeMasterId: String(floor.constructionType || '1'),
-                occupancyTypeMasterId: String(floor.occupancyType || '1'),
+          data.floorDtl && data.floorDtl.length > 0
+            ? data.floorDtl.map(floorDtl => ({
+                builtupArea: String(floorDtl.builtupArea || '100'),
+                dateFrom: floorDtl.dateFrom || '',
+                dateUpto: floorDtl.dateUpto1 || '',
+                floorMasterId: String(floorDtl.floorMasterId || '2'),
+                usageTypeMasterId: String(floorDtl.usageTypeMasterId || '1'),
+                constructionTypeMasterId: String(
+                  floorDtl.constructionTypeMasterId || '1',
+                ),
+                occupancyTypeMasterId: String(
+                  floorDtl.occupancyTypeMasterId || '1',
+                ),
               }))
             : [
                 {
@@ -245,10 +286,20 @@ const AssessmentSummary = ({ route, navigation }) => {
 
       setLoading(false);
       console.log('Full Response:', response.data);
+      if (response.data.status) {
+        const { message, data } = response.data;
 
-      if (response.data.message) {
-        showToast('success', response.data.message);
-        // navigation.navigate('ApplyAssessment');
+        // Show success message immediately
+        showToast('success', message);
+        const safNo = data?.safNo;
+
+        if (safNo) {
+          Clipboard.setString(safNo); // copy SAF No
+          setCopiedSafNo(safNo); // ✅ save SAF No in state
+          setTimeout(() => {
+            setModalVisible(true); // ✅ show modal
+          }, 2000);
+        }
       } else {
         Alert.alert('Error', response.data.message || 'Something went wrong');
       }
@@ -256,6 +307,11 @@ const AssessmentSummary = ({ route, navigation }) => {
       setLoading(false);
       Alert.alert('Error', error.message || 'API request failed');
     }
+  };
+
+  const handleOk = () => {
+    setModalVisible(false);
+    navigation.navigate('SearchAssesment'); // replace with your screen
   };
 
   return (
@@ -270,11 +326,11 @@ const AssessmentSummary = ({ route, navigation }) => {
         <Section title="Property Details">
           <View style={styles.ownerCard}>
             <Row label="Assessment Type" value="New Assessment" />
-            <Row label="Zone" value={data.zone} />
-            <Row label="Old Ward" value={data.oldWard} />
-            <Row label="New Ward" value={data.newWard} />
-            <Row label="Ownership Type" value={data.ownershipType} />
-            <Row label="Property Type" value={data.propertyType} />
+            <Row label="Zone" value={data.zoneLabel} />
+            <Row label="Old Ward" value={mappedProperty.ward} />
+            <Row label="New Ward" value={mappedProperty.newWardLabel} />
+            <Row label="Ownership Type" value={mappedProperty.ownershipType} />
+            <Row label="Property Type" value={mappedProperty.propertyType} />
             <Row label="Road Width (ft)" value={data.roadWidth} />
           </View>
         </Section>
@@ -334,8 +390,20 @@ const AssessmentSummary = ({ route, navigation }) => {
                 <Row label="Relation" value={relationType} />
                 <Row label="Aadhaar No." value={adharNo} />
                 <Row label="PAN No." value={pan} />
-                <Row label="Is Armed Force?" value={isArmedForce} />
-                <Row label="Is Specially Abled?" value={isSpeciallyAbled} />
+                <Row
+                  label="Is Armed Force?"
+                  value={
+                    isArmedForce === '1' || isArmedForce === 1 ? 'Yes' : 'No'
+                  }
+                />
+                <Row
+                  label="Is Specially Abled?"
+                  value={
+                    isSpeciallyAbled === '1' || isSpeciallyAbled === 1
+                      ? 'Yes'
+                      : 'No'
+                  }
+                />
               </View>
             ),
           )}
@@ -467,19 +535,11 @@ const AssessmentSummary = ({ route, navigation }) => {
             <Row label="Built-Up Area" value={floor.builtUpArea} />
             <Row
               label="From Date"
-              value={
-                floor.fromDate
-                  ? parseDate(floor.fromDate).toLocaleDateString('en-GB')
-                  : ''
-              }
+              value={floor.fromDate ? floor.fromDate.replace('-', '/') : ''} // "2025/10"
             />
             <Row
               label="Upto Date"
-              value={
-                floor.uptoDate
-                  ? parseDate(floor.uptoDate).toLocaleDateString('en-GB')
-                  : ''
-              }
+              value={floor.uptoDate ? floor.uptoDate.replace('-', '/') : ''} // "2025/10"
             />
           </View>
         ))}
@@ -500,6 +560,23 @@ const AssessmentSummary = ({ route, navigation }) => {
             </>
           )}
         </View>
+
+        <Modal
+          transparent={true}
+          visible={modalVisible}
+          animationType="fade"
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Copied!</Text>
+              <Text style={styles.modalText}>SAF No: {copiedSafNo}</Text>
+              <TouchableOpacity style={styles.okButton} onPress={handleOk}>
+                <Text style={styles.okText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </>
   );
@@ -552,6 +629,48 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2, // for Android shadow
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)', // dark transparent background
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    padding: 25,
+    borderRadius: 15, // rounded corners
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8, // Android shadow
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 15,
+    color: '#333',
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 25,
+    textAlign: 'center',
+    color: '#555',
+  },
+  okButton: {
+    backgroundColor: '#2196F3',
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 25, // pill-shaped button
+    elevation: 2,
+  },
+  okText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
 

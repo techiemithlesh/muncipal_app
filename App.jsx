@@ -6,10 +6,14 @@ import { AlertNotificationRoot } from 'react-native-alert-notification';
 import { MasterDataProvider } from './src/Context/MasterDataContext';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from './src/utils/toastConfig';
+// Reports All Urls
+import PropertyCollection from './src/PropertyMenu/Report/Collection';
+import PaymentWiseReportPorpty from './src/PropertyMenu/Report/PaymentWiseReport';
 // Water Url Screen
 import WaterInbox from './src/Water/Inbox/Inbox';
 import WaterSurvey from './src/Water/Inbox/WaterSurvey';
 import SubmitSurey from './src/Water/Inbox/SubmitSurey';
+
 // Screens
 import DashBoard from './src/Screen/DashBoard';
 import StaffCard from './src/Screen/StaffCard';
@@ -287,6 +291,17 @@ const App = () => {
               <Stack.Screen
                 name="SubmitSurey"
                 component={SubmitSurey}
+                options={{ headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="PropertyCollection"
+                component={PropertyCollection}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="PaymentWiseReportPorpty"
+                component={PaymentWiseReportPorpty}
                 options={{ headerShown: false }}
               />
             </Stack.Navigator>

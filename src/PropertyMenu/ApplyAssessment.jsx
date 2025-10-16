@@ -42,6 +42,7 @@ const ApplyAssessment = ({ navigation, route }) => {
   } = route?.params || {};
 
   // All state variables
+  const [newWardLabel, setNewWardLabel] = useState('');
   const [waterConnectionNo, setWaterConnectionNo] = useState('');
   const [waterConnectionDate, setWaterConnectionDate] = useState('');
   const [propertyTypeLabel, setPropertyTypeLabel] = useState('');
@@ -79,6 +80,7 @@ const ApplyAssessment = ({ navigation, route }) => {
   const [rainHarvesting, setRainHarvesting] = useState('no');
   const [data, setData] = useState(null);
   const [zone, setZone] = useState('');
+  const [zoneLabel, setZoneLabel] = useState('');
   const [transferMode, setTransferMode] = useState('');
   const [propertyTransferPercentage, setPropertyTransferPercentage] =
     useState('');
@@ -691,7 +693,7 @@ const ApplyAssessment = ({ navigation, route }) => {
     return true;
   };
   function convertToYearMonth(date) {
-    if (!date) return '2024-01';
+    if (!date) return '';
 
     // Handle MM/YYYY format
     if (date.includes('/')) {
@@ -750,6 +752,8 @@ const ApplyAssessment = ({ navigation, route }) => {
     // ✅ Prepare API request payload in the expected format
 
     const payload = {
+      newWardLabel,
+      zoneLabel,
       assessmentType: 'New Assessment',
       zoneMstrId: zone, // map your zone id
       wardMstrId: oldWard,
@@ -1054,7 +1058,10 @@ const ApplyAssessment = ({ navigation, route }) => {
               placeholderTextColor="grey"
               value={newWard}
               F
-              onChange={item => setNewWard(item.value)}
+              onChange={item => {
+                setNewWard(item.value); // store the id
+                setNewWardLabel(item.label); // store the label
+              }}
               disable={isRessessment || isMutation}
             />
             {error.newWard && (
@@ -1182,7 +1189,10 @@ const ApplyAssessment = ({ navigation, route }) => {
               placeholder="Select"
               placeholderTextColor="grey"
               value={zone}
-              onChange={item => setZone(item.value)}
+              onChange={item => {
+                setZone(item.value);
+                setZoneLabel(item.label);
+              }}
               disable={isRessessment || isMutation}
             />
             {error.zone && <Text style={styles.errorText}>{error.zone}</Text>}

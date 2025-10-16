@@ -139,7 +139,7 @@ console.log("Api Submisison data",submissionData)
       submissionData?.Verified_PropertyType === 'VACANT LAND'
         ? data?.landOccupationDate || new Date().toISOString().split('T')[0]
         : null,
-    floorDtl: finalFloors,
+   ...(submissionData?.propTypeMstrId != '4' && { floorDtl: finalFloors }),
   };
   console.log('Field Payload:', JSON.stringify(fieldPayload, null, 2));
   const response = await axios.post(

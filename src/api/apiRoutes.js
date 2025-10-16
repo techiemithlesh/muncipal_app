@@ -1,4 +1,5 @@
 import { BASE_URL } from "../config";
+
 export const API_ROUTES = {
   // trade api routes
   TRADE_DETAILS: `${BASE_URL}/api/trade/get-dtl`,
@@ -19,13 +20,16 @@ export const API_ROUTES = {
 export const WARD_API ={
   OLD_WARD_API : `${BASE_URL}/api/property/get-new-ward-by-old`,
 }
+
+export const PROPERTY_REPORTS_API ={
+  COLLECTION_REPORT_API:`${BASE_URL}/api/property/report/collection`,
+  PAYMENT_MODE_WISE_REPORT_API:`${BASE_URL}/api/property/report/collection-summary`, 
+}
 export const SAF_API_ROUTES = {
   SAF_VARIFICATION_MODEL: `${BASE_URL}/api/property/field-verification-dtl`,
   APPLY_SAF: `${BASE_URL}/api/property/saf-apply`,
   APPLY_SAF_RESSESMENT_API: `${BASE_URL}/api/property/saf-apply Reassessment`,
-  SEND_TO_LEVEL_API: `${BASE_URL}/api/property/post-next`,
-
-  
+  SEND_TO_LEVEL_API: `${BASE_URL}/api/property/post-next`, 
 };
 export const WORK_FLOW_PERMISSION = `${BASE_URL}/api/get-workflow-permission`;
 export const PROPERTY_API = {
@@ -76,5 +80,9 @@ export const CUSTOMER_API ={
   CONSUMER_GENERATE_DEMAND_API:`${BASE_URL}/api/water/consumer/generate-demand`,
 }
 
+
+export const  PAYMENT_MODE = {
+  PAYMENT_MODE_API:`${BASE_URL}/api/property/report/payment-mode`
+}
 
   
