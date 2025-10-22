@@ -130,6 +130,13 @@ const FieldVarification = ({ navigation }) => {
       >
         <Text style={styles.surveyButtonText}>Survey</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.button2}
+        onPress={() => navigation.navigate('SafDueDetails', { id: item.id })}
+      >
+        <Text style={styles.surveyButtonText}>Details</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -294,6 +301,13 @@ const styles = StyleSheet.create({
   button1: {
     marginTop: 16,
     backgroundColor: Colors.primary,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  button2: {
+    marginTop: 16,
+    backgroundColor: '#0a80a4ff',
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',

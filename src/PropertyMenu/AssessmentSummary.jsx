@@ -38,10 +38,11 @@ const AssessmentSummary = ({ route, navigation }) => {
   const [copiedSafNo, setCopiedSafNo] = useState(''); // ✅ add this
   const [modalVisible, setModalVisible] = useState(false);
   const data = route.params?.data || {};
-  console.log('data  AssessmentSummary', route.params?.masterData || {});
+  // console.log('data  AssessmentSummary', route.params?.masterData || {});
   const ownerDetails = data.ownerDtl || [];
-  console.log('owner Datails', ownerDetails);
+  // console.log('owner Datails', ownerDetails);
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState(route.params?.data || {});
 
   const masterData = route.params?.masterData || {};
   const getMasterName = (list, id, labelKey) => {
@@ -431,6 +432,7 @@ const AssessmentSummary = ({ route, navigation }) => {
         </Section>
         <Section title="Extra Charges">
           <View style={styles.ownerCard}>
+            {/* Mobile Tower */}
             <Row
               label="Have Mobile Tower?"
               value={
@@ -439,14 +441,14 @@ const AssessmentSummary = ({ route, navigation }) => {
                   : 'No'
               }
             />
-            {data.mobileTower === 'yes' && (
+            {(data.isMobileTower === '1' || data.isMobileTower === 1) && (
               <>
                 <Row label="Tower Area" value={data.towerArea} />
                 <Row
                   label="Installation Date"
                   value={
-                    data.installationDate
-                      ? new Date(data.installationDate).toLocaleDateString(
+                    data.towerInstallationDate
+                      ? new Date(data.towerInstallationDate).toLocaleDateString(
                           'en-GB',
                         )
                       : ''
@@ -454,6 +456,8 @@ const AssessmentSummary = ({ route, navigation }) => {
                 />
               </>
             )}
+
+            {/* Hoarding Board */}
             <Row
               label="Have Hoarding Board(s)?"
               value={
@@ -462,7 +466,7 @@ const AssessmentSummary = ({ route, navigation }) => {
                   : 'No'
               }
             />
-            {data.hoarding === 'yes' && (
+            {(data.isHoardingBoard === '1' || data.isHoardingBoard === 1) && (
               <>
                 <Row label="Hoarding Area" value={data.hoardingArea} />
                 <Row
@@ -477,6 +481,8 @@ const AssessmentSummary = ({ route, navigation }) => {
                 />
               </>
             )}
+
+            {/* Petrol Pump */}
             <Row
               label="Have Petrol Pump?"
               value={
@@ -485,21 +491,23 @@ const AssessmentSummary = ({ route, navigation }) => {
                   : 'No'
               }
             />
-            {data.petrolPump === 'yes' && (
+            {(data.isPetrolPump === '1' || data.isPetrolPump === 1) && (
               <>
-                <Row label="Pump Area" value={data.pumpArea} />
+                <Row label="Pump Area" value={data.underGroundArea} />
                 <Row
                   label="Pump Installation Date"
                   value={
-                    data.pumpInstallationDate
-                      ? new Date(data.pumpInstallationDate).toLocaleDateString(
-                          'en-GB',
-                        )
+                    data.petrolPumpCompletionDate
+                      ? new Date(
+                          data.petrolPumpCompletionDate,
+                        ).toLocaleDateString('en-GB')
                       : ''
                   }
                 />
               </>
             )}
+
+            {/* Rainwater Harvesting */}
             <Row
               label="Have Rainwater Harvesting?"
               value={
@@ -508,13 +516,15 @@ const AssessmentSummary = ({ route, navigation }) => {
                   : 'No'
               }
             />
-
-            {data.rainHarvesting === 'yes' && (
+            {(data.isWaterHarvesting === '1' ||
+              data.isWaterHarvesting === 1) && (
               <Row
                 label="Completion Date"
                 value={
-                  data.completionDate
-                    ? new Date(data.completionDate).toLocaleDateString('en-GB')
+                  data.waterHarvestingDate
+                    ? new Date(data.waterHarvestingDate).toLocaleDateString(
+                        'en-GB',
+                      )
                     : ''
                 }
               />

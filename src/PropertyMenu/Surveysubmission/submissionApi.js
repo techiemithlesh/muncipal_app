@@ -82,6 +82,11 @@ console.log("Api Submisison data",submissionData)
         }))) || [];
 
   const fieldPayload = {
+    //  percentageOfPropertyTransfer:
+    //       submissionData?.percentageOfPropertyTransfer,
+          percentageOfPropertyTransfer:
+  Number(submissionData?.percentageOfPropertyTransfer || 0),
+
     
     appartmentDetailsId: submissionData?.apartmentDetail,
     isMobileTower: submissionData?.mobileTower === 'yes',
@@ -126,7 +131,7 @@ console.log("Api Submisison data",submissionData)
   // Required numeric fields
   roadWidth: parseFloat(submissionData?.roadWidth) || 0,
   areaOfPlot: parseFloat(submissionData?.areaOfPlot) || 0,
-    safDetailId: id,
+    safDetailId: submissionData?.safDetailId,
     wardMstrId: submissionData?.wardMstrId,
     newWardMstrId: submissionData?.newWardMstrId,
     propTypeMstrId:
@@ -153,7 +158,7 @@ console.log("Api Submisison data",submissionData)
       timeout: 15000,
     },
   );
- console.log("API Status:", response?.data?.status, "dkfiudgifadsf");
+//  console.log("API Status:", response?.data?.status, "dkfiudgifadsf");
 console.log("Full Response:", JSON.stringify(response?.data, null, 2));
   return response;
 };

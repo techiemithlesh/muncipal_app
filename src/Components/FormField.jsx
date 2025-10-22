@@ -24,6 +24,7 @@ const FormField = forwardRef(
       onFocus,
       returnKeyType = 'next',
       blurOnSubmit = false,
+      error,
       editable = true,
     },
     ref,
@@ -161,6 +162,7 @@ const FormField = forwardRef(
         {type === 'multiselect' && renderMultiSelect()}
         {type === 'date' && renderDate()}
         {type === 'button' && renderButton()}
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </View>
     );
   },
@@ -222,5 +224,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 4,
   },
 });

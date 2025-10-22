@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TextInput,
   Platform,
-  Modal,
 } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import {
@@ -34,14 +33,17 @@ const VerificationCard = ({
   calendarValue = new Date(),
   setCalendarValue = () => {},
   hideCorrectOption = false,
-  editable = true, // 👈 new prop (default true)
+  editable = true,
+  showError = false, // Trigger error from parent
 }) => {
   const [showPicker, setShowPicker] = useState(false);
+  const [internalError, setInternalError] = useState(false);
 
-  const isSelectionRequired = selectedVerification === null;
+  const options = hideCorrectOption ? ['Incorrect'] : ['Correct', 'Incorrect'];
 
   const handleVerificationChange = status => {
     setSelectedVerification(status);
+    setInternalError(false); // Clear internal error
     if (status === 'Correct') {
       setDropdownValue('');
       setInputValue('');
@@ -49,20 +51,20 @@ const VerificationCard = ({
     }
   };
 
-  const options = hideCorrectOption ? ['Incorrect'] : ['Correct', 'Incorrect'];
-
   const handleChangeDate = (event, newDate) => {
     if (Platform.OS === 'ios') {
-      // On iOS, the picker always returns newDate
       setCalendarValue(newDate);
     } else {
-      // On Android, dismiss picker if canceled
       if (event === 'dateSetAction' && newDate) {
         setCalendarValue(newDate);
       }
       setShowPicker(false);
     }
   };
+
+  // Determine if we should show error
+  const isSelectionRequired = !selectedVerification;
+  const showErrorMessage = (internalError || showError) && isSelectionRequired;
 
   return (
     <View style={styles.card}>
@@ -81,10 +83,7 @@ const VerificationCard = ({
 
       {/* Correct / Incorrect radio */}
       <View
-        style={[
-          styles.radioGroup,
-          isSelectionRequired && styles.radioGroupRequired,
-        ]}
+        style={[styles.radioGroup, showErrorMessage && styles.radioGroupError]}
       >
         {options.map(option => (
           <TouchableOpacity
@@ -103,6 +102,11 @@ const VerificationCard = ({
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* Show error message */}
+      {showErrorMessage && (
+        <Text style={styles.errorText}>Please select Correct or Incorrect</Text>
+      )}
 
       <View style={styles.divider} />
 
@@ -128,7 +132,6 @@ const VerificationCard = ({
             </Text>
           </TouchableOpacity>
 
-          {/* Month-Year Picker */}
           {showPicker && (
             <MonthPicker
               onChange={handleChangeDate}
@@ -152,7 +155,6 @@ const VerificationCard = ({
               value={inputValue}
               onChangeText={setInputValue}
               placeholder={inputPlaceholder}
-              keyboardType="default"
               editable={editable}
             />
           </View>
@@ -222,12 +224,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: responsiveWidth(4),
     marginBottom: 10,
   },
-  radioGroupRequired: {
+  radioGroupError: {
+    borderColor: 'red',
+    backgroundColor: '#ffe6e6',
     borderWidth: 1,
-    borderColor: '#007BFF',
     borderRadius: 8,
     padding: 8,
-    backgroundColor: '#f8f9ff',
     marginHorizontal: responsiveWidth(2),
   },
   radioOption: {
@@ -291,5 +293,11 @@ const styles = StyleSheet.create({
     fontSize: responsiveFontSize(1.8),
     color: '#333',
     backgroundColor: '#fff',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: responsiveFontSize(1.6),
+    marginHorizontal: responsiveWidth(4),
+    marginBottom: 5,
   },
 });

@@ -106,6 +106,9 @@ const ApplyAssessment = ({ navigation, route }) => {
   const [apartmentDetail, setApartmentDetail] = useState(null);
   const [loadingApartments, setLoadingApartments] = useState(false);
 
+  // Track touched fields
+  const [touchedFields, setTouchedFields] = useState({});
+
   // MULTIPLE OWNERS STATE
   const [ownerDetails, setOwnerDetails] = useState([
     {
@@ -136,37 +139,6 @@ const ApplyAssessment = ({ navigation, route }) => {
 
   // Create refs for all form fields
   const scrollViewRef = useRef(null);
-  const oldWardRef = useRef(null);
-  const newWardRef = useRef(null);
-  const ownershipTypeRef = useRef(null);
-  const propertyTypeRef = useRef(null);
-  const zoneRef = useRef(null);
-  const electricityCategoryRef = useRef(null);
-  const khataNoRef = useRef(null);
-  const plotNoRef = useRef(null);
-  const villageNameRef = useRef(null);
-  const plotAreaRef = useRef(null);
-  const roadWidthRef = useRef(null);
-  const noRoadRef = useRef(null);
-  const propertyAddressRef = useRef(null);
-  const cityRef = useRef(null);
-  const districtRef = useRef(null);
-  const stateRef = useRef(null);
-  const pincodeRef = useRef(null);
-  const correspondingAddressRef = useRef(null);
-  const correspondingCityRef = useRef(null);
-  const correspondingDistrictRef = useRef(null);
-  const correspondingStateRef = useRef(null);
-  const correspondingPincodeRef = useRef(null);
-  const mobileTowerRef = useRef(null);
-  const towerAreaRef = useRef(null);
-  const hoardingRef = useRef(null);
-  const hoardingAreaRef = useRef(null);
-  const petrolPumpRef = useRef(null);
-  const pumpAreaRef = useRef(null);
-  const rainHarvestingRef = useRef(null);
-  const floorRefs = useRef([]);
-  const ownerRefs = useRef([]);
 
   const [floorDetails, setFloorDetails] = useState([
     {
@@ -185,11 +157,124 @@ const ApplyAssessment = ({ navigation, route }) => {
     show: false,
   });
 
+  // NEW: Mark field as touched
+  const markFieldAsTouched = fieldName => {
+    setTouchedFields(prev => ({ ...prev, [fieldName]: true }));
+  };
+
+  // NEW: Validate single field
+  const validateField = (fieldName, value) => {
+    const nameRegex = /^[a-zA-ZÀ-ÖØ-öø-ÿ' - .]+$/;
+    const alphabetRegex = /^[A-Za-z\s]+$/;
+    const addressRegex = /^[A-Za-z0-9\s,./-]+$/;
+
+    switch (fieldName) {
+      case 'oldWard':
+        return !value ? 'Old Ward is required' : '';
+      case 'newWard':
+        return !value ? 'New Ward is required' : '';
+      case 'ownershipType':
+        return !value ? 'Ownership Type is required' : '';
+      case 'propertyType':
+        return !value ? 'Property Type is required' : '';
+      case 'zone':
+        return !value ? 'Zone is required' : '';
+      case 'khataNo':
+        if (!value) return 'Khata No is required';
+        if (!addressRegex.test(value)) return 'Invalid Khata No';
+        return '';
+      case 'plotNo':
+        if (!value) return 'Plot No is required';
+        if (!addressRegex.test(value)) return 'Invalid Plot No';
+        return '';
+      case 'villageName':
+        if (!value) return 'Village Name is required';
+        if (!alphabetRegex.test(value))
+          return 'Village Name must contain only letters';
+        return '';
+      case 'plotArea':
+        if (!value) return 'Plot Area is required';
+        if (isNaN(value)) return 'Plot Area must be a number';
+        return '';
+      case 'roadWidth':
+        if (!value) return 'Road Width is required';
+        if (isNaN(value)) return 'Road Width must be a number';
+        if (Number(value) > 499)
+          return 'Road Width must not be greater than 499';
+        return '';
+      default:
+        return '';
+    }
+  };
+
+  // NEW: Validate owner field
+  const validateOwnerField = (index, fieldName, value) => {
+    const nameRegex = /^[a-zA-ZÀ-ÖØ-öø-ÿ' - .]+$/;
+
+    switch (fieldName) {
+      case 'ownerName':
+        if (!value) return 'Owner Name is required';
+        if (!nameRegex.test(value))
+          return 'Owner Name can only contain letters and spaces';
+        return '';
+      case 'guardianName':
+        if (!value) return 'Guardian Name is required';
+        if (!nameRegex.test(value))
+          return 'Guardian Name can only contain letters and spaces';
+        return '';
+      case 'relation':
+        return !value ? 'Relation is required' : '';
+      case 'gender':
+        return !value ? 'Gender is required' : '';
+      case 'dob':
+        return !value ? 'Date of Birth is required' : '';
+      case 'mobile':
+        if (!value) return 'Mobile is required';
+        if (!/^\d{10}$/.test(value)) return 'Mobile number must be 10 digits';
+        return '';
+      default:
+        return '';
+    }
+  };
+
+  // NEW: Validate floor field
+  const validateFloorField = (index, fieldName, value) => {
+    switch (fieldName) {
+      case 'floorName':
+        return !value ? 'Floor name is required' : '';
+      case 'usageType':
+        return !value ? 'Usage type is required' : '';
+      case 'constructionType':
+        return !value ? 'Construction type is required' : '';
+      case 'occupancyType':
+        return !value ? 'Occupancy type is required' : '';
+      case 'builtUpArea':
+        if (!value || value <= 0)
+          return 'Built-up area is required and must be > 0';
+        return '';
+      case 'fromDate':
+        return !value ? 'Start date is required' : '';
+      default:
+        return '';
+    }
+  };
+
   // OWNER FUNCTIONS
   const updateOwnerDetail = (index, field, value) => {
     const updated = [...ownerDetails];
     updated[index][field] = value;
     setOwnerDetails(updated);
+
+    // Real-time validation
+    const errorKey = `${field}_${index}`;
+    markFieldAsTouched(errorKey);
+    const fieldError = validateOwnerField(index, field, value);
+
+    if (fieldError) {
+      setError(prev => ({ ...prev, [errorKey]: fieldError }));
+    } else {
+      clearFieldError(errorKey);
+    }
   };
 
   const addOwner = () => {
@@ -215,6 +300,15 @@ const ApplyAssessment = ({ navigation, route }) => {
     if (ownerDetails.length > 1) {
       const updated = ownerDetails.filter((_, i) => i !== index);
       setOwnerDetails(updated);
+
+      // Remove errors for this owner
+      const newErrors = { ...error };
+      Object.keys(newErrors).forEach(key => {
+        if (key.endsWith(`_${index}`)) {
+          delete newErrors[key];
+        }
+      });
+      setError(newErrors);
     } else {
       showToast('error', 'At least one owner is required');
     }
@@ -222,7 +316,7 @@ const ApplyAssessment = ({ navigation, route }) => {
 
   const handleOwnerDateChange = (event, selectedDate) => {
     if (event.type === 'set' && selectedDate) {
-      const formatted = selectedDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      const formatted = selectedDate.toISOString().split('T')[0];
       const { index } = ownerDatePicker;
       updateOwnerDetail(index, 'dob', formatted);
     }
@@ -233,6 +327,17 @@ const ApplyAssessment = ({ navigation, route }) => {
     const updated = [...floorDetails];
     updated[index][field] = value;
     setFloorDetails(updated);
+
+    // Real-time validation for floors
+    const errorKey = `floor_${index}_${field}`;
+    markFieldAsTouched(errorKey);
+    const fieldError = validateFloorField(index, field, value);
+
+    if (fieldError) {
+      setError(prev => ({ ...prev, [errorKey]: fieldError }));
+    } else {
+      clearFieldError(errorKey);
+    }
   };
 
   const handleDateChange1 = (event, date) => {
@@ -272,6 +377,15 @@ const ApplyAssessment = ({ navigation, route }) => {
     if (floorDetails.length > 1) {
       const updated = floorDetails.filter((_, i) => i !== index);
       setFloorDetails(updated);
+
+      // Remove errors for this floor
+      const newErrors = { ...error };
+      Object.keys(newErrors).forEach(key => {
+        if (key.startsWith(`floor_${index}_`)) {
+          delete newErrors[key];
+        }
+      });
+      setError(newErrors);
     } else {
       showToast('error', 'At least one floor is required');
     }
@@ -279,11 +393,6 @@ const ApplyAssessment = ({ navigation, route }) => {
 
   const handleCheckboxToggle = () => {
     setIsChecked(!isChecked);
-    if (!isChecked) {
-      console.log('Checkbox checked - Show corresponding address fields');
-    } else {
-      console.log('Checkbox unchecked - Hide corresponding address fields');
-    }
   };
 
   // Fetch Apartments from API when Flats is selected
@@ -298,7 +407,6 @@ const ApplyAssessment = ({ navigation, route }) => {
       setLoadingApartments(true);
       const token = await getToken();
       const body = oldWard ? { oldWardId: oldWard } : {};
-      console.log('token', body);
 
       const response = await axios.post(PROPERTY_API.APARTMENT_API, body, {
         headers: {
@@ -306,15 +414,13 @@ const ApplyAssessment = ({ navigation, route }) => {
           'Content-Type': 'application/json',
         },
       });
-      console.log('response', response);
+
       if (response.data?.status) {
         const formatted = response.data.data.map(item => ({
           label: `${item.apartmentName} (${item.aptCode})`,
           value: item.id,
         }));
-
         setApartmentList(formatted);
-        console.log('Formatted apartments:', formatted);
       }
     } catch (error) {
       console.error('Error fetching apartments:', error);
@@ -323,9 +429,33 @@ const ApplyAssessment = ({ navigation, route }) => {
     }
   };
 
+  // Modified field change handlers with real-time validation
+  const handleFieldChange = (fieldName, value, setter) => {
+    setter(value);
+    markFieldAsTouched(fieldName);
+
+    const fieldError = validateField(fieldName, value);
+    if (fieldError) {
+      setError(prev => ({ ...prev, [fieldName]: fieldError }));
+    } else {
+      clearFieldError(fieldName);
+    }
+  };
+
   const Validate = () => {
     let newErrors = {};
 
+    // Mark all fields as touched on submit
+    const allTouched = {
+      oldWard: true,
+      newWard: true,
+      ownershipType: true,
+      propertyType: true,
+      zone: true,
+    };
+    setTouchedFields(prev => ({ ...prev, ...allTouched }));
+
+    // Basic Field Validations
     if (!oldWard) {
       newErrors.oldWard = 'Old Ward is required';
       setError(prev => ({ ...prev, ...newErrors }));
@@ -361,10 +491,10 @@ const ApplyAssessment = ({ navigation, route }) => {
       return false;
     }
 
-    // Validate each owner
+    // Owner Validations
+    const nameRegex = /^[a-zA-ZÀ-ÖØ-öø-ÿ' - .]+$/;
     for (let i = 0; i < ownerDetails.length; i++) {
       const owner = ownerDetails[i];
-      const nameRegex = /^[a-zA-ZÀ-ÖØ-öø-ÿ' - .]+$/; // Only letters and spaces
 
       if (!owner.ownerName) {
         newErrors[`ownerName_${i}`] = 'Owner Name is required';
@@ -392,11 +522,10 @@ const ApplyAssessment = ({ navigation, route }) => {
         return false;
       }
 
-      // Now check relation is required
       if (!owner.relation) {
         newErrors[`relation_${i}`] = 'Relation is required';
         setError(prev => ({ ...prev, ...newErrors }));
-        showToast('error', `Enter Relation for Owner ${i + 1}`);
+        showToast('error', `Select Relation for Owner ${i + 1}`);
         return false;
       }
 
@@ -406,23 +535,11 @@ const ApplyAssessment = ({ navigation, route }) => {
         showToast('error', `Select Gender for Owner ${i + 1}`);
         return false;
       }
-      if (!owner.dob) {
-        newErrors[`dob_${i}`] = 'dob is required';
-        setError(prev => ({ ...prev, ...newErrors }));
-        showToast('error', `dob dob for Owner ${i + 1}`);
-        return false;
-      }
-      if (!owner.relation) {
-        newErrors[`relation_${i}`] = 'Relation is required';
-        setError(prev => ({ ...prev, ...newErrors }));
-        showToast('error', `Select relation for Owner ${i + 1}`);
-        return false;
-      }
 
-      if (!owner.relation) {
-        newErrors[`relation_${i}`] = 'Relation is required';
+      if (!owner.dob) {
+        newErrors[`dob_${i}`] = 'Date of Birth is required';
         setError(prev => ({ ...prev, ...newErrors }));
-        showToast('error', `Select Relation for Owner ${i + 1}`);
+        showToast('error', `Select Date of Birth for Owner ${i + 1}`);
         return false;
       }
 
@@ -440,23 +557,13 @@ const ApplyAssessment = ({ navigation, route }) => {
         );
         return false;
       }
-
-      // if (!owner.aadhaar) {
-      //   newErrors[`aadhaar_${i}`] = 'Aadhaar is required';
-      //   setError(prev => ({ ...prev, ...newErrors }));
-      //   showToast('error', `Enter Aadhaar Number for Owner ${i + 1}`);
-      //   return false;
-      // } else if (!/^\d{12}$/.test(owner.aadhaar)) {
-      //   newErrors[`mobile_${i}`] = 'Aadhaar number must be 12 digits';
-      //   setError(prev => ({ ...prev, ...newErrors }));
-      //   showToast('error', `Aadhaar Number must be 12 digits`);
-      //   return false;
-      // }
     }
+
+    // Property Details Validations
     const alphabetRegex = /^[A-Za-z\s]+$/;
-    const addressRegex = /^[A-Za-z0-9\s,./-]+$/; // letters, numbers, space, comma, dot, slash, dash
+    const addressRegex = /^[A-Za-z0-9\s,./-]+$/;
     const pincodeRegex = /^[0-9]{6}$/;
-    // Khata No - required + alphanumeric
+
     if (!khataNo) {
       newErrors.khataNo = 'Khata No is required';
       setError(prev => ({ ...prev, ...newErrors }));
@@ -469,7 +576,6 @@ const ApplyAssessment = ({ navigation, route }) => {
       return false;
     }
 
-    // Plot No - required + alphanumeric
     if (!plotNo) {
       newErrors.plotNo = 'Plot No is required';
       setError(prev => ({ ...prev, ...newErrors }));
@@ -482,7 +588,6 @@ const ApplyAssessment = ({ navigation, route }) => {
       return false;
     }
 
-    // Village Name - required + only alphabets
     if (!villageName) {
       newErrors.villageName = 'Village Name is required';
       setError(prev => ({ ...prev, ...newErrors }));
@@ -495,7 +600,6 @@ const ApplyAssessment = ({ navigation, route }) => {
       return false;
     }
 
-    // Plot Area - required + must be number
     if (!plotArea) {
       newErrors.plotArea = 'Plot Area is required';
       setError(prev => ({ ...prev, ...newErrors }));
@@ -508,7 +612,6 @@ const ApplyAssessment = ({ navigation, route }) => {
       return false;
     }
 
-    // Road Width - required + must be number
     if (!roadWidth) {
       newErrors.roadWidth = 'Road Width is required';
       setError(prev => ({ ...prev, ...newErrors }));
@@ -519,183 +622,201 @@ const ApplyAssessment = ({ navigation, route }) => {
       setError(prev => ({ ...prev, ...newErrors }));
       showToast('error', 'Road Width must be numeric');
       return false;
-    }
-
-    // Example extra: Pincode (if you add it)
-    if (pincode && !pincodeRegex.test(pincode)) {
-      newErrors.pincode = 'Invalid Pincode';
+    } else if (Number(roadWidth) > 499) {
+      newErrors.roadWidth = 'Road Width must not be greater than 499';
       setError(prev => ({ ...prev, ...newErrors }));
-      showToast('error', 'Pincode must be exactly 6 digits');
+      showToast('error', 'Road Width equal or less than 499');
       return false;
     }
 
-    // Helper regex
-
-    // Address validation
+    // Address Validations
     if (!propertyAddress) {
       newErrors.address = 'Address is required';
+      setError(prev => ({ ...prev, ...newErrors }));
       showToast('error', 'Enter Address');
-      isValid = false;
+      return false;
     } else if (!addressRegex.test(propertyAddress)) {
       newErrors.address = 'Invalid Address';
+      setError(prev => ({ ...prev, ...newErrors }));
       showToast('error', 'Address can contain letters, numbers, and ,.-/');
-      isValid = false;
+      return false;
     }
 
-    // City validation
     if (!city) {
       newErrors.city = 'City is required';
+      setError(prev => ({ ...prev, ...newErrors }));
       showToast('error', 'Enter City');
-      isValid = false;
+      return false;
     } else if (!alphabetRegex.test(city)) {
       newErrors.city = 'City should contain only letters';
+      setError(prev => ({ ...prev, ...newErrors }));
       showToast('error', 'City should contain only letters');
-      isValid = false;
+      return false;
     }
 
-    // District validation
     if (!district) {
       newErrors.district = 'District is required';
+      setError(prev => ({ ...prev, ...newErrors }));
       showToast('error', 'Enter District');
-      isValid = false;
+      return false;
     } else if (!alphabetRegex.test(district)) {
       newErrors.district = 'District should contain only letters';
+      setError(prev => ({ ...prev, ...newErrors }));
       showToast('error', 'District should contain only letters');
-      isValid = false;
+      return false;
     }
 
-    // State validation
     if (!state) {
       newErrors.state = 'State is required';
+      setError(prev => ({ ...prev, ...newErrors }));
       showToast('error', 'Enter State');
-      isValid = false;
+      return false;
     } else if (!alphabetRegex.test(state)) {
       newErrors.state = 'State should contain only letters';
+      setError(prev => ({ ...prev, ...newErrors }));
       showToast('error', 'State should contain only letters');
-      isValid = false;
+      return false;
     }
 
-    // Pincode validation
     if (!pincode) {
       newErrors.pincode = 'Pincode is required';
+      setError(prev => ({ ...prev, ...newErrors }));
       showToast('error', 'Enter Pincode');
-      isValid = false;
+      return false;
     } else if (!pincodeRegex.test(pincode)) {
       newErrors.pincode = 'Pincode should be 6 digits';
+      setError(prev => ({ ...prev, ...newErrors }));
       showToast('error', 'Pincode should be 6 digits');
-      isValid = false;
+      return false;
     }
 
+    // Extra Charges Validations
     if (mobileTower === 'yes' || mobileTower === true) {
       if (!towerArea) {
         newErrors.towerArea = 'Tower area is required';
+        setError(prev => ({ ...prev, ...newErrors }));
         showToast('error', 'Enter Tower Area');
-        isValid = false;
+        return false;
       }
       if (!installationDate) {
         newErrors.installationDate = 'Installation date is required';
+        setError(prev => ({ ...prev, ...newErrors }));
         showToast('error', 'Select Tower Installation Date');
-        isValid = false;
+        return false;
       }
     }
 
-    // Hoarding
-    // Hoarding
     if (hoarding === 'yes') {
       if (!hoardingArea) {
         newErrors.hoardingArea = 'Hoarding area is required';
+        setError(prev => ({ ...prev, ...newErrors }));
         showToast('error', 'Enter Hoarding Area');
-        isValid = false;
+        return false;
       }
       if (!hoardingInstallationDate) {
         newErrors.hoardingInstallationDate =
           'Hoarding Installation Date is required';
+        setError(prev => ({ ...prev, ...newErrors }));
         showToast('error', 'Select Hoarding Installation Date');
-        isValid = false;
+        return false;
       }
     }
 
-    // Petrol Pump
     if (petrolPump === 'yes') {
       if (!pumpArea) {
         newErrors.pumpArea = 'Pump area is required';
+        setError(prev => ({ ...prev, ...newErrors }));
         showToast('error', 'Enter Pump Area');
-        isValid = false;
+        return false;
       }
       if (!pumpInstallationDate) {
         newErrors.pumpInstallationDate = 'Pump Installation Date is required';
+        setError(prev => ({ ...prev, ...newErrors }));
         showToast('error', 'Select Pump Installation Date');
-        isValid = false;
+        return false;
       }
     }
 
-    // Rain Harvesting
     if (rainHarvesting === 'yes') {
       if (!completionDate) {
         newErrors.completionDate = 'Completion date is required';
+        setError(prev => ({ ...prev, ...newErrors }));
         showToast('error', 'Select Rain Harvesting Completion Date');
-        isValid = false;
+        return false;
       }
     }
 
-    if (floorDetails && floorDetails.length > 0) {
-      floorDetails.forEach((floor, index) => {
-        const floorErrors = {};
+    // Floor Details Validations
+    if (propertyTypeLabel !== 'VACANT LAND') {
+      if (floorDetails && floorDetails.length > 0) {
+        for (let index = 0; index < floorDetails.length; index++) {
+          const floor = floorDetails[index];
 
-        if (!floor.floorName) {
-          floorErrors.floorName = 'Floor name is required';
-          showToast('error', `Select Floor Name for Floor ${index + 1}`);
-          isValid = false;
-        }
+          if (!floor.floorName) {
+            newErrors[`floor_${index}_floorName`] = 'Floor name is required';
+            setError(prev => ({ ...prev, ...newErrors }));
+            showToast('error', `Select Floor Name for Floor ${index + 1}`);
+            return false;
+          }
 
-        if (!floor.usageType) {
-          floorErrors.usageType = 'Usage type is required';
-          showToast('error', `Select Usage Type for Floor ${index + 1}`);
-          isValid = false;
-        }
+          if (!floor.usageType) {
+            newErrors[`floor_${index}_usageType`] = 'Usage type is required';
+            setError(prev => ({ ...prev, ...newErrors }));
+            showToast('error', `Select Usage Type for Floor ${index + 1}`);
+            return false;
+          }
 
-        if (!floor.constructionType) {
-          floorErrors.constructionType = 'Construction type is required';
-          showToast('error', `Select Construction Type for Floor ${index + 1}`);
-          isValid = false;
-        }
+          if (!floor.constructionType) {
+            newErrors[`floor_${index}_constructionType`] =
+              'Construction type is required';
+            setError(prev => ({ ...prev, ...newErrors }));
+            showToast(
+              'error',
+              `Select Construction Type for Floor ${index + 1}`,
+            );
+            return false;
+          }
 
-        if (!floor.occupancyType) {
-          floorErrors.occupancyType = 'Occupancy type is required';
-          showToast('error', `Select Occupancy Type for Floor ${index + 1}`);
-          isValid = false;
-        }
+          if (!floor.occupancyType) {
+            newErrors[`floor_${index}_occupancyType`] =
+              'Occupancy type is required';
+            setError(prev => ({ ...prev, ...newErrors }));
+            showToast('error', `Select Occupancy Type for Floor ${index + 1}`);
+            return false;
+          }
 
-        if (!floor.builtUpArea || floor.builtUpArea <= 0) {
-          floorErrors.builtUpArea = 'Built-up area is required and must be > 0';
-          showToast('error', `Enter Built-up Area for Floor ${index + 1}`);
-          isValid = false;
-        }
+          if (!floor.builtUpArea || floor.builtUpArea <= 0) {
+            newErrors[`floor_${index}_builtUpArea`] =
+              'Built-up area is required and must be > 0';
+            setError(prev => ({ ...prev, ...newErrors }));
+            showToast('error', `Enter Built-up Area for Floor ${index + 1}`);
+            return false;
+          }
 
-        if (!floor.fromDate) {
-          floorErrors.fromDate = 'Start date is required';
-          showToast('error', `Select Start Date for Floor ${index + 1}`);
-          isValid = false;
+          if (!floor.fromDate) {
+            newErrors[`floor_${index}_fromDate`] = 'Start date is required';
+            setError(prev => ({ ...prev, ...newErrors }));
+            showToast('error', `Select Start Date for Floor ${index + 1}`);
+            return false;
+          }
         }
-
-        if (!floor.uptoDate) {
-          floorErrors.uptoDate = 'End date is required';
-          showToast('error', `Select End Date for Floor ${index + 1}`);
-          isValid = false;
-        }
-
-        if (Object.keys(floorErrors).length > 0) {
-          newErrors[`floor_${index}`] = floorErrors;
-        }
-      });
+      }
     }
-    setError(prev => ({ ...prev, ...newErrors }));
+    // All validations passed
+    setError({});
     return true;
   };
+
+  const clearFieldError = fieldName => {
+    setError(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[fieldName];
+      return newErrors;
+    });
+  };
+
   function convertToYearMonth(date) {
     if (!date) return '';
-
-    // Handle MM/YYYY format
     if (date.includes('/')) {
       const parts = date.split('/');
       if (parts.length === 2) {
@@ -703,8 +824,6 @@ const ApplyAssessment = ({ navigation, route }) => {
         return `${year}-${month.padStart(2, '0')}`;
       }
     }
-
-    // Handle MM-YYYY format
     if (date.includes('-')) {
       const parts = date.split('-');
       if (parts.length === 2) {
@@ -712,50 +831,40 @@ const ApplyAssessment = ({ navigation, route }) => {
         return `${year}-${month.padStart(2, '0')}`;
       }
     }
-
     return '2024-01';
   }
 
   function formatDate1(dateInput) {
     if (!dateInput) return '';
-
-    // Handle ISO date format (from date pickers)
     if (dateInput.includes('T')) {
-      return dateInput.split('T')[0]; // Already in YYYY-MM-DD format
+      return dateInput.split('T')[0];
     }
-
-    // Handle DD/MM/YYYY format
     if (dateInput.includes('/')) {
       const parts = dateInput.split('/');
       if (parts.length !== 3) return '';
-
       const day = parts[0].padStart(2, '0');
       const month = parts[1].padStart(2, '0');
       const year = parts[2];
-
       return `${year}-${month}-${day}`;
     }
-
-    // Handle YYYY-MM-DD format (already correct)
     if (dateInput.includes('-') && dateInput.length === 10) {
       return dateInput;
     }
-
     return '';
   }
-  console.log('completin date', completionDate);
+
   const handleSubmit = async () => {
-    if (!Validate()) {
+    const isValid = await Validate();
+    console.log('isValid:', isValid);
+    if (!isValid) {
       return;
     }
-
-    // ✅ Prepare API request payload in the expected format
 
     const payload = {
       newWardLabel,
       zoneLabel,
       assessmentType: 'New Assessment',
-      zoneMstrId: zone, // map your zone id
+      zoneMstrId: zone,
       wardMstrId: oldWard,
       newWardMstrId: newWard,
       ownershipTypeMstrId: ownershipType,
@@ -765,7 +874,6 @@ const ApplyAssessment = ({ navigation, route }) => {
       electConsumerNo: kno,
       waterConnDate: waterConnectionDate,
       waterConnNo: waterConnectionNo,
-
       propTypeMstrId: propertyType,
       appartmentDetailsId: apartmentDetail || '',
       flatRegistryDate: selectedDate
@@ -788,7 +896,6 @@ const ApplyAssessment = ({ navigation, route }) => {
           ? formatDate1(installationDate)
           : '',
       }),
-
       isHoardingBoard: hoarding === 'yes' ? '1' : '0',
       ...(hoarding === 'yes' && {
         hoardingArea: hoardingArea ? String(hoardingArea) : '50',
@@ -796,7 +903,6 @@ const ApplyAssessment = ({ navigation, route }) => {
           ? formatDate1(hoardingInstallationDate)
           : '',
       }),
-
       isPetrolPump: petrolPump === 'yes' ? '1' : '0',
       ...(petrolPump === 'yes' && {
         underGroundArea: pumpArea ? String(pumpArea) : '25',
@@ -804,17 +910,13 @@ const ApplyAssessment = ({ navigation, route }) => {
           ? formatDate1(pumpInstallationDate)
           : '',
       }),
-
       isWaterHarvesting: rainHarvesting === 'yes' ? '1' : '0',
       ...(rainHarvesting === 'yes' && {
         waterHarvestingDate: completionDate ? formatDate1(completionDate) : '',
       }),
-
       landOccupationDate: completionDate
         ? formatDate1(completionDate)
         : '2021-02-03',
-
-      // Owner Details
       ownerDtl: (ownerDetails || []).map(owner => ({
         ownerName: owner.ownerName,
         guardianName: owner.guardianName,
@@ -825,8 +927,6 @@ const ApplyAssessment = ({ navigation, route }) => {
         isArmedForce: owner.isArmedForce ? 1 : 0,
         isSpeciallyAbled: owner.isSpeciallyAbled ? 1 : 0,
       })),
-
-      // Floor Details
       floorDtl:
         propertyTypeLabel !== 'VACANT LAND'
           ? (floorDetails || []).map(floor => ({
@@ -844,8 +944,6 @@ const ApplyAssessment = ({ navigation, route }) => {
     console.log(JSON.stringify(payload, null, 2));
     try {
       const token = await getToken();
-
-      // 🔥 Hit the API with mapped payload
       const response = await axios.post(
         PROPERTY_API.TEST_REQUEST_API,
         payload,
@@ -859,15 +957,14 @@ const ApplyAssessment = ({ navigation, route }) => {
 
       console.log('API Response:', response.data);
       if (response.data.status && response.data.message === 'Valid Request') {
-        showToast('success', response.data.message); // show success message
+        showToast('success', response.data.message);
         navigation.navigate('AssessmentSummary', {
           data: payload,
           masterData: data,
-        }); // navigate and pass data
+        });
       } else {
-        showToast('error', response.data.message); // show error message if not valid
+        showToast('error', response.data.message);
       }
-      // Navigate only after successful API call
     } catch (error) {
       console.error('API Test Error:', error.response?.data || error.message);
       showToast('error', 'API Test Failed ❌');
@@ -1001,8 +1098,8 @@ const ApplyAssessment = ({ navigation, route }) => {
 
   const selectelectcate =
     data?.electricityType?.map((item, index) => ({
-      label: item, // the string itself
-      value: item, // you can assign index as value, or keep same string
+      label: item,
+      value: item,
     })) || [];
 
   const transferModeOptions = [
@@ -1039,7 +1136,9 @@ const ApplyAssessment = ({ navigation, route }) => {
               placeholder="Select"
               placeholderTextColor="grey"
               value={oldWard}
-              onChange={item => setOldWard(item.value)}
+              onChange={item => {
+                handleFieldChange('oldWard', item.value, setOldWard);
+              }}
               disable={isRessessment || isMutation}
             />
             {error.oldWard && (
@@ -1057,10 +1156,11 @@ const ApplyAssessment = ({ navigation, route }) => {
               placeholder="Select"
               placeholderTextColor="grey"
               value={newWard}
-              F
               onChange={item => {
-                setNewWard(item.value); // store the id
-                setNewWardLabel(item.label); // store the label
+                setNewWard(item.value);
+                setNewWardLabel(item.label);
+                markFieldAsTouched('newWard');
+                clearFieldError('newWard');
               }}
               disable={isRessessment || isMutation}
             />
@@ -1084,7 +1184,13 @@ const ApplyAssessment = ({ navigation, route }) => {
               placeholder="Select"
               placeholderTextColor="grey"
               value={ownershipType}
-              onChange={item => setOwnershipType(item.value)}
+              onChange={item => {
+                handleFieldChange(
+                  'ownershipType',
+                  item.value,
+                  setOwnershipType,
+                );
+              }}
               disable={isRessessment || isMutation}
             />
             {error.ownershipType && (
@@ -1107,6 +1213,8 @@ const ApplyAssessment = ({ navigation, route }) => {
               onChange={item => {
                 setPropertyType(item.value);
                 setPropertyTypeLabel(item.label);
+                markFieldAsTouched('propertyType');
+                clearFieldError('propertyType');
               }}
               disable={isRessessment || isMutation}
             />
@@ -1116,7 +1224,6 @@ const ApplyAssessment = ({ navigation, route }) => {
 
             {propertyTypeLabel === 'FLATS / UNIT IN MULTI STORIED BUILDING' && (
               <View>
-                {/* Date Picker */}
                 <Text
                   style={[
                     styles.label,
@@ -1136,7 +1243,7 @@ const ApplyAssessment = ({ navigation, route }) => {
                 >
                   <Text>
                     {selectedDate
-                      ? selectedDate.toISOString().split('T')[0] // Y-M-D format
+                      ? selectedDate.toISOString().split('T')[0]
                       : 'Select Date'}
                   </Text>
                 </TouchableOpacity>
@@ -1151,7 +1258,6 @@ const ApplyAssessment = ({ navigation, route }) => {
                   />
                 )}
 
-                {/* Apartment Details Dropdown */}
                 <Text
                   style={[
                     styles.label,
@@ -1192,6 +1298,8 @@ const ApplyAssessment = ({ navigation, route }) => {
               onChange={item => {
                 setZone(item.value);
                 setZoneLabel(item.label);
+                markFieldAsTouched('zone');
+                clearFieldError('zone');
               }}
               disable={isRessessment || isMutation}
             />
@@ -1203,7 +1311,6 @@ const ApplyAssessment = ({ navigation, route }) => {
               Zone 2: Rest area other than Zone 1.
             </Text>
 
-            {/* Mutation-specific fields */}
             {isMutation && (
               <>
                 <Text style={styles.label}>Mode of Ownership Transfer *</Text>
@@ -1300,9 +1407,19 @@ const ApplyAssessment = ({ navigation, route }) => {
                 <Text style={styles.errorText}>{error[`gender_${index}`]}</Text>
               )}
 
-              <Text style={styles.label}>Date of Birth</Text>
+              <Text
+                style={[
+                  styles.label,
+                  error[`dob_${index}`] && styles.errorLabel,
+                ]}
+              >
+                Date of Birth *
+              </Text>
               <TouchableOpacity
-                style={styles.dateInput}
+                style={[
+                  styles.dateInput,
+                  error[`dob_${index}`] && styles.errorInput,
+                ]}
                 onPress={() => setOwnerDatePicker({ index, show: true })}
                 disabled={isRessessment || isMutation}
               >
@@ -1310,6 +1427,9 @@ const ApplyAssessment = ({ navigation, route }) => {
                   {owner.dob || 'Select Date of Birth'}
                 </Text>
               </TouchableOpacity>
+              {error[`dob_${index}`] && (
+                <Text style={styles.errorText}>{error[`dob_${index}`]}</Text>
+              )}
 
               <Text
                 style={[
@@ -1392,19 +1512,9 @@ const ApplyAssessment = ({ navigation, route }) => {
                 <Text style={styles.errorText}>{error[`mobile_${index}`]}</Text>
               )}
 
-              <Text
-                style={[
-                  styles.label,
-                  error[`aadhaar_${index}`] && styles.errorLabel,
-                ]}
-              >
-                Aadhaar Number *
-              </Text>
+              <Text style={styles.label}>Aadhaar Number</Text>
               <TextInput
-                style={[
-                  styles.input,
-                  error[`aadhaar_${index}`] && styles.errorInput,
-                ]}
+                style={styles.input}
                 placeholder="Enter Aadhaar Number"
                 keyboardType="numeric"
                 value={owner.aadhaar}
@@ -1414,11 +1524,6 @@ const ApplyAssessment = ({ navigation, route }) => {
                 maxLength={12}
                 editable={!(isRessessment || isMutation)}
               />
-              {error[`aadhaar_${index}`] && (
-                <Text style={styles.errorText}>
-                  {error[`aadhaar_${index}`]}
-                </Text>
-              )}
 
               <Text style={styles.label}>PAN Number</Text>
               <TextInput
@@ -1475,7 +1580,6 @@ const ApplyAssessment = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Owner Date Picker */}
         {ownerDatePicker.show && (
           <DateTimePicker
             mode="date"
@@ -1486,7 +1590,6 @@ const ApplyAssessment = ({ navigation, route }) => {
           />
         )}
 
-        {/* Electricity Details Section */}
         <View style={styles.cardContainer}>
           <Text style={styles.cardTitle}>Electricity Details</Text>
           <View style={styles.card}>
@@ -1502,12 +1605,17 @@ const ApplyAssessment = ({ navigation, route }) => {
               selectelectcate={selectelectcate}
               isRessessment={isRessessment}
               isMutation={isMutation}
-              error={error}
+              errors={{
+                kno: !kno ? 'K. No is required' : '',
+                accNo: !accNo ? 'ACC No is required' : '',
+                electricityCategory: !electricityCategory
+                  ? 'Select a category'
+                  : '',
+              }}
             />
           </View>
         </View>
 
-        {/* Water Connection Details Section */}
         <View style={styles.cardContainer}>
           <Text style={styles.cardTitle}>Water Connection Details</Text>
           <View style={styles.card}>
@@ -1526,30 +1634,42 @@ const ApplyAssessment = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Property Details Section */}
         <View style={styles.cardContainer}>
           <Text style={styles.cardTitle}>Property Details</Text>
           <View style={styles.card}>
             <PropertyDetails
               khataNo={khataNo}
-              setKhataNo={setKhataNo}
+              setKhataNo={value =>
+                handleFieldChange('khataNo', value, setKhataNo)
+              }
               plotNo={plotNo}
-              setPlotNo={setPlotNo}
+              setPlotNo={value => handleFieldChange('plotNo', value, setPlotNo)}
               villageName={villageName}
-              setVillageName={setVillageName}
+              setVillageName={value =>
+                handleFieldChange('villageName', value, setVillageName)
+              }
               plotArea={plotArea}
-              setPlotArea={setPlotArea}
+              setPlotArea={value =>
+                handleFieldChange('plotArea', value, setPlotArea)
+              }
               roadWidth={roadWidth}
-              setRoadWidth={setRoadWidth}
+              setRoadWidth={value =>
+                handleFieldChange('roadWidth', value, setRoadWidth)
+              }
               setNoRoad={setNoRoad}
               showFieldAlert={msg => {}}
               styles={styles}
-              error={error}
+              errors={{
+                khataNo: error.khataNo || '',
+                plotNo: error.plotNo || '',
+                villageName: error.villageName || '',
+                plotArea: error.plotArea || '',
+                roadWidth: error.roadWidth || '',
+              }}
             />
           </View>
         </View>
 
-        {/* Property Address Section */}
         <View style={styles.cardContainer}>
           <Text style={styles.cardTitle}>Property Address</Text>
           <View style={styles.card}>
@@ -1566,12 +1686,17 @@ const ApplyAssessment = ({ navigation, route }) => {
               setPincode={setPincode}
               isRessessment={isRessessment}
               isMutation={isMutation}
-              error={error}
+              errors={{
+                address: !propertyAddress ? 'Property Address is required' : '',
+                city: !city ? 'City is required' : '',
+                district: !district ? 'District is required' : '',
+                stateValue: !state ? 'State is required' : '',
+                pincode: !pincode ? 'Pincode is required' : '',
+              }}
             />
           </View>
         </View>
 
-        {/* Corresponding Address Section */}
         <View style={styles.cardContainer}>
           <TouchableOpacity
             style={styles.checkboxContainer}
@@ -1585,7 +1710,6 @@ const ApplyAssessment = ({ navigation, route }) => {
           </TouchableOpacity>
           {isChecked && (
             <View style={styles.card}>
-              {/* <Text style={styles.cardTitle}>Corresponding Address</Text> */}
               <AddressSection
                 address={correspondingAddress}
                 setAddress={setCorrespondingAddress}
@@ -1606,11 +1730,11 @@ const ApplyAssessment = ({ navigation, route }) => {
           )}
         </View>
 
-        {/* Extra Charges Section */}
         <View style={styles.cardContainer}>
           <Text style={styles.cardTitle}>Extra Charges</Text>
           <View style={styles.card}>
             <ExtraChargesSection
+              propertyTypeId={propertyType}
               mobileTower={mobileTower}
               setMobileTower={setMobileTower}
               towerArea={towerArea}
@@ -1655,11 +1779,10 @@ const ApplyAssessment = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* UPDATED FLOOR DETAILS SECTION WITH REMOVE BUTTON */}
         <View style={styles.cardContainer}>
-          <Text style={styles.cardTitle}>Floor Details</Text>
           {propertyTypeLabel !== 'VACANT LAND' && (
             <>
+              <Text style={styles.cardTitle}>Floor Details</Text>
               {floorDetails.map((floor, index) => (
                 <View key={index} style={styles.floorCard}>
                   <View style={styles.floorHeader}>
@@ -1674,9 +1797,19 @@ const ApplyAssessment = ({ navigation, route }) => {
                     )}
                   </View>
 
-                  <Text style={styles.label}>Floor Name</Text>
+                  <Text
+                    style={[
+                      styles.label,
+                      error[`floor_${index}_floorName`] && styles.errorLabel,
+                    ]}
+                  >
+                    Floor Name *
+                  </Text>
                   <Dropdown
-                    style={styles.dropdown}
+                    style={[
+                      styles.dropdown,
+                      error[`floor_${index}_floorName`] && styles.errorInput,
+                    ]}
                     data={floorNameOptions}
                     labelField="label"
                     valueField="value"
@@ -1688,10 +1821,25 @@ const ApplyAssessment = ({ navigation, route }) => {
                     }
                     disable={isRessessment || isMutation}
                   />
+                  {error[`floor_${index}_floorName`] && (
+                    <Text style={styles.errorText}>
+                      {error[`floor_${index}_floorName`]}
+                    </Text>
+                  )}
 
-                  <Text style={styles.label}>Usage Type</Text>
+                  <Text
+                    style={[
+                      styles.label,
+                      error[`floor_${index}_usageType`] && styles.errorLabel,
+                    ]}
+                  >
+                    Usage Type *
+                  </Text>
                   <Dropdown
-                    style={styles.dropdown}
+                    style={[
+                      styles.dropdown,
+                      error[`floor_${index}_usageType`] && styles.errorInput,
+                    ]}
                     data={usageTypeOptions}
                     labelField="label"
                     valueField="value"
@@ -1703,10 +1851,27 @@ const ApplyAssessment = ({ navigation, route }) => {
                     }
                     disable={isRessessment || isMutation}
                   />
+                  {error[`floor_${index}_usageType`] && (
+                    <Text style={styles.errorText}>
+                      {error[`floor_${index}_usageType`]}
+                    </Text>
+                  )}
 
-                  <Text style={styles.label}>Occupancy Type</Text>
+                  <Text
+                    style={[
+                      styles.label,
+                      error[`floor_${index}_occupancyType`] &&
+                        styles.errorLabel,
+                    ]}
+                  >
+                    Occupancy Type *
+                  </Text>
                   <Dropdown
-                    style={styles.dropdown}
+                    style={[
+                      styles.dropdown,
+                      error[`floor_${index}_occupancyType`] &&
+                        styles.errorInput,
+                    ]}
                     data={occupancyTypeOptions}
                     labelField="label"
                     valueField="value"
@@ -1718,10 +1883,27 @@ const ApplyAssessment = ({ navigation, route }) => {
                     }
                     disable={isRessessment || isMutation}
                   />
+                  {error[`floor_${index}_occupancyType`] && (
+                    <Text style={styles.errorText}>
+                      {error[`floor_${index}_occupancyType`]}
+                    </Text>
+                  )}
 
-                  <Text style={styles.label}>Construction Type</Text>
+                  <Text
+                    style={[
+                      styles.label,
+                      error[`floor_${index}_constructionType`] &&
+                        styles.errorLabel,
+                    ]}
+                  >
+                    Construction Type *
+                  </Text>
                   <Dropdown
-                    style={styles.dropdown}
+                    style={[
+                      styles.dropdown,
+                      error[`floor_${index}_constructionType`] &&
+                        styles.errorInput,
+                    ]}
                     data={constructionTypeOptions}
                     labelField="label"
                     valueField="value"
@@ -1733,10 +1915,25 @@ const ApplyAssessment = ({ navigation, route }) => {
                     }
                     disable={isRessessment || isMutation}
                   />
+                  {error[`floor_${index}_constructionType`] && (
+                    <Text style={styles.errorText}>
+                      {error[`floor_${index}_constructionType`]}
+                    </Text>
+                  )}
 
-                  <Text style={styles.label}>Built Up Area (Sq Ft)</Text>
+                  <Text
+                    style={[
+                      styles.label,
+                      error[`floor_${index}_builtUpArea`] && styles.errorLabel,
+                    ]}
+                  >
+                    Built Up Area (Sq Ft) *
+                  </Text>
                   <TextInput
-                    style={styles.input}
+                    style={[
+                      styles.input,
+                      error[`floor_${index}_builtUpArea`] && styles.errorInput,
+                    ]}
                     placeholder="Enter Built Up Area"
                     placeholderStyle={{ color: 'grey' }}
                     keyboardType="numeric"
@@ -1746,10 +1943,25 @@ const ApplyAssessment = ({ navigation, route }) => {
                     }
                     editable={!(isRessessment || isMutation)}
                   />
+                  {error[`floor_${index}_builtUpArea`] && (
+                    <Text style={styles.errorText}>
+                      {error[`floor_${index}_builtUpArea`]}
+                    </Text>
+                  )}
 
-                  <Text style={styles.label}>From Date (MM/YYYY)</Text>
+                  <Text
+                    style={[
+                      styles.label,
+                      error[`floor_${index}_fromDate`] && styles.errorLabel,
+                    ]}
+                  >
+                    From Date (MM/YYYY) *
+                  </Text>
                   <TouchableOpacity
-                    style={styles.dateInput}
+                    style={[
+                      styles.dateInput,
+                      error[`floor_${index}_fromDate`] && styles.errorInput,
+                    ]}
                     onPress={() =>
                       setDatePicker({ index, field: 'fromDate', show: true })
                     }
@@ -1759,6 +1971,11 @@ const ApplyAssessment = ({ navigation, route }) => {
                       {floor.fromDate || 'Select From Date'}
                     </Text>
                   </TouchableOpacity>
+                  {error[`floor_${index}_fromDate`] && (
+                    <Text style={styles.errorText}>
+                      {error[`floor_${index}_fromDate`]}
+                    </Text>
+                  )}
 
                   <Text style={styles.label}>Up to Date (MM/YYYY)</Text>
                   <TouchableOpacity
@@ -1782,7 +1999,6 @@ const ApplyAssessment = ({ navigation, route }) => {
           )}
         </View>
 
-        {/* Date Picker for Floors */}
         {datePicker.show && (
           <DateTimePicker
             mode="date"
@@ -1792,7 +2008,6 @@ const ApplyAssessment = ({ navigation, route }) => {
           />
         )}
 
-        {/* Submit Button */}
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
           <Text style={styles.buttonText}>Submit</Text>
         </TouchableOpacity>
@@ -1849,7 +2064,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     marginBottom: 12,
     fontSize: 16,
-    // color: '#333',
   },
   errorInput: {
     borderColor: '#e74c3c',

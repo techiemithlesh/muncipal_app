@@ -134,7 +134,8 @@ const SubmitVarification = ({ route }) => {
 
       const fieldPayload = {
         // Mobile Tower
-
+        percentageOfPropertyTransfer:
+          submissionData?.percentageOfPropertyTransfer,
         appartmentDetailsId: submissionData?.apartmentDetail,
 
         isMobileTower: submissionData?.isMobileTower === true, // ensure boolean

@@ -1,36 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 
-// ✅ Separate styles section
-const css = {
-  section: {
-    marginBottom: 20,
-  },
-  header: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
-    color: '#333',
-  },
-  label: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 5,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-    marginBottom: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-};
-
 const AddressSection = ({
   address,
   setAddress,
@@ -45,8 +15,13 @@ const AddressSection = ({
   title,
   isRessessment = false,
   isMutation = false,
+  errors = {}, // 👈 object containing errors
 }) => {
   const isDisabled = isRessessment || isMutation;
+
+  // helper to apply error style
+  const getInputStyle = field =>
+    errors[field] ? [styles.input, styles.inputError] : styles.input;
 
   return (
     <View style={styles.section}>
@@ -54,47 +29,55 @@ const AddressSection = ({
 
       <Text style={styles.label}>Property Address *</Text>
       <TextInput
-        style={styles.input}
+        style={getInputStyle('address')}
         placeholder="Property Address *"
         placeholderTextColor="grey"
         value={address}
         onChangeText={setAddress}
         editable={!isDisabled}
       />
+      {errors.address && <Text style={styles.errorText}>{errors.address}</Text>}
 
       <Text style={styles.label}>City *</Text>
       <TextInput
-        style={styles.input}
+        style={getInputStyle('city')}
         placeholder="City *"
         placeholderTextColor="grey"
         value={city}
         onChangeText={setCity}
         editable={!isDisabled}
       />
+      {errors.city && <Text style={styles.errorText}>{errors.city}</Text>}
 
       <Text style={styles.label}>District *</Text>
       <TextInput
-        style={styles.input}
+        style={getInputStyle('district')}
         placeholder="District *"
         placeholderTextColor="grey"
         value={district}
         onChangeText={setDistrict}
         editable={!isDisabled}
       />
+      {errors.district && (
+        <Text style={styles.errorText}>{errors.district}</Text>
+      )}
 
       <Text style={styles.label}>State *</Text>
       <TextInput
-        style={styles.input}
+        style={getInputStyle('stateValue')}
         placeholder="State *"
         placeholderTextColor="grey"
         value={stateValue}
         onChangeText={setStateValue}
         editable={!isDisabled}
       />
+      {errors.stateValue && (
+        <Text style={styles.errorText}>{errors.stateValue}</Text>
+      )}
 
       <Text style={styles.label}>Pincode *</Text>
       <TextInput
-        style={styles.input}
+        style={getInputStyle('pincode')}
         placeholder="Pincode *"
         placeholderTextColor="grey"
         value={pincode}
@@ -102,11 +85,39 @@ const AddressSection = ({
         keyboardType="numeric"
         editable={!isDisabled}
       />
+      {errors.pincode && <Text style={styles.errorText}>{errors.pincode}</Text>}
     </View>
   );
 };
 
-// ✅ Use StyleSheet.create with css object
-const styles = StyleSheet.create(css);
+const styles = StyleSheet.create({
+  section: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 5,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#fff',
+    marginBottom: 8,
+    fontSize: 16,
+    color: '#333',
+  },
+  inputError: {
+    borderColor: '#e63946', // red border for error
+  },
+  errorText: {
+    color: '#e63946',
+    fontSize: 12,
+    marginBottom: 8,
+  },
+});
 
 export default AddressSection;

@@ -147,12 +147,12 @@ export const ViewDemandModal = ({
   demandDetails,
   tradeDetails1,
 }) => {
-  // useEffect(() => {
-  //   if (visible) {
-  //     console.log('Full Response:', demandDetails);
-  //     // console.log('tradeDue:', tradeDetails.data.data);
-  //   }
-  // }, [visible]);
+  useEffect(() => {
+    if (visible) {
+      console.log('Full Response:', demandDetails);
+      // console.log('tradeDue:', tradeDetails.data.data);
+    }
+  }, [visible]);
 
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -167,13 +167,13 @@ export const ViewDemandModal = ({
 
             <View style={styles.sectionContainer}>
               <Text style={styles.sectionTitle}>Current Demand</Text>
-
+              {/* 
               <View style={styles.rowContainer}>
                 <Text style={styles.label}>Application No:</Text>
                 <Text style={styles.value}>
                   {demandDetails?.applicationNo || 'N/A'}
                 </Text>
-              </View>
+              </View> */}
 
               <View style={styles.rowContainer}>
                 <Text style={styles.label}>License Fee:</Text>
@@ -243,17 +243,20 @@ export const PaymentModal = ({
   onClose,
   tradeDetails,
   demandDetails,
+  onPaymentSuccess, // ✅ new callback prop
   setUpdatedTradeDetails,
 }) => {
   const [year, setYear] = useState(null);
-  const [paymentMode, setPaymentMode] = useState(null);
+  const [paymentMode, setPaymentMode] = useState('CASH');
   const [refNo, setRefNo] = useState('');
   const [chequeDate, setChequeDate] = useState(new Date());
   const [bankName, setBankName] = useState('');
   const [branchName, setBranchName] = useState('');
   const [paymentType, setPaymentType] = useState('FULL');
+
   const processPayment = async () => {
-    let response = null; // declare here
+    let response = null;
+
     try {
       const token = await getToken();
       if (!token) {
@@ -262,17 +265,18 @@ export const PaymentModal = ({
       }
 
       console.log('tradeDetails', tradeDetails);
+
       const paymentData = {
         id: tradeDetails?.id,
-        paymentType: paymentType.toUpperCase(),
-        paymentMode: paymentMode.toUpperCase(),
-        chequeNo: paymentMode.toUpperCase() === 'CASH' ? '' : refNo,
+        paymentType: paymentType?.toUpperCase(),
+        paymentMode: paymentMode?.toUpperCase(),
+        chequeNo: paymentMode?.toUpperCase() === 'CASH' ? '' : refNo,
         chequeDate:
-          paymentMode.toUpperCase() === 'CASH'
+          paymentMode?.toUpperCase() === 'CASH'
             ? ''
-            : chequeDate.toISOString().split('T')[0],
-        bankName: paymentMode.toUpperCase() === 'CASH' ? '' : bankName,
-        branchName: paymentMode.toUpperCase() === 'CASH' ? '' : branchName,
+            : chequeDate?.toISOString().split('T')[0],
+        bankName: paymentMode?.toUpperCase() === 'CASH' ? '' : bankName,
+        branchName: paymentMode?.toUpperCase() === 'CASH' ? '' : branchName,
       };
 
       console.log('paymentData', paymentData);
@@ -284,17 +288,12 @@ export const PaymentModal = ({
             'Content-Type': 'application/json',
           },
         });
-
-        console.log('Full API Response:', response.data);
-        console.log('Status:', response.data.status);
-        console.log('Message:', response.data.message);
-        console.log('Data:', response.data.data);
       } catch (error) {
         console.error(
           'Payment API Error:',
           error.response?.data || error.message,
         );
-        response = error.response; // capture the error response to avoid ReferenceError
+        response = error.response;
       }
 
       const tranId =
@@ -310,33 +309,42 @@ export const PaymentModal = ({
           response.data.message || 'Payment Successfully Done',
         );
 
-        setUpdatedTradeDetails(prev => ({
-          ...prev,
-          demandAmount: 0,
-          payableAmount: 0,
-          realizationPenalty: 0,
-          demandList: prev?.demandList?.map(i => ({
-            ...i,
-            connFee: 0,
-            penalty: 0,
-            amount: 0,
-          })),
-        }));
+        // ✅ Reset local trade amounts to 0
+        if (setUpdatedTradeDetails) {
+          setUpdatedTradeDetails(prev => ({
+            ...prev,
+            demandAmount: 0,
+            payableAmount: 0,
+            realizationPenalty: 0,
+            demandList: prev?.demandList?.map(item => ({
+              ...item,
+              connFee: 0,
+              penalty: 0,
+              amount: 0,
+            })),
+          }));
+        }
+
+        // ✅ Trigger refresh callback in parent
+        if (onPaymentSuccess) onPaymentSuccess();
+
+        // ✅ Close modal
+        onClose();
 
         return { success: true, tranId };
       } else {
         Alert.alert(
           'Payment Error',
-          response?.data?.message || 'Payment failed',
+          response?.data?.message || 'Payment failed. Please try again.',
         );
         return { success: false };
       }
     } catch (error) {
-      console.error('Payment error:', error);
+      console.error('Unexpected Payment Error:', error);
       Alert.alert(
         'Payment Error',
-        error.response?.data?.message ||
-          'Failed to process payment. Please try again.',
+        error?.response?.data?.message ||
+          'Failed to process payment. Please try again later.',
       );
       return { success: false };
     }
@@ -352,30 +360,6 @@ export const PaymentModal = ({
             </TouchableOpacity>
 
             <Text style={styles.mainTitle}>Licence Required for the Year</Text>
-
-            <View style={styles.row}>
-              <Text style={styles.label}>License For*</Text>
-              <Dropdown
-                style={styles.dropdown}
-                data={[
-                  { label: 'Year 1', value: 1 },
-                  { label: 'Year 2', value: 2 },
-                  { label: 'Year 3', value: 3 },
-                  { label: 'Year 4', value: 4 },
-                  { label: 'Year 5', value: 5 },
-                  { label: 'Year 6', value: 6 },
-                  { label: 'Year 7', value: 7 },
-                  { label: 'Year 8', value: 8 },
-                  { label: 'Year 9', value: 9 },
-                  { label: 'Year 10', value: 10 },
-                ]}
-                labelField="label"
-                valueField="value"
-                placeholder="Choose Year"
-                value={year}
-                onChange={item => setYear(item.value)}
-              />
-            </View>
 
             <View style={styles.row}>
               <Text style={styles.label}>Charge Applied*</Text>
@@ -474,11 +458,8 @@ export const PaymentModal = ({
             <TouchableOpacity
               style={styles.submitBtn}
               onPress={async () => {
-                if (!year || !paymentMode) {
-                  Alert.alert(
-                    'Validation Error',
-                    'Please fill required fields',
-                  );
+                if (!paymentMode) {
+                  Alert.alert('Validation Error', 'Please select Payment Mode');
                   return;
                 }
 
@@ -496,9 +477,7 @@ export const PaymentModal = ({
                 const paymentResult = await processPayment();
 
                 if (paymentResult.success) {
-                  console.log('Payment Done:', paymentResult.tranId);
-                  onClose();
-                  // Add additional actions if needed
+                  console.log('✅ Payment Done:', paymentResult.tranId);
                 }
               }}
             >
@@ -737,13 +716,15 @@ export const PaymentReceiptModal = ({ visible, onClose, receiptData }) => (
 
           <Text style={styles.mainTitle}>Payment Receipt</Text>
           <Text style={styles.subTitle}>
-            {receiptData?.ulbDtl?.ulbName || 'Municipal Corporation'}
+            {receiptData?.ulbDtl?.ulbName || 'Ranchi Municipal Corporation'}
+          </Text>
+          <Text style={styles.receiptTypeTitle}>
+            Trade License Payment Receipt
           </Text>
 
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Receipt Info</Text>
             <View style={styles.rowContainer}>
-              <Text style={styles.label}>Receipt No:</Text>
+              <Text style={styles.label}>Receipt No.:</Text>
               <Text style={styles.value}>{receiptData?.tranNo || 'N/A'}</Text>
             </View>
             <View style={styles.rowContainer}>
@@ -751,37 +732,58 @@ export const PaymentReceiptModal = ({ visible, onClose, receiptData }) => (
               <Text style={styles.value}>{receiptData?.tranDate || 'N/A'}</Text>
             </View>
             <View style={styles.rowContainer}>
-              <Text style={styles.label}>Application No:</Text>
+              <Text style={styles.label}>Transaction Type:</Text>
               <Text style={styles.value}>
-                {receiptData?.applicationNo || 'N/A'}
+                {receiptData?.tranDtl?.tranType || 'N/A'}
               </Text>
             </View>
             <View style={styles.rowContainer}>
-              <Text style={styles.label}>Account:</Text>
-              <Text style={styles.value}>
-                {receiptData?.accountDescription || 'N/A'}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Owner Details</Text>
-            {receiptData?.ownerDtl?.map((o, i) => (
-              <View style={styles.rowContainer} key={i}>
-                <Text style={styles.label}>Owner {i + 1}:</Text>
-                <Text style={styles.value}>
-                  {o.ownerName} ({o.mobileNo})
-                </Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Payment Details</Text>
-            <View style={styles.rowContainer}>
-              <Text style={styles.label}>Mode:</Text>
+              <Text style={styles.label}>Payment Mode:</Text>
               <Text style={styles.value}>
                 {receiptData?.paymentMode || 'N/A'}
+              </Text>
+            </View>
+            <View style={styles.rowContainer}>
+              <Text style={styles.label}>Ward No:</Text>
+              <Text style={styles.value}>
+                {receiptData?.newWardNo || receiptData?.wardNo || 'N/A'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.sectionContainer}>
+            <View style={styles.rowContainer}>
+              <Text style={styles.label}>Demand Amount:</Text>
+              <Text style={styles.value}>
+                ₹
+                {receiptData?.tranDtl?.demandAmt ||
+                  (
+                    parseFloat(receiptData?.currentCharge || 0) +
+                    parseFloat(receiptData?.arrearCharge || 0)
+                  ).toFixed(2)}
+              </Text>
+            </View>
+            <View style={styles.rowContainer}>
+              <Text style={styles.label}>Penalty:</Text>
+              <Text style={styles.value}>
+                ₹{receiptData?.tranDtl?.penaltyAmt || '0.00'}
+              </Text>
+            </View>
+            <View style={styles.rowContainer}>
+              <Text style={styles.label}>Discount:</Text>
+              <Text style={styles.value}>
+                ₹{receiptData?.tranDtl?.discountAmt || '0.00'}
+              </Text>
+            </View>
+            <View style={styles.rowContainer}>
+              <Text style={[styles.label, styles.totalText]}>
+                Payable Amount:
+              </Text>
+              <Text style={[styles.value, styles.totalText]}>
+                ₹
+                {receiptData?.tranDtl?.payableAmt ||
+                  receiptData?.amount ||
+                  '0.00'}
               </Text>
             </View>
             <View style={styles.rowContainer}>
@@ -791,68 +793,32 @@ export const PaymentReceiptModal = ({ visible, onClose, receiptData }) => (
                   styles.value,
                   {
                     color:
-                      receiptData?.paymentStatus === 'Clear' ? 'green' : 'red',
+                      receiptData?.paymentStatus === 'Clear' ||
+                      receiptData?.paymentStatus === 'Paid'
+                        ? 'green'
+                        : 'red',
+                    fontWeight: 'bold',
                   },
                 ]}
               >
                 {receiptData?.paymentStatus || 'N/A'}
               </Text>
             </View>
-            <View style={styles.rowContainer}>
-              <Text style={styles.label}>Amount:</Text>
-              <Text style={styles.value}>
-                ₹ {receiptData?.amount || '0.00'}
-              </Text>
-            </View>
-            <View style={styles.rowContainer}>
-              <Text style={styles.label}>In Words:</Text>
-              <Text style={styles.value}>
-                {receiptData?.amountInWords || ''}
-              </Text>
-            </View>
           </View>
-
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Transaction</Text>
-            <View style={styles.rowContainer}>
-              <Text style={styles.label}>Payable Amount:</Text>
-              <Text style={styles.value}>
-                ₹ {receiptData?.tranDtl?.payableAmt || '0.00'}
-              </Text>
-            </View>
-            <View style={styles.rowContainer}>
-              <Text style={styles.label}>Demand Amount:</Text>
-              <Text style={styles.value}>
-                ₹ {receiptData?.tranDtl?.demandAmt || '0.00'}
-              </Text>
-            </View>
-            <View style={styles.rowContainer}>
-              <Text style={styles.label}>Penalty:</Text>
-              <Text style={styles.value}>
-                ₹ {receiptData?.tranDtl?.penaltyAmt || '0.00'}
-              </Text>
-            </View>
-          </View>
-
-          {receiptData?.fineRebate?.length > 0 && (
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Fine / Rebate</Text>
-              {receiptData.fineRebate.map((f, i) => (
-                <View style={styles.rowContainer} key={i}>
-                  <Text style={styles.label}>{f.headName}:</Text>
-                  <Text style={styles.value}>₹ {f.amount}</Text>
-                </View>
-              ))}
-            </View>
-          )}
 
           <Text style={styles.note}>
-            Note: This is a computer-generated receipt. No physical signature is
-            required.
+            Visit: {receiptData?.ulbDtl?.ulbUrl || 'https://ranchimunicipal.com'}
+          </Text>
+          <Text style={styles.note}>
+            Call: {receiptData?.ulbDtl?.tollFreeNo || '1800-xxx-xxxx'}
+          </Text>
+          <Text style={styles.note}>
+            In collaboration with{'\n'}
+            {receiptData?.ulbDtl?.collaboration || 'Ranchi Municipal Corporation'}
           </Text>
 
           <TouchableOpacity style={styles.printBtn}>
-            <Text style={styles.printText}>Download / Print</Text>
+            <Text style={styles.printText}>Print</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -901,6 +867,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 4,
     color: '#333',
+  },
+  receiptTypeTitle: {
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 13,
+    marginBottom: 12,
+    color: '#000',
+    borderWidth: 1,
+    borderColor: '#333',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    alignSelf: 'center',
   },
   tinyText: {
     fontSize: 10,

@@ -7,11 +7,9 @@ import {
   TouchableOpacity,
   Button,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from './Header';
 import HeaderNavigation from '../Components/HeaderNavigation';
-import LogoutButton from '../Components/LogoutButton';
 import MenuTree from '../Components/MenuTree';
 
 const DashBoard = ({ navigation }) => {

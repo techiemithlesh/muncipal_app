@@ -6,120 +6,104 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
+  Modal,
+  Alert,
 } from 'react-native';
 import Colors from '../../Constants/Colors';
-import { API_ROUTES, WORK_FLOW_PERMISSION } from '../../api/apiRoutes';
+import { API_ROUTES } from '../../api/apiRoutes';
 import axios from 'axios';
 import HeaderNavigation from '../../Components/HeaderNavigation';
-import {
-  ViewDemandModal,
-  ViewTradeLicenseModal,
-  PaymentModal,
-  DocumentModal,
-  PaymentReceiptModal,
-} from './InboxModels';
 import { useNavigation } from '@react-navigation/native';
 import { getToken } from '../../utils/auth';
+import { showToast } from '../../utils/toast';
 
 const InboxDtls = ({ route }) => {
-  const [showTradeLicenseModal, setShowTradeLicenseModal] = useState(false);
-  const [showDemandModal, setShowDemandModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showDocumentModal, setShowDocumentModal] = useState(false);
-  const [showReceipt, setShowReceipt] = useState(false);
+  const [showWorkflowModal, setShowWorkflowModal] = useState(false);
+  const [remarks, setRemarks] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [receiptData, setTradPaymentRecipt] = useState(null);
-  const [tradeDue, setTradeDue] = useState(null);
   const [tradeDetails, setTradeDetails] = useState(null);
   const [paymentDtl, setPaymentDtl] = useState(null);
-  const [workflowData, setWorkflowData] = useState(null);
-  const [documents, setDocuments] = useState([]);
   const [levelRemarks, setLevelRemarks] = useState([]);
-
   const [loading, setLoading] = useState(true);
 
   const id = route?.params?.id;
   const navigation = useNavigation();
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      if (!id) return;
-      setLoading(true);
+  const fetchTradeDetails = async () => {
+    if (!id) return;
+    setLoading(true);
 
-      try {
-        const token = await getToken();
+    try {
+      const token = await getToken();
 
-        // Fetch trade details first to get workflowId
-        const tradeRes = await axios.post(
-          API_ROUTES.TRADE_DETAILS,
-          { id: Number(id) },
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
+      const tradeRes = await axios.post(
+        API_ROUTES.TRADE_DETAILS,
+        { id: Number(id) },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
 
-        if (tradeRes?.data?.status && tradeRes.data.data) {
-          setTradeDetails(tradeRes.data.data);
-          setPaymentDtl(tradeRes.data.data.tranDtls?.[0] || null);
-          setLevelRemarks(tradeRes.data.data.levelRemarks || []);
-        }
-
-        const workflowId = tradeRes?.data?.data?.workflowId || 0;
-
-        // Run other APIs in parallel
-        const [tradeDueRes, workflowRes, paymentRes, receiptRes, documentRes] =
-          await Promise.all([
-            axios.post(
-              API_ROUTES.TRADE_DUE_DETAILS,
-              { id },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-            axios.post(
-              WORK_FLOW_PERMISSION,
-              { wfId: workflowId },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-            axios.post(
-              API_ROUTES.TRADE_PAYMENT,
-              {
-                id,
-                paymentType: 'FULL',
-                paymentMode: 'CASH',
-                chequeNo: '',
-                chequeDate: '',
-                bankName: '',
-                branchName: '',
-              },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-            axios.post(
-              API_ROUTES.TRADE_PAYMENT_RECEIPT,
-              { id },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-            axios.post(
-              API_ROUTES.TRADE_DOCUMENT_DETAILS,
-              { id },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-          ]);
-
-        if (tradeDueRes?.data?.status) setTradeDue(tradeDueRes.data.data);
-        if (workflowRes?.data?.status) setWorkflowData(workflowRes.data.data);
-        if (paymentRes?.data?.status) setTradeDue(paymentRes.data.data);
-        if (receiptRes?.data?.status)
-          setTradPaymentRecipt(receiptRes.data.data);
-        if (documentRes?.data?.status) setDocuments(documentRes.data.data);
-      } catch (err) {
-        console.log(
-          '❌ Error fetching data:',
-          err.response?.data || err.message,
-        );
-      } finally {
-        setLoading(false);
+      if (tradeRes?.data?.status && tradeRes.data.data) {
+        setTradeDetails(tradeRes.data.data);
+        setPaymentDtl(tradeRes.data.data.tranDtls?.[0] || null);
+        setLevelRemarks(tradeRes.data.data.levelRemarks || []);
       }
-    };
-
-    fetchAllData();
+    } catch (err) {
+      console.log(
+        '❌ Error fetching trade details:',
+        err.response?.data || err.message,
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchTradeDetails();
   }, [id]);
+
+  const handleWorkflowAction = async status => {
+    if (!id) return;
+    if (!remarks.trim()) {
+      Alert.alert('Validation', 'Please enter remarks before submitting');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const token = await getToken();
+
+      const payload = {
+        id: String(id),
+        remarks: remarks,
+        status: status, // "FORWARD" or "BACKWARD"
+      };
+
+      const res = await axios.post(API_ROUTES.TRADE_POST_NEXT, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data?.status) {
+        showToast(
+          'success',
+          `Application ${
+            status === 'FORWARD' ? 'forwarded' : 'sent back'
+          } successfully`,
+        );
+        setShowWorkflowModal(false);
+        setRemarks('');
+
+        // ✅ Fetch updated trade details again
+      } else {
+        Alert.alert('Error', res.data?.message || 'Something went wrong');
+      }
+    } catch (err) {
+      console.log('❌ Workflow error:', err.response?.data || err.message);
+      Alert.alert('Error', 'Error processing workflow action');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -225,30 +209,6 @@ const InboxDtls = ({ route }) => {
           ))}
         </Section>
 
-        {/* Document Details */}
-        <Section title="Document Details">
-          <View style={styles.docHeader}>
-            <Text style={styles.docCol}>Document Name</Text>
-            <Text style={styles.docCol}>Image</Text>
-            <Text style={styles.docCol}>Status</Text>
-          </View>
-
-          {Array.isArray(documents) &&
-            documents.map(doc => (
-              <DocRow
-                key={doc.id}
-                name={doc.docName}
-                status={
-                  doc.verifiedStatus === 1
-                    ? 'Verified'
-                    : doc.verifiedStatus === 0
-                    ? 'Pending'
-                    : 'Failed'
-                }
-              />
-            ))}
-        </Section>
-
         {/* Payment Details */}
         <Section title="Payment Detail">
           <View style={styles.docHeader}>
@@ -264,30 +224,11 @@ const InboxDtls = ({ route }) => {
               <Text style={styles.paymentCol}>{paymentDtl.tranDate}</Text>
               <Text style={styles.paymentCol}>{paymentDtl.paymentMode}</Text>
               <Text style={styles.paymentCol}>{paymentDtl.tranType}</Text>
-              <TouchableOpacity
-                style={styles.viewBtn}
-                onPress={() => setShowReceipt(true)}
-              >
+              <TouchableOpacity style={styles.viewBtn}>
                 <Text style={styles.viewBtnText}>View</Text>
               </TouchableOpacity>
             </View>
           )}
-        </Section>
-
-        {/* Field Verification */}
-        <Section title="Field Verification">
-          <View style={styles.noDataContainer}>
-            <Text style={styles.noDataText}>
-              No Field Verification Available!
-            </Text>
-          </View>
-        </Section>
-
-        {/* Memo Details */}
-        <Section title="Memo Details">
-          <View style={styles.noDataContainer}>
-            <Text style={styles.noDataText}>No Memo Details Available!</Text>
-          </View>
         </Section>
 
         {/* Level Remarks */}
@@ -335,73 +276,73 @@ const InboxDtls = ({ route }) => {
           )}
         </Section>
 
-        {/* Buttons */}
-        <View style={{ flexDirection: 'row', gap: 10, marginTop: 15 }}>
+        {/* Workflow Button */}
+        <View style={{ marginVertical: 20, alignItems: 'center' }}>
           <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
-            onPress={() => setShowTradeLicenseModal(true)}
+            style={styles.workflowBtn}
+            onPress={() => setShowWorkflowModal(true)}
           >
-            <Text style={styles.tradeLicenseText}>View Trade License</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
-            onPress={() => setShowDemandModal(true)}
-          >
-            <Text style={styles.tradeLicenseText}>View Demand</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
-            onPress={() => setShowPaymentModal(true)}
-          >
-            <Text style={styles.tradeLicenseText}>View Payment</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
-            onPress={() => setShowDocumentModal(true)}
-          >
-            <Text style={styles.tradeLicenseText}>View Documents</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
-            onPress={() => navigation.navigate('EditTrade', { id })}
-          >
-            <Text style={styles.tradeLicenseText}>Edit</Text>
+            <Text style={styles.workflowBtnText}>Backward/Forward</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* Modals */}
-      <ViewTradeLicenseModal
-        visible={showTradeLicenseModal}
-        onClose={() => setShowTradeLicenseModal(false)}
-        tradeDetails={tradeDetails}
-      />
-      <ViewDemandModal
-        visible={showDemandModal}
-        onClose={() => setShowDemandModal(false)}
-        tradeDetails={tradeDue}
-        tradeDetails1={tradeDetails}
-      />
-      <PaymentModal
-        visible={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        tradeDetails={tradeDetails}
-      />
-      <DocumentModal
-        visible={showDocumentModal}
-        onClose={() => setShowDocumentModal(false)}
-        documents={documents}
-      />
-      <PaymentReceiptModal
-        visible={showReceipt}
-        onClose={() => setShowReceipt(false)}
-        receiptData={receiptData}
-      />
+      {/* Workflow Modal */}
+      <Modal
+        visible={showWorkflowModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowWorkflowModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.workflowModal}>
+            <Text style={styles.modalTitle}>Enter Remarks</Text>
+
+            {/* <Text style={styles.inputLabel}>Enter Remarks:</Text> */}
+            <TextInput
+              style={styles.remarksInput}
+              placeholder="Enter your remarks..."
+              value={remarks}
+              onChangeText={setRemarks}
+              multiline
+            />
+
+            <View style={styles.modalBtnContainer}>
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: '#007bff' }]}
+                onPress={() => handleWorkflowAction('FORWARD')}
+                disabled={isSubmitting}
+              >
+                <Text style={styles.btnText}>
+                  {isSubmitting ? 'Processing...' : 'Forward'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: '#ff9800' }]}
+                onPress={() => handleWorkflowAction('BACKWARD')}
+                disabled={isSubmitting}
+              >
+                <Text style={styles.btnText}>
+                  {isSubmitting ? 'Processing...' : 'Backward'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={() => setShowWorkflowModal(false)}
+            >
+              <Text style={{ color: '#000', fontWeight: '600' }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
 
-// Section and Row components
+// --- Section Components ---
 const Section = ({ title, children }) => (
   <View style={styles.section}>
     <Text style={styles.sectionTitle}>{title}</Text>
@@ -416,26 +357,7 @@ const DetailRow = ({ label, value }) => (
   </View>
 );
 
-const DocRow = ({ name, status }) => {
-  const color =
-    status === 'Verified'
-      ? 'green'
-      : status === 'Pending'
-      ? 'orange'
-      : status === 'Failed'
-      ? 'red'
-      : 'black';
-  return (
-    <View style={styles.docRow}>
-      <Text style={styles.docCol}>{name}</Text>
-      <Text style={styles.docCol}>📄</Text>
-      <Text style={[styles.docCol, { color, fontWeight: 'bold' }]}>
-        {status}
-      </Text>
-    </View>
-  );
-};
-
+// --- Styles ---
 const styles = StyleSheet.create({
   container: { padding: 10, backgroundColor: '#f4faff' },
   loaderContainer: {
@@ -444,7 +366,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
   },
-
   banner: {
     backgroundColor: '#e6f0ff',
     borderRadius: 6,
@@ -455,7 +376,7 @@ const styles = StyleSheet.create({
   appId: { color: '#ff6600', fontWeight: 'bold' },
   statusText: { marginTop: 5 },
   expired: { color: 'red', fontWeight: 'bold' },
-
+  active: { color: 'green', fontWeight: 'bold' },
   section: {
     backgroundColor: '#fff',
     borderRadius: 6,
@@ -467,11 +388,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     marginBottom: 8,
-    color: Colors.background,
+    color: '#fff',
     backgroundColor: Colors.primary,
     padding: 10,
+    borderRadius: 4,
   },
-
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -482,7 +403,6 @@ const styles = StyleSheet.create({
   },
   label: { fontWeight: '600', color: '#333', flex: 1 },
   value: { flex: 1, textAlign: 'right', color: '#000' },
-
   ownerHeader: { flexDirection: 'row', backgroundColor: '#f2f2f2', padding: 8 },
   ownerRow: {
     flexDirection: 'row',
@@ -491,7 +411,6 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
   },
   ownerCol: { flex: 1, fontWeight: 'bold' },
-
   docHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -500,14 +419,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
-  docRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-    alignItems: 'center',
-  },
   docCol: { flex: 1, textAlign: 'center' },
-
   paymentRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -515,48 +427,73 @@ const styles = StyleSheet.create({
   },
   paymentCol: { flex: 1, textAlign: 'center' },
   viewBtn: {
-    backgroundColor: '#d71717ff',
+    backgroundColor: '#d71717',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 4,
-    borderWidth: 2, // sets border thickness
-    borderColor: Colors.primary,
   },
   viewBtnText: { color: '#fff', fontWeight: '600' },
-
   noRemarksContainer: { padding: 10, alignItems: 'center' },
   noRemarksText: { color: '#999' },
-
-  noDataContainer: {
-    padding: 20,
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
+  workflowBtn: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 6,
   },
-  noDataText: {
-    color: '#666',
-    fontSize: 10,
-    fontStyle: 'italic',
-  },
-
-  tradeLicenseBtn: {
-    backgroundColor: '#0f3969ff',
-    marginBottom: 40,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center', // centers content horizontally
-    flexDirection: 'row', // ensures content is in a row
-    // paddingHorizontal: 10, // optional, adds spacing inside the button
-    // paddingVertical: 5, // optional, adjusts height
-    borderWidth: 1, // sets border thickness
-    borderColor: 'red',
-    padding: 2,
-  },
-  tradeLicenseText: {
+  workflowBtnText: {
     color: '#fff',
-    fontSize: 8,
     fontWeight: 'bold',
-    marginLeft: 5, // optional, if you have an icon next to text
+    fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  workflowModal: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    marginBottom: 15,
+  },
+  inputLabel: { fontWeight: '600', marginBottom: 5 },
+  remarksInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    padding: 8,
+    textAlignVertical: 'top',
+    height: 100,
+    marginBottom: 15,
+  },
+  modalBtnContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionBtn: {
+    flex: 1,
+    marginHorizontal: 5,
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  btnText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  cancelBtn: {
+    marginTop: 10,
+    alignSelf: 'center',
   },
 });
 

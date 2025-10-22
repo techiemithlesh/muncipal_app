@@ -299,6 +299,7 @@ export const PaymentModal = ({
   const [amount, setAmount] = useState(
     customerDeuDetails?.payableAmount || '0.00',
   );
+  const [demandData, setDemandData] = useState(null);
 
   // Dropdown states
   const [showPaymentTypeDropdown, setShowPaymentTypeDropdown] = useState(false);
@@ -399,8 +400,8 @@ export const PaymentModal = ({
 
       if (response.status >= 200 && response.status < 300) {
         setReceiptData(response.data);
-        Alert.alert('Success', 'Payment processed successfully');
-        const updatedData = demandData.map(item => ({
+        Alert.alert('Success', response?.data?.message);
+        const updatedData = customerDue.map(item => ({
           ...item,
           amount: 0,
           totalTax: 0,

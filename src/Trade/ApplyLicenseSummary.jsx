@@ -5,6 +5,7 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
+  Modal,
 } from 'react-native';
 import axios from 'axios';
 import Colors from '../Constants/Colors';
@@ -15,12 +16,16 @@ import {
 } from 'react-native-responsive-dimensions';
 import { API_ROUTES } from '../api/apiRoutes';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useState } from 'react';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 const ApplyLicenseSummary = ({ route, navigation }) => {
   const { submittedData } = route.params || {};
 
   const data = submittedData?.displayData || submittedData;
   const apiPayload = submittedData?.apiPayload || null;
+  const [modalVisible, setModalVisible] = useState(false);
+  const [copiedLicenseNo, setCopiedLicenseNo] = useState('');
 
   const formatDate = date => {
     if (!date) return 'Not specified';
@@ -103,6 +108,10 @@ const ApplyLicenseSummary = ({ route, navigation }) => {
       'Total Charge': data.totalCharge,
     };
   };
+  const handleOk = () => {
+    setModalVisible(false);
+    navigation.navigate('Search'); // replace with your screen
+  };
 
   const handleSubmit = async () => {
     const payload =
@@ -128,7 +137,7 @@ const ApplyLicenseSummary = ({ route, navigation }) => {
         };
 
         return {
-          applicationType: 'NEW LICENSE',
+          applicationType: serializedSubmittedData.applicationType,
           firmTypeId: serializedSubmittedData.firmTypeId || 1,
           ownershipTypeId: serializedSubmittedData.ownershipTypeId || 1,
           wardMstrId: serializedSubmittedData.wardMstrId || 1,
@@ -181,11 +190,25 @@ const ApplyLicenseSummary = ({ route, navigation }) => {
       }
 
       if (response.data.status) {
-        alert(
-          `✅ Application Submitted!\nApplication No: ${response.data.data.applicationNo}`,
-        );
-        navigation.navigate('TradeInbox');
+        const safNo = response.data.data?.applicationNo; // or safNo if API returns that key
+
+        // alert(`✅ Application Submitted!\nApplication No: ${safNo}`);
+
+        const licenseNo = response.data.data?.applicationNo; // License Number from API
+
+        // alert(`✅ Application Submitted!\nLicense No: ${licenseNo}`);
+
+        if (licenseNo) {
+          Clipboard.setString(licenseNo); // copy License No
+          setCopiedLicenseNo(licenseNo); // ✅ save License No in state
+          setTimeout(() => {
+            setModalVisible(true); // show confirmation modal
+          }, 2000);
+        }
+        // Optional navigation if needed
+        // navigation.navigate('Search');
       } else {
+        // Handle backend validation or message errors
         let errorMessage = response.data.message || 'Submission failed';
         if (response.data.errors) {
           const errorDetails = Object.entries(response.data.errors)
@@ -193,19 +216,12 @@ const ApplyLicenseSummary = ({ route, navigation }) => {
             .join('\n');
           errorMessage += '\n\nDetails:\n' + errorDetails;
         }
+
         alert('❌ ' + errorMessage);
       }
     } catch (error) {
-      console.error('Error submitting application:', error);
-      if (error.response) {
-        alert(
-          `⚠️ Error: ${error.response.data.message || 'Something went wrong'}`,
-        );
-      } else if (error.request) {
-        alert('⚠️ Error: No response received from server');
-      } else {
-        alert('⚠️ Something went wrong while submitting');
-      }
+      setLoading(false);
+      console.error('❌ Error submitting application:', error);
     }
   };
 
@@ -272,6 +288,24 @@ const ApplyLicenseSummary = ({ route, navigation }) => {
           <Text style={styles.submitButtonText}>Submit Application</Text>
         </TouchableOpacity>
       </View>
+      <Modal
+        transparent={true}
+        visible={modalVisible}
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Copied!</Text>
+            <Text style={styles.modalText}>
+              copiedLicenseNo No: {copiedLicenseNo}
+            </Text>
+            <TouchableOpacity style={styles.okButton} onPress={handleOk}>
+              <Text style={styles.okText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -387,6 +421,48 @@ const styles = StyleSheet.create({
     color: '#0050b3',
     fontSize: responsiveFontSize(1.8),
     fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)', // dark transparent background
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    padding: 25,
+    borderRadius: 15, // rounded corners
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8, // Android shadow
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 15,
+    color: '#333',
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 25,
+    textAlign: 'center',
+    color: '#555',
+  },
+  okButton: {
+    backgroundColor: '#2196F3',
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 25, // pill-shaped button
+    elevation: 2,
+  },
+  okText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
 

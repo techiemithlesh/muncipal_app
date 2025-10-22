@@ -358,16 +358,6 @@ const HoldingDetails = ({ route, navigation }) => {
           <Text style={styles.heading}>Basic Details</Text>
 
           <View style={styles.row}>
-            <Text style={styles.labelFixed}>Holding No:</Text>
-            <Text style={styles.value}>{safData?.assessmentType}</Text>
-          </View>
-
-          <View style={styles.row}>
-            <Text style={styles.labelFixed}>New Holding No:</Text>
-            <Text style={styles.value}>{safData?.newHoldingNo || 'N/A'}</Text>
-          </View>
-
-          <View style={styles.row}>
             <Text style={styles.labelFixed}>Ward No:</Text>
             <Text style={styles.value}>{safData?.wardNo || 'N/A'}</Text>
           </View>
@@ -379,8 +369,18 @@ const HoldingDetails = ({ route, navigation }) => {
 
           <View style={styles.row}>
             <Text style={styles.labelFixed}>Assessment Type:</Text>
-            <Text style={styles.value}>{safData?.assessmentType || 'N/A'}</Text>
+            <Text style={styles.value}>{safData?.assessmentType}</Text>
           </View>
+
+          <View style={styles.row}>
+            <Text style={styles.labelFixed}>New Holding No:</Text>
+            <Text style={styles.value}>{safData?.newHoldingNo || 'N/A'}</Text>
+          </View>
+
+          {/* <View style={styles.row}>
+            <Text style={styles.labelFixed}>Assessment Type:</Text>
+            <Text style={styles.value}>{safData?.assessmentType || 'N/A'}</Text>
+          </View> */}
 
           <View style={styles.row}>
             <Text style={styles.labelFixed}>Property Type:</Text>
@@ -858,7 +858,7 @@ const HoldingDetails = ({ route, navigation }) => {
                 </View>
 
                 {/* Table Body */}
-                {taxDetails.map((item, index) => (
+                {/* {taxDetails.map((item, index) => (
                   <View style={styles.tableRow} key={index}>
                     <Text style={styles.tableCell}>{index + 1}</Text>
                     <Text style={styles.tableCell}>{item?.arv ?? 'NA'}</Text>
@@ -884,7 +884,7 @@ const HoldingDetails = ({ route, navigation }) => {
                       {item?.quarterlyTax ?? 'NA'}
                     </Text>
                   </View>
-                ))}
+                ))} */}
               </View>
             </ScrollView>
           </View>

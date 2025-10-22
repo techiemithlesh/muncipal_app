@@ -2108,7 +2108,7 @@ const SafDueDetails = ({ route, navigation }) => {
       </Modal>
 
       {/* Payment Receipt Modal */}
-      <PaymentReceiptModal
+      {/* <PaymentReceiptModal
         visible={paymentReceiptVisible}
         onClose={() => {
           setPaymentReceiptVisible(false);
@@ -2122,13 +2122,13 @@ const SafDueDetails = ({ route, navigation }) => {
           setBranchName('');
           setChequeDate(null);
         }}
-        paymentDtls={{
-          tranNo: transactionId ? `TXN-${transactionId}` : 'PMT-' + Date.now(),
-          tranDate: new Date().toLocaleDateString('en-GB'),
-          paymentMode: paymentMode || 'Online',
-          payableAmt: amount,
-        }}
-      />
+        // paymentDtls={{
+        //   tranNo: transactionId ? `TXN-${transactionId}` : 'PMT-' + Date.now(),
+        //   tranDate: new Date().toLocaleDateString('en-GB'),
+        //   paymentMode: paymentMode || 'Online',
+        //   payableAmt: amount,
+        // }}
+      /> */}
     </ScrollView>
   );
 };

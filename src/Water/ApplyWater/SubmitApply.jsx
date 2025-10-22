@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  Modal,
 } from 'react-native';
 import HeaderNavigation from '../../Components/HeaderNavigation';
 import Colors from '../../Constants/Colors';
@@ -13,12 +14,22 @@ import { WATER_API_ROUTES } from '../../api/apiRoutes';
 import axios from 'axios';
 import { getToken } from '../../utils/auth';
 import { useNavigation } from '@react-navigation/native';
+import Clipboard from '@react-native-clipboard/clipboard';
+import { useState } from 'react';
+
 const SubmitApply = ({ route }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [copiedWaterNo, setCopiedWaterNo] = useState('');
+  const [copiedLicenseNo, setCopiedLicenseNo] = useState('');
+
   const navigation = useNavigation();
   const { formData, masterData } = route.params;
   console.log('Form Data:', formData);
   // const {}
-
+  const handleOk = () => {
+    setModalVisible(false);
+    navigation.navigate('SearchWater'); // replace with your screen
+  };
   // Mapping field keys to their label property
   const labelKeyMap = {
     constructionType: 'constructionType',
@@ -81,6 +92,7 @@ const SubmitApply = ({ route }) => {
       landmark: formData.landmark || '',
       pinCode: formData.pinCode || '',
       holdingNo: formData.holdingNo || '',
+      safNo: formData.safNo || '',
       ownerDtl: formData.ownerDtl?.map((applicant, index) => ({
         id: applicant.id || index + 1,
         ownerName: applicant.ownerName || '',
@@ -115,17 +127,17 @@ const SubmitApply = ({ route }) => {
       console.log('Response:', response.data);
 
       if (response.data.status) {
-        Alert.alert(
-          '✅ Success',
-          'Your form has been successfully submitted!',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.navigate('SearchWater'),
-            },
-          ],
-          { cancelable: false },
-        );
+        const licenseNo = response.data.data?.applicationNo; // License Number from API
+
+        // alert(`✅ Application Submitted!\nLicense No: ${licenseNo}`);
+
+        if (licenseNo) {
+          Clipboard.setString(licenseNo); // copy License No
+          setCopiedLicenseNo(licenseNo); // ✅ save License No in state
+          setTimeout(() => {
+            setModalVisible(true); // show confirmation modal
+          }, 2000);
+        }
       } else {
         Alert.alert(
           'Authentication Failed',
@@ -231,6 +243,25 @@ const SubmitApply = ({ route }) => {
           <Text style={styles.submitButtonText}>FINAL SUBMIT</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal
+        transparent={true}
+        visible={modalVisible}
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Copied!</Text>
+            <Text style={styles.modalText}>
+              Copied Application No: {copiedLicenseNo}
+            </Text>
+            <TouchableOpacity style={styles.okButton} onPress={handleOk}>
+              <Text style={styles.okText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -291,6 +322,48 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   submitButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)', // dark transparent background
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    padding: 25,
+    borderRadius: 15, // rounded corners
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8, // Android shadow
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 15,
+    color: '#333',
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 25,
+    textAlign: 'center',
+    color: '#555',
+  },
+  okButton: {
+    backgroundColor: '#2196F3',
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 25, // pill-shaped button
+    elevation: 2,
+  },
+  okText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
 });
 
 export default SubmitApply;

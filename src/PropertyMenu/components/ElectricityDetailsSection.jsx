@@ -12,6 +12,7 @@ const ElectricityDetailsSection = ({
   electricityCategory,
   setElectricityCategory,
   selectelectcate,
+  errors = {}, // 👈 new
   isRessessment = false,
   isMutation = false,
 }) => {
@@ -19,9 +20,13 @@ const ElectricityDetailsSection = ({
 
   return (
     <View style={styles.container}>
+      {/* Electricity K. No */}
       <Text style={styles.label}>Electricity K. No *</Text>
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          errors.kno && styles.inputError, // highlight error
+        ]}
         placeholder="xxxx xxxx xxxx"
         placeholderTextColor="grey"
         keyboardType="numeric"
@@ -30,10 +35,12 @@ const ElectricityDetailsSection = ({
         onChangeText={setKno}
         editable={!isDisabled}
       />
+      {errors.kno && <Text style={styles.errorText}>{errors.kno}</Text>}
 
+      {/* ACC No */}
       <Text style={styles.label}>ACC No *</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, errors.accNo && styles.inputError]}
         placeholder="xxxx xxxx xxxx"
         placeholderTextColor="grey"
         keyboardType="numeric"
@@ -41,20 +48,29 @@ const ElectricityDetailsSection = ({
         onChangeText={setAccNo}
         editable={!isDisabled}
       />
+      {errors.accNo && <Text style={styles.errorText}>{errors.accNo}</Text>}
 
+      {/* BIND/BOOK No */}
       <Text style={styles.label}>BIND/BOOK No</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, errors.bindBookNo && styles.inputError]}
         placeholder="xxxx xxxx xxxx"
         placeholderTextColor="grey"
         value={bindBookNo}
         onChangeText={setBindBookNo}
         editable={!isDisabled}
       />
+      {errors.bindBookNo && (
+        <Text style={styles.errorText}>{errors.bindBookNo}</Text>
+      )}
 
+      {/* Electricity Category */}
       <Text style={styles.label}>Electricity Category *</Text>
       <Dropdown
-        style={styles.dropdown}
+        style={[
+          styles.dropdown,
+          errors.electricityCategory && styles.inputError,
+        ]}
         data={selectelectcate}
         labelField="label"
         valueField="value"
@@ -62,6 +78,9 @@ const ElectricityDetailsSection = ({
         onChange={item => setElectricityCategory(item.value)}
         disabled={isDisabled}
       />
+      {errors.electricityCategory && (
+        <Text style={styles.errorText}>{errors.electricityCategory}</Text>
+      )}
     </View>
   );
 };
@@ -82,7 +101,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     backgroundColor: '#fff',
-    marginBottom: 12,
+    marginBottom: 8,
     fontSize: 16,
     color: '#333',
   },
@@ -93,8 +112,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     backgroundColor: '#fff',
-    marginBottom: 12,
+    marginBottom: 8,
     justifyContent: 'center',
+  },
+  inputError: {
+    borderColor: '#e63946',
+  },
+  errorText: {
+    color: '#e63946',
+    fontSize: 12,
+    marginBottom: 8,
   },
 });
 

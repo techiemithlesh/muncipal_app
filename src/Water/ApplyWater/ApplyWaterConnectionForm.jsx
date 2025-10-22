@@ -253,6 +253,8 @@ const ApplyWaterConnectionForm = () => {
   const handleSubmit = async () => {
     const isValid = handleValidation({
       totalArea,
+      holdingNo,
+      safNo,
       landmark,
       pin,
       address,
@@ -285,24 +287,6 @@ const ApplyWaterConnectionForm = () => {
 
     if (!isValid) return;
 
-    // const payload = {
-    //   typeOfConnection,
-    //   connectionThrough: connectionThroughValue,
-    //   propertyType,
-    //   ownerType,
-    //   wardNo,
-    //   newWardNo: wardNo2,
-    //   newWardOptions,
-    //   totalArea,
-    //   landmark,
-    //   pin,
-    //   address,
-    //   applicants,
-    //   pipelineType,
-    //   categoryType,
-    //   safNo,
-    // };
-
     const payload = {
       category: categoryType,
       pipelineTypeId: pipelineType.toString(),
@@ -321,6 +305,7 @@ const ApplyWaterConnectionForm = () => {
       landmark: landmark,
       pinCode: pin,
       holdingNo: holdingNo || '',
+      safNo: safNo || '',
 
       ownerDtl: applicants.map((applicant, index) => ({
         id: applicant.id || index + 1,

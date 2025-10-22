@@ -22,6 +22,7 @@ import WaterConnectionDetailsSection from './components/WaterConnectionDetailsSe
 import ExtraChargesSection from './components/ExtraChargesSection';
 import FloorDetailsSection from './components/FloorDetailsSection';
 import PropertyDetails from './components/PropertyDetails';
+import { showToast } from '../utils/toast';
 
 const ApplyAssessmentComponentized = ({ navigation, route }) => {
   // Get data from route params if it's a reassessment or mutation
@@ -39,6 +40,16 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
   } = route?.params || {};
 
   // All state and logic copied from ApplyAssessment.jsx
+
+  const [error, setError] = useState({});
+  // const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(
+    safData.flatRegistryDate ? new Date(safData.flatRegistryDate) : new Date(),
+  );
+
+  const [apartmentList, setApartmentList] = useState([]);
+  const [apartmentDetail, setApartmentDetail] = useState(null);
+
   const [waterConnectionNo, setWaterConnectionNo] = useState('');
   const [waterConnectionDate, setWaterConnectionDate] = useState('');
   const [propertyTypeLabel, setPropertyTypeLabel] = useState('');
@@ -165,7 +176,49 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
     }
   };
   const handleSubmit = async () => {
+    let newErrors = {};
+
+    if (isMutation) {
+      if (!transferMode) {
+        newErrors.transferMode = 'Please select mode of ownership transfer';
+        showToast(
+          'error',
+          'Validation Error',
+          'Please select mode of ownership transfer',
+        );
+      }
+
+      if (!propertyTransferPercentage) {
+        newErrors.propertyTransferPercentage =
+          'Please enter property transfer percentage';
+        showToast(
+          'error',
+          'Validation Error',
+          'Please enter property transfer percentage',
+        );
+      } else if (
+        isNaN(propertyTransferPercentage) ||
+        propertyTransferPercentage < 0 ||
+        propertyTransferPercentage > 100
+      ) {
+        newErrors.propertyTransferPercentage =
+          'Percentage must be between 0 and 100';
+        showToast(
+          'error',
+          'Validation Error',
+          'Percentage must be between 0 and 100',
+        );
+      }
+    }
+
+    setError(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      return; // stop submission if errors exist
+    }
     const formData = {
+      appartmentDetailsId: safData?.appartmentDetailsId || '',
+      holdingId: safData?.id,
       oldWard,
       newWard,
       ownershipType,
@@ -232,12 +285,23 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
     }
 
     if (isRessessment) {
-      navigation.navigate('RessesmentSummry', { data: formData });
+      navigation.navigate('RessesmentSummry', {
+        data: formData,
+        safData: safData,
+      });
     } else if (isMutation) {
-      navigation.navigate('MutationScreen', { data: formData });
+      navigation.navigate('MutationScreen', {
+        data: formData,
+        safData: safData,
+      });
     } else {
       navigation.navigate('AssessmentSummary', { data: formData });
     }
+    console.log('Frprm saata', fromData);
+  };
+
+  const clearFieldError = field => {
+    setError(prev => ({ ...prev, [field]: undefined }));
   };
   useEffect(() => {
     fetchMasterData();
@@ -391,7 +455,10 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
       );
       setPropertyType(propertyTypeOption?.id || '');
       setPropertyTypeLabel(safData.propertyType || '');
-
+      setApartmentDetail({
+        apartmentName: safData.apartmentName || 'BALAJEE ENCLAVE( APT-2917)',
+        appartmentDetailsId: safData.appartmentDetailsId || 2254,
+      });
       // Set zone
       const zoneValue = safData.zone || '';
       // Map zone values to dropdown format
@@ -438,7 +505,8 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
         );
         setRelation(relationOption?.value || '');
 
-        setMobile(owner.mobileNo || '');
+        setMobile(owner.mobileNo?.toString() || '');
+
         setAadhaar(owner.aadharNo || '');
         setPan(owner.panNo || '');
         setEmail(owner.email || '');
@@ -621,6 +689,61 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
             Zone 2: Rest area other than Zone 1.
           </Text>
 
+          {safData.propTypeMstrId == 3 && (
+            <View>
+              {/* Date Picker */}
+              <Text
+                style={[styles.label, error.ownershipType && styles.errorLabel]}
+              >
+                Select Flat Registry Date *
+              </Text>
+              <TouchableOpacity
+                disabled={true}
+                style={{
+                  borderWidth: 1,
+                  padding: 10,
+                  marginBottom: 10,
+                  borderRadius: 5,
+                }}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text>
+                  {selectedDate
+                    ? selectedDate.toISOString().split('T')[0] // Y-M-D format
+                    : 'Select Date'}
+                </Text>
+              </TouchableOpacity>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={selectedDate}
+                  maximumDate={new Date()}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={handleDateChange1}
+                />
+              )}
+
+              {/* Apartment Details Dropdown */}
+              <Text
+                style={[styles.label, error.ownershipType && styles.errorLabel]}
+              >
+                Apartment Details *
+              </Text>
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderRadius: 5,
+                  padding: 10,
+                  marginBottom: 10,
+                  backgroundColor: '#f0f0f0', // optional, to indicate read-only
+                }}
+              >
+                <Text>{safData?.apartmentName || 'N/A'}</Text>
+              </View>
+            </View>
+          )}
+
           {/* Mutation-specific fields */}
           {isMutation && (
             <>
@@ -632,17 +755,33 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
                 valueField="value"
                 placeholder="Select Mode of Ownership Transfer"
                 value={transferMode}
-                onChange={item => setTransferMode(item.value)}
+                onChange={item => {
+                  setTransferMode(item.value);
+                  if (error.transferMode) clearFieldError('transferMode');
+                }}
               />
+              {error.transferMode && (
+                <Text style={styles.errorText}>{error.transferMode}</Text>
+              )}
+
               <Text style={styles.label}>Property Transfer (0-100%) *</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter percentage (0-100)"
                 keyboardType="numeric"
                 value={propertyTransferPercentage}
-                onChangeText={setPropertyTransferPercentage}
+                onChangeText={text => {
+                  setPropertyTransferPercentage(text);
+                  if (error.propertyTransferPercentage)
+                    clearFieldError('propertyTransferPercentage');
+                }}
                 maxLength={3}
               />
+              {error.propertyTransferPercentage && (
+                <Text style={styles.errorText}>
+                  {error.propertyTransferPercentage}
+                </Text>
+              )}
             </>
           )}
         </View>
@@ -715,7 +854,7 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
           setStateValue={setState}
           pincode={pincode}
           setPincode={setPincode}
-          isRessessment={isRessessment}
+          isRessessment={isRessessment} // true/false
           isMutation={isMutation}
         />
         <TouchableOpacity
@@ -802,6 +941,7 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
           setNoRoad={setNoRoad}
           showFieldAlert={msg => {}}
           styles={styles}
+          isEditable={!isRessessment && !isMutation}
         />
         <FloorDetailsSection
           propertyTypeLabel={propertyTypeLabel}
@@ -961,6 +1101,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     marginBottom: 5,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 2,
   },
 });
 

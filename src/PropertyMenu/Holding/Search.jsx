@@ -36,7 +36,7 @@ const Search = ({ navigation }) => {
   const renderItem = ({ item, index }) => (
     <View style={styles.resultCard}>
       {/* Row with Apply Date and Application Status */}
-      <View
+      {/* <View
         style={{
           flexDirection: 'row',
           justifyContent: 'space-between',
@@ -49,7 +49,7 @@ const Search = ({ navigation }) => {
         <Text style={[styles.label, { flex: 1, textAlign: 'right' }]}>
           Status: <Text style={styles.value}>{item.appStatus}</Text>
         </Text>
-      </View>
+      </View> */}
 
       <Text style={styles.label}>
         🏷️ SL No: <Text style={styles.value}>{index + 1}</Text>
@@ -61,27 +61,30 @@ const Search = ({ navigation }) => {
         🆕 New Ward No: <Text style={styles.value}>{item.newWardNo}</Text>
       </Text>
       <Text style={styles.label}>
-        📄 Application No: <Text style={styles.value}>{item.safNo}</Text>
+        📄 Holding No: <Text style={styles.value}>{item.holdingNo}</Text>
       </Text>
-      <Text style={styles.label}>
+      {/* <Text style={styles.label}>
         🏢 Assessment Type:{' '}
         <Text style={styles.value}>{item.assessmentType}</Text>
-      </Text>
+      </Text> */}
       <Text style={styles.label}>
         👤 Owner: <Text style={styles.value}>{item.ownerName}</Text>
       </Text>
+
       <Text style={styles.label}>
-        👨‍👩‍👧 Guardian Name: <Text style={styles.value}>{item.guardianName}</Text>
+        📞 Mobile: <Text style={styles.value}>{item.mobileNo}</Text>
       </Text>
 
       <Text style={styles.label}>
-        🏡 Property Type: <Text style={styles.value}>{item.propertyType}</Text>
-      </Text>
-      <Text style={styles.label}>
         📍 Address: <Text style={styles.value}>{item.propAddress}</Text>
       </Text>
+
       <Text style={styles.label}>
-        📞 Mobile: <Text style={styles.value}>{item.mobileNo}</Text>
+        🧾 Khata No: <Text style={styles.value}>{item.khataNo}</Text>
+      </Text>
+
+      <Text style={styles.label}>
+        📌 Plot No: <Text style={styles.value}>{item.plotNo}</Text>
       </Text>
 
       <TouchableOpacity
@@ -116,7 +119,7 @@ const Search = ({ navigation }) => {
         // const ubid = response.data.data.wardList.ubid || [];
         // console.log(ubid, 'my ub');
         // console.log(ubid, 'i am passing data to all');
-        console.log(response.data.data, 'i am passing data to all');
+        // console.log(response.data.data, 'i am passing data to all');
         setMasterData(response.data.data);
       } catch (error) {
         console.error('Fetch error:', error);
@@ -146,7 +149,7 @@ const Search = ({ navigation }) => {
           Authorization: `Bearer ${token}`,
         },
       });
-
+      console.log('Holdig data', response.data.data.data);
       if (response.data?.status) {
         setSearchResults(response.data.data.data);
       } else {
@@ -217,23 +220,46 @@ const styles = StyleSheet.create({
   seacrhCont: {
     paddingVertical: responsiveHeight(2),
     paddingHorizontal: responsiveWidth(4),
-    marginVertical: responsiveHeight(3),
+    marginVertical: responsiveHeight(2),
     marginHorizontal: responsiveWidth(3),
-    borderWidth: 1,
-    borderLeftWidth: 0,
     borderColor: Colors.borderColor,
-  },
-  searchhead: {
-    backgroundColor: Colors.headignColor,
-    paddingVertical: responsiveHeight(2),
-    paddingHorizontal: responsiveWidth(2),
+    borderWidth: 1, // optional, adds border around
+    borderRadius: 5, // makes shadow and border look nice
+    height: 200,
+
+    // iOS shadow
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 2 }, // shadow direction
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    minHeight: responsiveHeight(10),
+    // Android shadow
     elevation: 5,
-    marginBottom: responsiveHeight(2),
+    backgroundColor: '#fff', // required on Android to see elevation
   },
+
+  searchhead: {
+    backgroundColor: Colors.headignColor,
+    paddingVertical: responsiveHeight(1),
+    paddingHorizontal: responsiveWidth(1),
+    marginBottom: responsiveHeight(1),
+    justifyContent: 'center',
+    alignItems: 'center',
+
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 }, // makes shadow go down
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+
+    // Android shadow
+    elevation: 5,
+
+    // Optional: rounded corners to make shadow fully visible
+    borderRadius: 5,
+    overflow: 'visible', // ensures shadow isn't clipped
+  },
+
   text: {
     color: Colors.background,
     fontSize: responsiveFontSize(2),
@@ -295,8 +321,8 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: Colors.borderColor,
-    paddingVertical: responsiveHeight(1.8),
-    paddingHorizontal: responsiveWidth(10),
+    paddingVertical: responsiveHeight(1),
+    // paddingHorizontal: responsiveWidth(1),
     borderRadius: responsiveWidth(2),
     alignItems: 'center',
     marginTop: responsiveHeight(2),
@@ -310,12 +336,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: responsiveHeight(2),
-    marginBottom: responsiveHeight(2),
+    marginBottom: responsiveHeight(1),
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 3,
+    margin: 15,
   },
   resultText: {
     fontSize: responsiveFontSize(1.8),

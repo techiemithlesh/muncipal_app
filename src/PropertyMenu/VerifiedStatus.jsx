@@ -37,9 +37,16 @@ const VerifiedStatus = ({ route }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigation = useNavigation();
-  const { submissionData, floorsData, hasExtraFloors, id, data, floorIds } =
-    route.params || {};
-  console.log('After Preview Verified Status', submissionData);
+  const {
+    submissionData,
+    floorsData,
+    hasExtraFloors,
+    id,
+    data,
+    floorIds,
+    floorDataArray,
+  } = route.params || {};
+  console.log('floorDataArray ', floorDataArray);
   // console.log('After floor', floorIds);
   // console.log('After data', data);
 
@@ -123,6 +130,7 @@ const VerifiedStatus = ({ route }) => {
       const fieldResponse = await submitFieldVerification(
         submissionData,
         floorIds,
+        floorDataArray,
         id,
         data,
       );
@@ -266,6 +274,16 @@ const VerifiedStatus = ({ route }) => {
           <SubmissionCard
             title="Property Details"
             rows={[
+              ...(submissionData['assessmentType'] === 'Mutation'
+                ? [
+                    {
+                      label: 'Percentage Transfer',
+                      value: submissionData['Percentage_Transfer'],
+                      verifiedValue: submissionData['Verified_Percentage'],
+                    },
+                  ]
+                : []),
+
               {
                 label: 'Ward No',
                 value: submissionData['Ward No'],
@@ -591,7 +609,7 @@ const VerifiedStatus = ({ route }) => {
   );
 };
 
-const SubmissionCard = ({ title, rows, isHide }) => (
+const SubmissionCard = ({ title, rows, isHide = false }) => (
   <View style={styles.tableCard}>
     <Text style={styles.tableTitle}>{title}</Text>
     <View style={[styles.tableRow, styles.tableHeader]}>
@@ -617,6 +635,12 @@ const SubmissionCard = ({ title, rows, isHide }) => (
             {String(row.verifiedValue || 'N/A')}
           </Text>
         )}
+
+        {/* 
+        <Text style={styles.tableCellValue}>
+          {String(row.verifiedValue || 'N/A')}
+        </Text> */}
+
         <Text style={styles.tableCellValue}>{String(row.value || 'N/A')}</Text>
       </View>
     ))}

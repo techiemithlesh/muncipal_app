@@ -13,7 +13,7 @@ import PaymentWiseReportPorpty from './src/PropertyMenu/Report/PaymentWiseReport
 import WaterInbox from './src/Water/Inbox/Inbox';
 import WaterSurvey from './src/Water/Inbox/WaterSurvey';
 import SubmitSurey from './src/Water/Inbox/SubmitSurey';
-
+import MutationScreen from './src/PropertyMenu/SubmitData/Verification/MutationScreen';
 // Screens
 import DashBoard from './src/Screen/DashBoard';
 import StaffCard from './src/Screen/StaffCard';
@@ -54,6 +54,9 @@ import SubmitApply from './src/Water/ApplyWater/SubmitApply';
 import MyInput from './src/Water/ApplyWater/MyInput';
 // customer urls
 import SearchCustomer from './src/Customer/Search';
+
+import Amedment from './src/Trade/Amedment/Amedment';
+import AmedmentSummery from './src/Trade/Amedment/AmedmentSummery';
 
 import CustomerDetails from './src/Customer/Details';
 import SubmitSummaryPage from './src/PropertyMenu/SubmitData/Verification/SubmitSummaryPage';
@@ -302,6 +305,22 @@ const App = () => {
               <Stack.Screen
                 name="PaymentWiseReportPorpty"
                 component={PaymentWiseReportPorpty}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="MutationScreen"
+                component={MutationScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="Amedment"
+                component={Amedment}
+                options={{ headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="AmedmentSummery"
+                component={AmedmentSummery}
                 options={{ headerShown: false }}
               />
             </Stack.Navigator>

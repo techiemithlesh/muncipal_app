@@ -19,12 +19,10 @@ import Colors from '../../Constants/Colors';
 import HeaderNavigation from '../../Components/HeaderNavigation';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
-import { BASE_URL } from '../../config';
+import { BASE_URL } from '../config';
 import { API_ROUTES } from '../../api/apiRoutes';
-// import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
-import { getToken } from '../../utils/auth';
 
-const Search = ({ navigation }) => {
+const Amedment = ({ navigation }) => {
   const [value, setValue] = useState(null); // selected ward id
   const [keyword, setKeyword] = useState('');
   const [masterData, setMasterData] = useState(null);
@@ -37,7 +35,8 @@ const Search = ({ navigation }) => {
     const fetchMaster = async () => {
       try {
         setLoadingMaster(true);
-        const token = await getToken();
+        const storedToken = await AsyncStorage.getItem('token');
+        const token = storedToken ? JSON.parse(storedToken) : null;
 
         if (!token) {
           Alert.alert('Auth error', 'No token found. Please login.');
@@ -79,7 +78,8 @@ const Search = ({ navigation }) => {
   const search = async () => {
     try {
       setLoadingSearch(true);
-      const token = await getToken();
+      const storedToken = await AsyncStorage.getItem('token');
+      const token = storedToken ? JSON.parse(storedToken) : null;
 
       if (!token) {
         Alert.alert('Auth error', 'No token found. Please login.');
@@ -88,7 +88,7 @@ const Search = ({ navigation }) => {
       }
 
       const body = {
-        perPage: 100,
+        perPage: 20,
         page: 1,
         keyWord: keyword?.trim() || '',
         wardId: value ? [value] : [],
@@ -97,7 +97,7 @@ const Search = ({ navigation }) => {
       const response = await axios.post(API_ROUTES.TRADE_SEARCH, body, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log('Search Response:', response?.data);
+
       if (response.data?.status) {
         const results = response.data.data?.data ?? [];
         setSearchResults(results);
@@ -114,42 +114,51 @@ const Search = ({ navigation }) => {
   };
 
   const handleViewPress = item => {
-    navigation.navigate('TradeDetails', { id: item.id });
+    navigation.navigate('AmedmentSummery', { id: item.id });
+    console.log(item.id, 'my id is');
   };
 
   const renderItem = ({ item, index }) => (
     <View style={styles.resultCard}>
+      <View style={styles.rowBetween}>
+        <Text style={[styles.label, { flex: 1 }]}>
+          Apply Date: <Text style={styles.value}>{item.applyDate}</Text>
+        </Text>
+        <Text style={[styles.label, { flex: 1, textAlign: 'right' }]}>
+          Status: <Text style={styles.value}>{item.appStatus}</Text>
+        </Text>
+      </View>
+
       <Text style={styles.label}>
         🏷️ SL No: <Text style={styles.value}>{index + 1}</Text>
       </Text>
-
       <Text style={styles.label}>
         🏠 Ward No: <Text style={styles.value}>{item.wardNo}</Text>
       </Text>
-
+      <Text style={styles.label}>
+        🆕 New Ward No: <Text style={styles.value}>{item.newWardNo}</Text>
+      </Text>
       <Text style={styles.label}>
         📄 Application No:{' '}
         <Text style={styles.value}>{item.applicationNo}</Text>
       </Text>
-
       <Text style={styles.label}>
-        🏢 Firm Name: <Text style={styles.value}>{item.firmName}</Text>
+        🏢 firmName Type: <Text style={styles.value}>{item.firmName}</Text>
       </Text>
-
       <Text style={styles.label}>
-        👤 Owner Name: <Text style={styles.value}>{item.ownerName}</Text>
+        👤 Owner: <Text style={styles.value}>{item.ownerName}</Text>
       </Text>
-
       <Text style={styles.label}>
-        📍 Address: <Text style={styles.value}>{item.address}</Text>
+        👨‍👩‍👧 Guardian Name: <Text style={styles.value}>{item.guardianName}</Text>
       </Text>
-
       <Text style={styles.label}>
-        📅 Apply Date: <Text style={styles.value}>{item.applyDate}</Text>
+        🏡 Property Type: <Text style={styles.value}>{item.propertyType}</Text>
       </Text>
-
       <Text style={styles.label}>
-        🔖 App Status: <Text style={styles.value}>{item.appStatus}</Text>
+        📍 Address: <Text style={styles.value}>{item.propAddress}</Text>
+      </Text>
+      <Text style={styles.label}>
+        📞 Mobile: <Text style={styles.value}>{item.mobileNo}</Text>
       </Text>
 
       <TouchableOpacity
@@ -219,7 +228,7 @@ const Search = ({ navigation }) => {
   );
 };
 
-export default Search;
+export default Amedment;
 
 const styles = StyleSheet.create({
   container: {
@@ -229,83 +238,24 @@ const styles = StyleSheet.create({
   seacrhCont: {
     paddingVertical: responsiveHeight(2),
     paddingHorizontal: responsiveWidth(4),
-    marginVertical: responsiveHeight(2),
+    marginVertical: responsiveHeight(3),
     marginHorizontal: responsiveWidth(3),
+    borderWidth: 1,
+    borderLeftWidth: 0,
     borderColor: Colors.borderColor,
-    borderWidth: 1, // optional, adds border around
-    borderRadius: 5, // makes shadow and border look nice
-    height: 200,
-
-    // iOS shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 }, // shadow direction
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    minHeight: responsiveHeight(10),
-    // Android shadow
-    elevation: 5,
-    backgroundColor: '#fff', // required on Android to see elevation
+    backgroundColor: '#fff',
   },
-
   searchhead: {
     backgroundColor: Colors.headignColor,
-    paddingVertical: responsiveHeight(1),
-    paddingHorizontal: responsiveWidth(1),
-    marginBottom: responsiveHeight(1),
-    justifyContent: 'center',
-    alignItems: 'center',
-
-    // iOS shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 }, // makes shadow go down
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-
-    // Android shadow
-    elevation: 5,
-
-    // Optional: rounded corners to make shadow fully visible
-    borderRadius: 5,
-    overflow: 'visible', // ensures shadow isn't clipped
+    paddingVertical: responsiveHeight(2),
+    paddingHorizontal: responsiveWidth(2),
+    marginBottom: responsiveHeight(2),
+    elevation: 3,
   },
-
   text: {
     color: Colors.background,
     fontSize: responsiveFontSize(2),
     fontWeight: 'bold',
-  },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: responsiveHeight(1),
-    marginRight: responsiveWidth(5),
-  },
-  optionLabel: {
-    fontSize: responsiveFontSize(1.9),
-    color: Colors.textPrimary,
-    marginLeft: responsiveWidth(1.5),
-  },
-  circle: {
-    width: responsiveWidth(6),
-    height: responsiveWidth(6),
-    borderRadius: responsiveWidth(3),
-    borderWidth: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  unselected: {
-    backgroundColor: 'transparent',
-    borderColor: Colors.borderColor,
-  },
-  selected: {
-    backgroundColor: Colors.borderColor,
-    borderColor: Colors.borderColor,
-  },
-  innerDot: {
-    width: responsiveWidth(2.5),
-    height: responsiveWidth(2.5),
-    borderRadius: responsiveWidth(1.25),
-    backgroundColor: Colors.background,
   },
   dropdown: {
     height: responsiveHeight(5),
@@ -330,8 +280,8 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: Colors.borderColor,
-    paddingVertical: responsiveHeight(1),
-    // paddingHorizontal: responsiveWidth(1),
+    paddingVertical: responsiveHeight(1.8),
+    paddingHorizontal: responsiveWidth(10),
     borderRadius: responsiveWidth(2),
     alignItems: 'center',
     marginTop: responsiveHeight(2),
@@ -345,43 +295,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: responsiveHeight(2),
-    marginBottom: responsiveHeight(1),
+    marginBottom: responsiveHeight(2),
+    marginLeft: responsiveHeight(2),
+    marginRight: responsiveHeight(2),
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 3,
-    margin: 15,
-  },
-  resultText: {
-    fontSize: responsiveFontSize(1.8),
-    color: Colors.textPrimary,
-    fontWeight: 500,
-  },
-  card: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: responsiveHeight(1.5),
-    marginVertical: responsiveHeight(1),
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  cardText: {
-    color: Colors.textPrimary,
-    fontSize: responsiveFontSize(1.8),
-    marginBottom: 3,
-  },
-  slNoText: {
-    fontSize: responsiveFontSize(2.2),
-    fontWeight: 'bold',
-    color: '#4A90E2',
-    marginBottom: responsiveHeight(1),
-    alignSelf: 'flex-end',
   },
   label: {
     fontSize: responsiveFontSize(1.9),
@@ -391,6 +312,11 @@ const styles = StyleSheet.create({
   value: {
     fontWeight: '600',
     color: '#000',
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
   },
   viewButton: {
     marginTop: responsiveHeight(1),

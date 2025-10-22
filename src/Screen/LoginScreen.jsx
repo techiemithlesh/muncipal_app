@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { showToast } from '../utils/toast';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -31,11 +31,36 @@ const LoginScreen = ({ navigation }) => {
   const [selected, setSelected] = useState('email'); // Default to 'email'
   const [showPassword, setShowPassword] = useState(false); // Show/hide password
 
+  // ✅ Check token on mount
+  useEffect(() => {
+    const checkLogin = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const expiry = await AsyncStorage.getItem('tokenExpiry');
+
+        if (token && expiry) {
+          const now = new Date().getTime();
+          if (now < JSON.parse(expiry)) {
+            // Token valid
+            navigation.replace('DashBoard');
+          } else {
+            // Token expired
+            await AsyncStorage.removeItem('token');
+            await AsyncStorage.removeItem('userDetails');
+            await AsyncStorage.removeItem('tokenExpiry');
+            showToast('error', 'Session expired! Please login again.');
+          }
+        }
+      } catch (error) {
+        console.error('Error checking login:', error);
+      }
+    };
+    checkLogin();
+  }, []);
+
   const handleLogin = async () => {
-    // Regex for email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    // Check fields
     if (selected === 'email') {
       if (!email) {
         showToast('error', 'Please enter your email!');
@@ -52,25 +77,21 @@ const LoginScreen = ({ navigation }) => {
         showToast('error', 'Please enter your username!');
         return;
       }
-      // Optional: username length check
       if (userName.length < 3) {
         showToast('error', 'Username must be at least 3 characters!');
         return;
       }
     }
 
-    // Password validation
     if (!password) {
       showToast('error', 'Please enter your password!');
       return;
     }
-    // Optional: password strength
     if (password.length < 6) {
       showToast('error', 'Password must be at least 6 characters!');
       return;
     }
 
-    // If all validations pass, create payload
     const loginPayload =
       selected === 'email'
         ? { email, password, type: 'mobile' }
@@ -82,20 +103,17 @@ const LoginScreen = ({ navigation }) => {
 
       if (response?.data?.data?.token) {
         const { token, userDetails } = response.data.data;
+        const expiryTime = new Date().getTime() + 5 * 60 * 1000; // 5 minutes from now
         await AsyncStorage.setItem('token', JSON.stringify(token));
         await AsyncStorage.setItem('userDetails', JSON.stringify(userDetails));
-        // Alert.alert('Success', 'Logged in successfully');
+        await AsyncStorage.setItem('tokenExpiry', JSON.stringify(expiryTime)); // store expiry
         showToast('success', 'Login Successfully!');
-
         navigation.navigate('DashBoard');
-        // console.log('Login successful, userDetails:', userDetails);
-        // console.log('MenuTree data:', userDetails.menuTree);
       } else {
         showToast('error', 'Check email & password please!');
       }
     } catch (error) {
       console.error('Login error:', error.response?.data || error.message);
-
       if (error.response?.status === 401) {
         Alert.alert('Login Failed', 'Incorrect credentials');
       } else {

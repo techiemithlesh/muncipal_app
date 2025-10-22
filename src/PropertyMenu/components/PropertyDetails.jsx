@@ -37,36 +37,26 @@ const PropertyDetails = ({
       <TextInput
         ref={khataNoRef}
         style={[styles.input, errors.khataNo && styles.inputError]}
-        placeholder="xxxx xxxx xxxx"
+        // placeholder="xxxx xxxx xxxx"
         placeholderTextColor="grey"
         value={khataNo}
-        onChangeText={text => {
-          setKhataNo(text);
-          const error = text.trim() ? '' : 'Khata No is required';
-          setErrors(prev => ({ ...prev, khataNo: error }));
-        }}
-        onFocus={() => showFieldAlert('Khata No.')}
+        onChangeText={setKhataNo}
         editable={isEditable}
       />
-      <ErrorText error={errors.khataNo} />
+      {errors.khataNo && <Text style={styles.errorText}>{errors.khataNo}</Text>}
 
       {/* Plot No */}
       <Text style={styles.label}>Plot No. *</Text>
       <TextInput
         ref={plotNoRef}
         style={[styles.input, errors.plotNo && styles.inputError]}
-        placeholder="ASD12"
+        // placeholder="ASD12"
         placeholderTextColor="grey"
         value={plotNo}
-        onChangeText={text => {
-          setPlotNo(text);
-          const error = text.trim() ? '' : 'Plot No is required';
-          setErrors(prev => ({ ...prev, plotNo: error }));
-        }}
-        onFocus={() => showFieldAlert('Plot No.')}
+        onChangeText={setPlotNo}
         editable={isEditable}
       />
-      <ErrorText error={errors.plotNo} />
+      {errors.plotNo && <Text style={styles.errorText}>{errors.plotNo}</Text>}
 
       {/* Village Name */}
       <Text style={styles.label}>Village/Mauja Name *</Text>
@@ -74,17 +64,14 @@ const PropertyDetails = ({
         ref={villageNameRef}
         style={[styles.input, errors.villageName && styles.inputError]}
         placeholder="village"
-        placeholderTextColor="grey"
+        // placeholderTextColor="grey"
         value={villageName}
-        onChangeText={text => {
-          setVillageName(text);
-          const error = text.trim() ? '' : 'Village Name is required';
-          setErrors(prev => ({ ...prev, villageName: error }));
-        }}
-        onFocus={() => showFieldAlert('Village/Mauja Name')}
+        onChangeText={setVillageName}
         editable={isEditable}
       />
-      <ErrorText error={errors.villageName} />
+      {errors.villageName && (
+        <Text style={styles.errorText}>{errors.villageName}</Text>
+      )}
 
       {/* Plot Area */}
       <Text style={styles.label}>Area of Plot (in Decimal) *</Text>
@@ -94,20 +81,13 @@ const PropertyDetails = ({
         placeholder="100.00"
         placeholderTextColor="grey"
         value={plotArea}
-        onChangeText={text => {
-          setPlotArea(text);
-          const error = !text
-            ? 'Plot Area is required'
-            : isNaN(text) || parseFloat(text) <= 0
-            ? 'Plot Area must be a positive number'
-            : '';
-          setErrors(prev => ({ ...prev, plotArea: error }));
-        }}
+        onChangeText={setPlotArea}
         keyboardType="numeric"
-        onFocus={() => showFieldAlert('Area of Plot')}
         editable={isEditable}
       />
-      <ErrorText error={errors.plotArea} />
+      {errors.plotArea && (
+        <Text style={styles.errorText}>{errors.plotArea}</Text>
+      )}
 
       {/* Road Width */}
       <Text style={styles.label}>Road Width (in ft) *</Text>
@@ -117,20 +97,13 @@ const PropertyDetails = ({
         placeholder="Road Width"
         placeholderTextColor="grey"
         value={roadWidth}
-        onChangeText={text => {
-          setRoadWidth(text);
-          const error = !text
-            ? 'Road Width is required'
-            : isNaN(text) || parseFloat(text) < 0
-            ? 'Road Width must be a positive number or 0'
-            : '';
-          setErrors(prev => ({ ...prev, roadWidth: error }));
-        }}
+        onChangeText={setRoadWidth}
         keyboardType="numeric"
-        onFocus={() => showFieldAlert('Road Width')}
         editable={isEditable}
       />
-      <ErrorText error={errors.roadWidth} />
+      {errors.roadWidth && (
+        <Text style={styles.errorText}>{errors.roadWidth}</Text>
+      )}
 
       <Text style={styles.label}>
         In Case of No Road Enter "0" (For Vacant Land Only)
@@ -167,12 +140,21 @@ const styles = StyleSheet.create({
     borderColor: '#FF0000',
     borderWidth: 1.5,
   },
+  inputError: {
+    borderColor: '#e63946',
+    borderWidth: 1.5, // make sure borderWidth is set
+  },
   errorText: {
-    color: '#FF0000',
+    color: '#e63946',
     fontSize: 12,
-    marginTop: -8,
+    marginTop: -4,
     marginBottom: 8,
     marginLeft: 4,
     fontWeight: '400',
+  },
+  errorText: {
+    color: '#e63946',
+    fontSize: 12,
+    marginBottom: 8,
   },
 });

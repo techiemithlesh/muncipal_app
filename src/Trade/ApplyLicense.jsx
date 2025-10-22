@@ -20,10 +20,10 @@ import CustomAlert from '../Components/CustomAlert';
 import { BASE_URL } from '../config';
 import HeaderNavigation from '../Components/HeaderNavigation';
 import { API_ROUTES } from '../api/apiRoutes';
-
-// Dropdown options will be loaded from API
+import { showToast } from '../utils/toast';
 
 const ApplyLicense = ({ navigation }) => {
+  const [currentCharge, setCurrentCharge] = useState('');
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [applicationType, setApplicationType] = useState('NEW APPLICATION');
@@ -59,8 +59,33 @@ const ApplyLicense = ({ navigation }) => {
     },
   ]);
 
-  const [paymentMode, setPaymentMode] = useState('');
+  // Error states for all fields
+  const [errors, setErrors] = useState({
+    firmType: '',
+    ownershipType: '',
+    wardNo: '',
+    holdingNo: '',
+    firmName: '',
+    totalArea: '',
+    establishmentDate: '',
+    businessAddress: '',
+    pinCode: '',
+    newWardNo: '',
+    ownerOfPremises: '',
+    businessDescription: '',
+    natureOfBusiness: '',
+    licenseFor: '',
+    owners: [
+      {
+        ownerName: '',
+        guardianName: '',
+        mobileNo: '',
+        email: '',
+      },
+    ],
+  });
 
+  const [paymentMode, setPaymentMode] = useState('');
   const [wardList, setWardList] = useState([]);
   const [wardDropdownOptions, setWardDropdownOptions] = useState([]);
   const [newWardOptions, setNewWardOptions] = useState([]);
@@ -86,21 +111,208 @@ const ApplyLicense = ({ navigation }) => {
   const [bankName, setBankName] = useState('');
   const [branchName, setBranchName] = useState('');
   const [taxData, setTaxData] = useState(null);
-  const payload = {
-    paymentMode,
-    ...(paymentMode === 'cheque' && {
-      chequeDate,
-      chequeNumber,
-      bankName,
-      branchName,
-    }),
-  };
 
   const showAlert = message => {
     setAlertMessage(message);
     setAlertVisible(true);
   };
+
+  // Clear error for a specific field
+  const clearError = (field, index = null) => {
+    if (field === 'owners' && index !== null) {
+      setErrors(prev => ({
+        ...prev,
+        owners: prev.owners.map((owner, i) =>
+          i === index
+            ? { ownerName: '', guardianName: '', mobileNo: '', email: '' }
+            : owner,
+        ),
+      }));
+    } else {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // Validation function
+  const validateForm = () => {
+    const newErrors = {
+      firmType: '',
+      ownershipType: '',
+      wardNo: '',
+      holdingNo: '',
+      firmName: '',
+      totalArea: '',
+      establishmentDate: '',
+      businessAddress: '',
+      pinCode: '',
+      newWardNo: '',
+      ownerOfPremises: '',
+      businessDescription: '',
+      natureOfBusiness: '',
+      licenseFor: '',
+      owners: owners.map(() => ({
+        ownerName: '',
+        guardianName: '',
+        mobileNo: '',
+        email: '',
+      })),
+    };
+
+    let isValid = true;
+
+    // Firm Type validation
+    if (!firmType) {
+      newErrors.firmType = 'Firm Type is required';
+      isValid = false;
+    }
+
+    // Ownership Type validation
+    if (!ownershipType) {
+      newErrors.ownershipType = 'Ownership Type is required';
+      isValid = false;
+    }
+
+    // Ward No validation
+    if (!wardNo) {
+      newErrors.wardNo = 'Ward No is required';
+      isValid = false;
+    }
+
+    // Holding No validation - mandatory only if license for > 1 year
+    if (licenseFor && parseInt(licenseFor) > 1 && !holdingNo) {
+      newErrors.holdingNo =
+        'Holding No is required for license period > 1 year';
+      isValid = false;
+    }
+
+    // Firm Name validation
+    if (!firmName || firmName.trim() === '') {
+      newErrors.firmName = 'Firm Name is required';
+      isValid = false;
+    }
+
+    // Total Area validation
+    if (!totalArea || totalArea.trim() === '') {
+      newErrors.totalArea = 'Total Area is required';
+      isValid = false;
+    } else if (isNaN(totalArea) || parseFloat(totalArea) <= 0) {
+      newErrors.totalArea = 'Total Area must be a valid number';
+      isValid = false;
+    }
+
+    // Establishment Date validation
+    if (!establishmentDate) {
+      newErrors.establishmentDate = 'Establishment Date is required';
+      isValid = false;
+    }
+
+    // Business Address validation
+    if (!businessAddress || businessAddress.trim() === '') {
+      newErrors.businessAddress = 'Business Address is required';
+      isValid = false;
+    }
+
+    // Pin Code validation
+    if (!pinCode || pinCode.trim() === '') {
+      newErrors.pinCode = 'Pin Code is required';
+      isValid = false;
+    } else if (!/^\d{6}$/.test(pinCode)) {
+      newErrors.pinCode = 'Pin Code must be 6 digits';
+      isValid = false;
+    }
+
+    // New Ward No validation
+    if (!newWardNo) {
+      newErrors.newWardNo = 'New Ward No is required';
+      isValid = false;
+    }
+
+    // Owner of Premises validation
+    if (!ownerOfPremises || ownerOfPremises.trim() === '') {
+      newErrors.ownerOfPremises = 'Owner of Business Premises is required';
+      isValid = false;
+    }
+
+    // Business Description validation
+    if (!businessDescription || businessDescription.trim() === '') {
+      newErrors.businessDescription = 'Business Description is required';
+      isValid = false;
+    }
+
+    // Nature of Business validation
+    if (!natureOfBusiness || natureOfBusiness.length === 0) {
+      newErrors.natureOfBusiness =
+        'Please select at least one Nature of Business';
+      isValid = false;
+    }
+
+    // License For validation
+    if (!licenseFor) {
+      newErrors.licenseFor = 'License For is required';
+      isValid = false;
+    }
+
+    // Owner Details validation
+    owners.forEach((owner, index) => {
+      // Ensure the index exists in the error object
+      newErrors.owners[index] = newErrors.owners[index] || {};
+
+      // Owner Name validation
+      if (!owner.ownerName || owner.ownerName.trim() === '') {
+        newErrors.owners[index].ownerName = 'Owner Name is required';
+        isValid = false;
+      } else {
+        delete newErrors.owners[index].ownerName;
+      }
+
+      // Guardian Name validation
+      if (!owner.guardianName || owner.guardianName.trim() === '') {
+        newErrors.owners[index].guardianName = 'Guardian Name is required';
+        isValid = false;
+      } else {
+        delete newErrors.owners[index].guardianName;
+      }
+
+      // Mobile No validation
+      if (!owner.mobileNo || owner.mobileNo.trim() === '') {
+        newErrors.owners[index].mobileNo = 'Mobile No is required';
+        isValid = false;
+      } else if (!/^\d{10}$/.test(owner.mobileNo)) {
+        newErrors.owners[index].mobileNo = 'Mobile No must be 10 digits';
+        isValid = false;
+      } else {
+        delete newErrors.owners[index].mobileNo;
+      }
+
+      // Email validation (required + valid format)
+      // if (!owner.email || owner.email.trim() === '') {
+      //   newErrors.owners[index].email = 'Email is required';
+      //   isValid = false;
+      // } else {
+      //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      //   if (!emailRegex.test(owner.email)) {
+      //     newErrors.owners[index].email = 'Invalid email format';
+      //     isValid = false;
+      //   } else {
+      //     delete newErrors.owners[index].email;
+      //   }
+      // }
+    });
+
+    setErrors(newErrors);
+    if (!isValid) {
+      showToast('error', 'Validation Error', 'Please fill all required fields');
+    }
+
+    return isValid;
+  };
+
   const handleSubmit = async () => {
+    // Validate form
+    if (!validateForm()) {
+      return;
+    }
+
     // Format establishment date to YYYY-MM-DD
     const formatDate = date => {
       if (!date) return '';
@@ -189,20 +401,18 @@ const ApplyLicense = ({ navigation }) => {
   useEffect(() => {
     const fetchTaxData = async () => {
       try {
-        // get token if required
+        setIsLoading(true);
         const storedToken = await AsyncStorage.getItem('token');
         const token = storedToken ? JSON.parse(storedToken) : null;
 
-        // request body
         const body = {
           applicationType: 'NEW LICENSE',
           firmEstablishmentDate: '2020-02-20',
           areaInSqft: '100',
-          licenseForYears: '2',
+          licenseForYears: licenseFor || '',
           isTobaccoLicense: 0,
         };
 
-        // API call
         const response = await axios.post(API_ROUTES.TRADE_REVIEW_TAX, body, {
           headers: {
             Authorization: token ? `Bearer ${token}` : undefined,
@@ -210,21 +420,21 @@ const ApplyLicense = ({ navigation }) => {
           },
         });
 
-        console.log('✅ Tax Review Response:', response.data?.data);
-
         setTaxData(response.data.data);
       } catch (error) {
         console.error(
           '❌ Error fetching Tax Review:',
           error.response?.data || error,
         );
+        setTaxData(null);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     fetchTaxData();
-  }, []); //
+  }, [licenseFor]); // ✅ Re-fetch whenever licenseFor changes
+
   const fetchTradeMaster = async () => {
     try {
       const storedToken = await AsyncStorage.getItem('token');
@@ -250,21 +460,12 @@ const ApplyLicense = ({ navigation }) => {
         setWardOptions(
           data.wardList.map(w => ({ label: w.wardNo, value: w.id })),
         );
-        // 👇 This is for Nature of Business
         setCategoryOptions(
           data.itemType.map(c => ({
-            label: `(${c.tradeCode}) ${c.tradeItem}`, // show code + name
+            label: c.tradeItem,
             value: c.id,
           })),
         );
-        const mappedOptions = data.itemType.map(c => ({
-          label: c.tradeItem,
-          value: c.id,
-        }));
-
-        console.log('Mapped Category Options:', mappedOptions);
-
-        setCategoryOptions(mappedOptions);
       } else {
         showAlert('Failed to load data');
       }
@@ -294,7 +495,6 @@ const ApplyLicense = ({ navigation }) => {
 
       if (response?.data?.status) {
         const wards = response.data.data.wardList || [];
-        console.log('Wards:', wards);
         setWardList(wards);
 
         const wardOptions = wards.map(ward => ({
@@ -334,6 +534,7 @@ const ApplyLicense = ({ navigation }) => {
 
   const handleWardChange = async selectedWardId => {
     setWardNo(selectedWardId);
+    clearError('wardNo');
     setNewWardNo('');
 
     try {
@@ -366,8 +567,6 @@ const ApplyLicense = ({ navigation }) => {
     <View style={{ flex: 1 }}>
       <HeaderNavigation />
       <ScrollView style={styles.container}>
-        {/* Page Title */}
-
         <Text style={styles.pageTitle}>Apply License</Text>
 
         {/* License Info */}
@@ -381,17 +580,25 @@ const ApplyLicense = ({ navigation }) => {
             label="Firm Type"
             type="dropdown"
             value={firmType}
-            onChange={setFirmType}
+            onChange={value => {
+              setFirmType(value);
+              clearError('firmType');
+            }}
             options={firmTypeOptions}
             placeholder={isLoading ? 'Loading...' : 'Select Firm Type'}
+            error={errors.firmType}
           />
           <FormField
             label="Ownership Type"
             type="dropdown"
             value={ownershipType}
-            onChange={setOwnershipType}
+            onChange={value => {
+              setOwnershipType(value);
+              clearError('ownershipType');
+            }}
             options={ownershipTypeOptions}
             placeholder={isLoading ? 'Loading...' : 'Select Ownership Type'}
+            error={errors.ownershipType}
           />
         </View>
 
@@ -406,52 +613,94 @@ const ApplyLicense = ({ navigation }) => {
             value={wardNo}
             onChange={handleWardChange}
             options={wardDropdownOptions}
+            error={errors.wardNo}
           />
           <FormField
-            label="Holding No"
+            label="New Ward No"
+            type="dropdown"
+            value={newWardNo}
+            onChange={value => {
+              setNewWardNo(value);
+              clearError('newWardNo');
+            }}
+            options={newWardOptions}
+            error={errors.newWardNo}
+          />
+          <FormField
+            label={`Holding No ${parseInt(licenseFor) > 1 ? '*' : ''}`}
             value={holdingNo}
-            onChange={setHoldingNo}
+            onChange={value => {
+              setHoldingNo(value);
+              clearError('holdingNo');
+            }}
+            error={errors.holdingNo}
           />
           <FormField
             label="Firm Name"
             value={firmName}
-            onChange={setFirmName}
+            onChange={value => {
+              setFirmName(value);
+              clearError('firmName');
+            }}
+            error={errors.firmName}
           />
           <FormField
             label="Business Description"
             value={businessDescription}
-            onChange={setBusinessDescription}
+            onChange={value => {
+              setBusinessDescription(value);
+              clearError('businessDescription');
+            }}
+            error={errors.businessDescription}
           />
           <FormField
             label="Total Area (in Sq. Ft)"
             value={totalArea}
-            onChange={setTotalArea}
+            onChange={value => {
+              setTotalArea(value);
+              clearError('totalArea');
+            }}
+            error={errors.totalArea}
           />
           <FormField
             label="Firm Establishment Date"
             type="date"
             value={establishmentDate}
-            onChange={setEstablishmentDate}
+            onChange={value => {
+              setEstablishmentDate(value);
+              clearError('establishmentDate');
+            }}
+            error={errors.establishmentDate}
           />
           <FormField
             label="Business Address"
             value={businessAddress}
-            onChange={setBusinessAddress}
+            onChange={value => {
+              setBusinessAddress(value);
+              clearError('businessAddress');
+            }}
+            error={errors.businessAddress}
           />
           <FormField label="Landmark" value={landmark} onChange={setLandmark} />
-          <FormField label="Pin Code" value={pinCode} onChange={setPinCode} />
           <FormField
-            label="New Ward No"
-            type="dropdown"
-            value={newWardNo}
-            onChange={setNewWardNo}
-            options={newWardOptions}
+            label="Pin Code"
+            value={pinCode}
+            onChange={value => {
+              setPinCode(value);
+              clearError('pinCode');
+            }}
+            error={errors.pinCode}
           />
+
           <FormField
             label="Owner of Business Premises"
             value={ownerOfPremises}
-            onChange={setOwnerOfPremises}
+            onChange={value => {
+              setOwnerOfPremises(value);
+              clearError('ownerOfPremises');
+            }}
             placeholder="Enter premises owner name"
+            error={errors.ownerOfPremises}
           />
         </View>
 
@@ -470,7 +719,9 @@ const ApplyLicense = ({ navigation }) => {
                   const updated = [...owners];
                   updated[index].ownerName = value;
                   setOwners(updated);
+                  clearError('owners', index);
                 }}
+                error={errors.owners[index]?.ownerName}
               />
               <FormField
                 label="Guardian Name"
@@ -479,7 +730,9 @@ const ApplyLicense = ({ navigation }) => {
                   const updated = [...owners];
                   updated[index].guardianName = value;
                   setOwners(updated);
+                  clearError('owners', index);
                 }}
+                error={errors.owners[index]?.guardianName}
               />
               <FormField
                 label="Mobile No"
@@ -488,7 +741,9 @@ const ApplyLicense = ({ navigation }) => {
                   const updated = [...owners];
                   updated[index].mobileNo = value;
                   setOwners(updated);
+                  clearError('owners', index);
                 }}
+                error={errors.owners[index]?.mobileNo}
               />
               <FormField
                 label="Email ID"
@@ -497,7 +752,9 @@ const ApplyLicense = ({ navigation }) => {
                   const updated = [...owners];
                   updated[index].email = value;
                   setOwners(updated);
+                  clearError('owners', index);
                 }}
+                error={errors.owners[index]?.email}
               />
 
               {owners.length > 1 && (
@@ -506,6 +763,10 @@ const ApplyLicense = ({ navigation }) => {
                   onPress={() => {
                     const updated = owners.filter((_, i) => i !== index);
                     setOwners(updated);
+                    const updatedErrors = errors.owners.filter(
+                      (_, i) => i !== index,
+                    );
+                    setErrors(prev => ({ ...prev, owners: updatedErrors }));
                   }}
                 >
                   <Text style={styles.removeButtonText}>Remove Owner</Text>
@@ -521,6 +782,13 @@ const ApplyLicense = ({ navigation }) => {
                 ...owners,
                 { ownerName: '', guardianName: '', mobileNo: '', email: '' },
               ]);
+              setErrors(prev => ({
+                ...prev,
+                owners: [
+                  ...prev.owners,
+                  { ownerName: '', guardianName: '', mobileNo: '', email: '' },
+                ],
+              }));
             }}
           >
             <Text style={styles.addButtonText}>+ Add Owner</Text>
@@ -534,12 +802,17 @@ const ApplyLicense = ({ navigation }) => {
           <FormField
             label="Nature of Business"
             type="multiselect"
-            value={natureOfBusiness} // selected IDs array
-            onChange={setNatureOfBusiness} // update selected IDs
-            options={categoryOptions} // dropdown options from API
+            value={natureOfBusiness}
+            onChange={value => {
+              setNatureOfBusiness(value);
+              clearError('natureOfBusiness');
+            }}
+            options={categoryOptions}
             placeholder={isLoading ? 'Loading...' : 'Select Nature of Business'}
+            error={errors.natureOfBusiness}
           />
         </View>
+
         {/* Charges */}
         <View style={styles.sectionCard}>
           <View style={styles.headingBox}>
@@ -549,9 +822,17 @@ const ApplyLicense = ({ navigation }) => {
             label="License For"
             type="dropdown"
             value={licenseFor}
-            onChange={setLicenseFor}
+            onChange={value => {
+              setLicenseFor(value);
+              clearError('licenseFor');
+              // Clear holding no error when license period changes
+              if (parseInt(value) === 1) {
+                clearError('holdingNo');
+              }
+            }}
             options={licenseForOptions}
             placeholder={isLoading ? 'Loading...' : 'Select License Type'}
+            error={errors.licenseFor}
           />
 
           <FormField
@@ -570,50 +851,22 @@ const ApplyLicense = ({ navigation }) => {
 
           <FormField
             label="Denial Amount"
-            value={taxData?.arrearCharge?.toString() || ''} // was licenseCharge earlier
+            value={taxData?.arrearCharge?.toString() || ''}
             onChange={setDenialAmount}
             editable={false}
           />
-
+          <FormField
+            label="currentCharge"
+            value={taxData?.currentCharge?.toString() || ''}
+            onChange={setCurrentCharge}
+            editable={false}
+          />
           <FormField
             label="Total Charge"
             value={taxData?.totalCharge?.toString() || ''}
             onChange={setTotalCharge}
             editable={false}
           />
-          {/* <FormField
-            label="Payment Mode"
-            type="dropdown"
-            value={paymentMode}
-            onChange={setPaymentMode}
-            options={paymentModeOptions}
-            placeholder="Select Payment Mode"
-          />
-          {paymentMode === 'cheque' && (
-            <>
-              <FormField
-                label="Cheque Date"
-                type="date"
-                value={chequeDate}
-                onChange={setChequeDate}
-              />
-              <FormField
-                label="Cheque No"
-                value={chequeNumber}
-                onChange={setChequeNumber}
-              />
-              <FormField
-                label="Bank Name"
-                value={bankName}
-                onChange={setBankName}
-              />
-              <FormField
-                label="Branch Name"
-                value={branchName}
-                onChange={setBranchName}
-              />
-            </>
-          )} */}
         </View>
 
         {/* Submit Button */}
@@ -648,10 +901,13 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   sectionCard: {
-    backgroundColor: Colors.lightGray,
+    borderWidth: 1,
+    borderColor: Colors.gray,
     borderRadius: 10,
-    padding: responsiveWidth(4),
+    padding: responsiveWidth(3),
     marginBottom: responsiveHeight(2),
+    backgroundColor: Colors.white,
+    elevation: 3,
   },
   headingBox: {
     marginBottom: responsiveHeight(1.5),

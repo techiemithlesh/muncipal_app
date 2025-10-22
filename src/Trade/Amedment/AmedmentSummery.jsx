@@ -21,7 +21,7 @@ import { BASE_URL } from '../../config';
 import HeaderNavigation from '../../Components/HeaderNavigation';
 import { API_ROUTES } from '../../api/apiRoutes';
 
-const RenewLicensePage = ({ navigation, route }) => {
+const AmedmentSummery = ({ navigation, route }) => {
   const { id } = route.params;
 
   // Alert states
@@ -334,7 +334,7 @@ const RenewLicensePage = ({ navigation, route }) => {
 
     const payload = {
       priviesLicenseId: id,
-      applicationType: 'RENEWAL',
+      applicationType: 'AMENDMENT',
       firmTypeId: firmType || 1,
       ownershipTypeId: ownershipType || 1,
       wardMstrId: wardNo || 1,
@@ -406,7 +406,7 @@ const RenewLicensePage = ({ navigation, route }) => {
         <View style={styles.sectionCard}>
           <FormField
             label="Application Type"
-            value={'RENEWAL'}
+            value={'AMENDMENT'}
             editable={false}
           />
           <FormField
@@ -621,7 +621,7 @@ const RenewLicensePage = ({ navigation, route }) => {
   );
 };
 
-export default RenewLicensePage;
+export default AmedmentSummery;
 
 const styles = StyleSheet.create({
   container: {

@@ -654,7 +654,15 @@ export const PaymentReceiptModal = ({ visible, onClose, receiptData }) => (
   </Modal>
 );
 
-export const PaymentModal = ({ visible, onClose, tradeDetails, id }) => {
+export const PaymentModal = ({
+  visible,
+  onClose,
+  tradeDetails,
+  id,
+  fetchAllData,
+  onShowReceipt,
+  onPaymentSuccess,
+}) => {
   const [payNowModalVisible, setPayNowModalVisible] = useState(false);
   const [paymentType, setPaymentType] = useState(null);
   const [paymentMode, setPaymentMode] = useState(null);
@@ -723,6 +731,8 @@ export const PaymentModal = ({ visible, onClose, tradeDetails, id }) => {
           response.data.message || 'Payment Successfully Done',
         );
 
+        fetchAllData();
+
         if (response.data.status === true) {
           setUpdatedTradeDetails(prev => ({
             ...prev,
@@ -736,6 +746,10 @@ export const PaymentModal = ({ visible, onClose, tradeDetails, id }) => {
               amount: 0,
             })),
           }));
+        }
+        if (typeof onShowReceipt === 'function') {
+          console.log('Triggering receipt modal with:', response.data.data);
+          onShowReceipt(response.data.data);
         }
 
         return { success: true, tranId: response.data.data?.tranId };

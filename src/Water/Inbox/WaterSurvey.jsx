@@ -29,6 +29,9 @@ const WaterSurvey = () => {
   const { id } = route.params || {};
   const navigation = useNavigation();
 
+  const [showError, setShowErrors] = useState(false);
+  const [errors, setErrors] = useState({});
+
   const [waterMeterChamber, setWaterMeterChamber] = useState('');
   const [camberValue, setCamberValue] = useState('');
 
@@ -213,6 +216,8 @@ const WaterSurvey = () => {
   if (loadingData) return <ActivityIndicator size="large" color="#0891b2" />;
 
   const handleAddNewWard = () => {
+    if (!validateForm()) return;
+
     const findLabel = (options, value) => {
       const item = options?.find(opt => opt.value === value);
       return item ? { id: item.value, label: item.label } : null;
@@ -450,6 +455,44 @@ const WaterSurvey = () => {
     setIsModalVisible(true);
   };
 
+  const validateForm = () => {
+    let valid = true;
+    const newErrors = {};
+
+    // Verification fields
+    if (!wardVerification) valid = false;
+    if (!newWardVerification) valid = false;
+    if (!propertyTypeVerification) valid = false;
+    if (!pipelineTypeVerification) valid = false;
+    if (!connectionTypeVerification) valid = false;
+    if (!categoryVerification) valid = false;
+    if (!areaVerification || (areaVerification === 'Incorrect' && !areaInput))
+      valid = false;
+
+    // Pipeline/Input fields
+    if (!pinelineSize) newErrors.pinelineSize = 'Pipeline size required';
+    if (!selectedPipelineType)
+      newErrors.selectedPipelineType = 'Pipeline disturbance type required';
+    if (!selectedPipeDelimeter)
+      newErrors.selectedPipeDelimeter = 'Pipe delimeter required';
+    if (!selectedPipeQuality)
+      newErrors.selectedPipeQuality = 'Pipe quality required';
+    if (!selectedRoadType) newErrors.selectedRoadType = 'Road type required';
+    if (!selectedTsMap) newErrors.selectedTsMap = 'TS Map required';
+    if (!fealureSize) newErrors.fealureSize = 'Ferrule size required';
+    // Role 15 specific fields
+    if (roleId === 15) {
+      if (!waterMeterChamber)
+        newErrors.waterMeterChamber = 'Water Meter Chamber required';
+      if (!camberValue) newErrors.camberValue = 'Camber required';
+    }
+
+    setErrors(newErrors);
+    setShowErrors(!valid); // trigger error display for verification fields
+
+    return valid && Object.keys(newErrors).length === 0;
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <HeaderNavigation />
@@ -475,7 +518,9 @@ const WaterSurvey = () => {
           dropdownValue={wardDropdown}
           setDropdownValue={setWardDropdown}
           editable={roleId !== 15}
+          showError={showError} // pass boolean
         />
+
         <VerificationCard
           label="New Ward No."
           value={data?.newWardNo}
@@ -486,6 +531,7 @@ const WaterSurvey = () => {
           setDropdownValue={setNewWardDropdown}
           disabled={!wardDropdown}
           editable={roleId !== 15}
+          showError={showError} // pass boolean
         />
         <VerificationCard
           label="Property Type"
@@ -496,6 +542,7 @@ const WaterSurvey = () => {
           dropdownValue={propertyTypeDropdown}
           setDropdownValue={setPropertyTypeDropdown}
           editable={roleId !== 15}
+          showError={showError} // pass boolean
         />
         <VerificationCard
           label="Pipeline Type"
@@ -506,6 +553,7 @@ const WaterSurvey = () => {
           dropdownValue={pipelineTypeDropdown}
           setDropdownValue={setPipelineTypeDropdown}
           editable={roleId !== 15}
+          showError={showError} // pass boolean
         />
         <VerificationCard
           label="Connection Type"
@@ -516,6 +564,7 @@ const WaterSurvey = () => {
           dropdownValue={connectionTypeDropdown}
           setDropdownValue={setConnectionTypeDropdown}
           editable={roleId !== 15}
+          showError={showError} // pass boolean
         />
         <VerificationCard
           label="Category"
@@ -526,6 +575,7 @@ const WaterSurvey = () => {
           dropdownValue={categoryDropdown}
           setDropdownValue={setCategoryDropdown}
           editable={roleId !== 15}
+          showError={showError} // pass boolean
         />
         {/*Connection Through - Skipped as per new design */}
 
@@ -541,6 +591,7 @@ const WaterSurvey = () => {
           inputLabel="Enter Area (Sq ft):"
           inputPlaceholder="Enter area in square feet"
           editable={roleId !== 15}
+          showError={showError} // pass boolean
         />
 
         {/* Pipeline Size */}
@@ -555,7 +606,11 @@ const WaterSurvey = () => {
             onChangeText={setPinelineSize}
             keyboardType="numeric"
             editable={roleId !== 15}
+            showError={showError} // pass boolean
           />
+          {errors.pinelineSize && (
+            <Text style={{ color: 'red' }}>{errors.pinelineSize}</Text>
+          )}
         </View>
 
         {/* Ferule Size */}
@@ -570,6 +625,9 @@ const WaterSurvey = () => {
             value={fealureSize}
             onChange={item => setfealureSize(item.value)}
           />
+          {errors.pinelineSize && (
+            <Text style={{ color: 'red' }}>{errors.fealureSize}</Text>
+          )}
         </View>
 
         {/* More Dropdowns */}
@@ -585,6 +643,9 @@ const WaterSurvey = () => {
             onChange={item => setSelectedPipelineType(item.value)}
             disable={roleId === 15}
           />
+          {errors.pinelineSize && (
+            <Text style={{ color: 'red' }}>{errors.selectedPipelineType}</Text>
+          )}
         </View>
 
         <View style={styles.section}>
@@ -598,6 +659,9 @@ const WaterSurvey = () => {
             value={selectedPipeDelimeter}
             onChange={item => setSelectedPipeDelimeter(item.value)}
           />
+          {errors.pinelineSize && (
+            <Text style={{ color: 'red' }}>{errors.selectedPipelineType}</Text>
+          )}
         </View>
 
         <View style={styles.section}>
@@ -612,6 +676,9 @@ const WaterSurvey = () => {
             onChange={item => setSelectedPipeQuality(item.value)}
             disable={roleId === 15}
           />
+          {errors.pinelineSize && (
+            <Text style={{ color: 'red' }}>{errors.selectedPipeQuality}</Text>
+          )}
         </View>
 
         <View style={styles.section}>
@@ -626,30 +693,51 @@ const WaterSurvey = () => {
             onChange={item => setSelectedRoadType(item.value)}
             disable={roleId === 15}
           />
+          {errors.pinelineSize && (
+            <Text style={{ color: 'red' }}>{errors.selectedRoadType}</Text>
+          )}
         </View>
 
         {roleId === 15 && (
           <>
+            {/* Water Meter Chamber */}
             <View style={styles.section}>
               <Text style={styles.sectionHeader}>Water Meter Chamber</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter Water Meter Chamber"
                 value={waterMeterChamber}
-                onChangeText={setWaterMeterChamber}
+                onChangeText={text => {
+                  setWaterMeterChamber(text); // update value
+                  if (text) {
+                    setErrors(prev => ({ ...prev, waterMeterChamber: null })); // remove error
+                  }
+                }}
                 keyboardType="default"
               />
+              {errors.waterMeterChamber && (
+                <Text style={{ color: 'red' }}>{errors.waterMeterChamber}</Text>
+              )}
             </View>
 
+            {/* Camber */}
             <View style={styles.section}>
               <Text style={styles.sectionHeader}>Camber</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter Camber"
                 value={camberValue}
-                onChangeText={setCamberValue}
+                onChangeText={text => {
+                  setCamberValue(text); // update value
+                  if (text) {
+                    setErrors(prev => ({ ...prev, camberValue: null })); // remove error
+                  }
+                }}
                 keyboardType="default"
               />
+              {errors.camberValue && (
+                <Text style={{ color: 'red' }}>{errors.camberValue}</Text>
+              )}
             </View>
           </>
         )}

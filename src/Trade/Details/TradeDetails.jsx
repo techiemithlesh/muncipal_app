@@ -35,93 +35,90 @@ const TradeDetails = ({ route }) => {
   const [workflowData, setWorkflowData] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [levelRemarks, setLevelRemarks] = useState([]);
+  const [transid, setTransId] = useState('');
 
   const [loading, setLoading] = useState(false);
 
   const id = route?.params?.id;
+  console.log('dsfdsfdsf', id);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      if (!id) return;
-      setLoading(true);
+  // Component scope
+  const fetchAllData = async () => {
+    if (!id) return;
+    setLoading(true);
 
-      try {
-        const token = await getToken();
-        console.log('token', token);
+    let transIdValue = null; // ✅ declare in outer scope
 
-        // Fetch trade details first to get workflowId
-        const tradeRes = await axios.post(
-          API_ROUTES.TRADE_DETAILS,
-          { id: Number(id) },
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
+    try {
+      const token = await getToken();
 
-        if (tradeRes?.data?.status && tradeRes.data.data) {
-          setTradeDetails(tradeRes.data.data);
-          setPaymentDtl(tradeRes.data.data.tranDtls?.[0] || null);
-          setLevelRemarks(tradeRes.data.data.levelRemarks || []);
-        }
+      // Fetch trade details first
+      const tradeRes = await axios.post(
+        API_ROUTES.TRADE_DETAILS,
+        { id },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
 
-        const workflowId = tradeRes?.data?.data?.workflowId || 0;
+      console.log('paymnet Deayail', tradeDetails);
 
-        // Run other APIs in parallel
-        const [tradeDueRes, workflowRes, paymentRes, receiptRes, documentRes] =
-          await Promise.all([
-            axios.post(
-              API_ROUTES.TRADE_DUE_DETAILS,
-              { id },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-            axios.post(
-              WORK_FLOW_PERMISSION,
-              { wfId: workflowId },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-            axios.post(
-              API_ROUTES.TRADE_PAYMENT,
-              {
-                id,
-                paymentType: 'FULL',
-                paymentMode: 'CASH',
-                chequeNo: '',
-                chequeDate: '',
-                bankName: '',
-                branchName: '',
-              },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-            axios.post(
-              API_ROUTES.TRADE_PAYMENT_RECEIPT,
-              { id },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-            axios.post(
-              API_ROUTES.TRADE_DOCUMENT_DETAILS,
-              { id },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-          ]);
+      if (tradeRes?.data?.status && tradeRes.data.data) {
+        setTradeDetails(tradeRes.data.data);
 
-        if (tradeDueRes?.data?.status) setTradeDue(tradeDueRes.data.data);
-        if (workflowRes?.data?.status) setWorkflowData(workflowRes.data.data);
-        // if (paymentRes?.data?.status) setTradeDue(paymentRes.data.data);
-        // console.log('trade due fhfhdhdfhdf', tradeDue);
-        // console.log('trade due second', tradeDueRes.data);
+        const localPaymentDtl = tradeRes.data.data.tranDtls?.[0] || null;
+        setPaymentDtl(localPaymentDtl);
 
-        if (receiptRes?.data?.status)
-          setTradPaymentRecipt(receiptRes.data.data);
-        if (documentRes?.data?.status) setDocuments(documentRes.data.data);
-      } catch (err) {
-        console.log(
-          '❌ Error fetching data:',
-          err.response?.data || err.message,
-        );
-      } finally {
-        setLoading(false);
+        transIdValue = localPaymentDtl?.id || null; // ✅ set outer-scope variable
+        setTransId(transIdValue);
+        console.log('transid ', transIdValue);
+
+        setLevelRemarks(tradeRes.data.data.levelRemarks || []);
       }
-    };
+      // console.log('Payment Details API Response:', tradeRes?.data);
+      const workflowId = tradeRes?.data?.data?.workflowId || 0;
 
+      // Fetch other APIs in parallel
+      const [tradeDueRes, workflowRes, receiptRes, documentRes] =
+        await Promise.all([
+          axios.post(
+            API_ROUTES.TRADE_DUE_DETAILS,
+            { id },
+            { headers: { Authorization: `Bearer ${token}` } },
+          ),
+          axios.post(
+            WORK_FLOW_PERMISSION,
+            { wfId: workflowId },
+            { headers: { Authorization: `Bearer ${token}` } },
+          ),
+          axios.post(
+            API_ROUTES.TRADE_PAYMENT_RECEIPT,
+            { id: transIdValue }, // ✅ now defined correctly
+            { headers: { Authorization: `Bearer ${token}` } },
+          ),
+          axios.post(
+            API_ROUTES.TRADE_DOCUMENT_DETAILS,
+            { id },
+            { headers: { Authorization: `Bearer ${token}` } },
+          ),
+        ]);
+
+      if (tradeDueRes?.data?.status) setTradeDue(tradeDueRes.data.data);
+      if (workflowRes?.data?.status) setWorkflowData(workflowRes.data.data);
+      if (receiptRes?.data?.status) {
+        const receiptData = receiptRes.data.data;
+        setTradPaymentRecipt(receiptData);
+        console.log('Receipt Transaction ID:', receiptData);
+      }
+      if (documentRes?.data?.status) setDocuments(documentRes.data.data);
+    } catch (err) {
+      console.log('❌ Error fetching data:', err.response?.data || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Call fetchAllData when component mounts or id changes
+  useEffect(() => {
     fetchAllData();
   }, [id]);
 
@@ -163,6 +160,8 @@ const TradeDetails = ({ route }) => {
         {/* Basic Details */}
         <Section title="Basic Details">
           <DetailRow label="Ward No" value={tradeDetails?.wardNo} />
+          <DetailRow label="New Ward No" value={tradeDetails?.newWardNo} />
+
           <DetailRow
             label="Licence For"
             value={`${tradeDetails?.licenseForYears} Years`}
@@ -230,7 +229,7 @@ const TradeDetails = ({ route }) => {
         </Section>
 
         {/* Document Details */}
-        <Section title="Document Details">
+        {/* <Section title="Document Details">
           <View style={styles.docHeader}>
             <Text style={styles.docCol}>Document Name</Text>
             <Text style={styles.docCol}>Image</Text>
@@ -251,12 +250,12 @@ const TradeDetails = ({ route }) => {
                 }
               />
             ))}
-        </Section>
+        </Section> */}
 
         {/* Payment Details */}
         <Section title="Payment Detail">
           <View style={styles.docHeader}>
-            <Text style={styles.docCol}>Processing Fee</Text>
+            <Text style={styles.docCol}>tranNo</Text>
             <Text style={styles.docCol}>Transaction Date</Text>
             <Text style={styles.docCol}>Payment Through</Text>
             <Text style={styles.docCol}>Payment For</Text>
@@ -264,7 +263,7 @@ const TradeDetails = ({ route }) => {
           </View>
           {paymentDtl && (
             <View style={styles.paymentRow}>
-              <Text style={styles.paymentCol}>{paymentDtl.penaltyAmt}</Text>
+              <Text style={styles.paymentCol}>{paymentDtl.tranNo}</Text>
               <Text style={styles.paymentCol}>{paymentDtl.tranDate}</Text>
               <Text style={styles.paymentCol}>{paymentDtl.paymentMode}</Text>
               <Text style={styles.paymentCol}>{paymentDtl.tranType}</Text>
@@ -279,20 +278,20 @@ const TradeDetails = ({ route }) => {
         </Section>
 
         {/* Field Verification */}
-        <Section title="Field Verification">
+        {/* <Section title="Field Verification">
           <View style={styles.noDataContainer}>
             <Text style={styles.noDataText}>
               No Field Verification Available!
             </Text>
           </View>
-        </Section>
+        </Section> */}
 
         {/* Memo Details */}
-        <Section title="Memo Details">
+        {/* <Section title="Memo Details">
           <View style={styles.noDataContainer}>
             <Text style={styles.noDataText}>No Memo Details Available!</Text>
           </View>
-        </Section>
+        </Section> */}
 
         {/* Level Remarks */}
         <Section title="Level Remarks">
@@ -353,18 +352,49 @@ const TradeDetails = ({ route }) => {
           >
             <Text style={styles.tradeLicenseText}>View Demand</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
-            onPress={() => setShowPaymentModal(true)}
-          >
-            <Text style={styles.tradeLicenseText}>View Payment</Text>
-          </TouchableOpacity>
+          {tradeDetails?.paymentStatus == 0 && (
+            <TouchableOpacity
+              style={[styles.tradeLicenseBtn, { flex: 1 }]}
+              onPress={() => setShowPaymentModal(true)}
+            >
+              <Text style={styles.tradeLicenseText}>Make Payment</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={[styles.tradeLicenseBtn, { flex: 1 }]}
             onPress={() => setShowDocumentModal(true)}
           >
             <Text style={styles.tradeLicenseText}>View Documents</Text>
           </TouchableOpacity>
+
+          {(tradeDetails?.isApproved === true ||
+            tradeDetails?.isApproved === 'true') && (
+            <>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('AmedmentSummery', { id })}
+                style={[styles.tradeLicenseBtn, { flex: 1 }]}
+              >
+                <Text style={styles.tradeLicenseText}>Amedment</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate('SurrenderLicensePage', { id })
+                }
+                style={[styles.tradeLicenseBtn, { flex: 1 }]}
+              >
+                <Text style={styles.tradeLicenseText}>Surrender</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('RenewLicensePage', { id })}
+                style={[styles.tradeLicenseBtn, { flex: 1 }]}
+              >
+                <Text style={styles.tradeLicenseText}>Renew</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </ScrollView>
 
@@ -386,6 +416,8 @@ const TradeDetails = ({ route }) => {
         onClose={() => setShowPaymentModal(false)}
         demandDetails={tradeDue}
         tradeDetails={tradeDetails}
+        setUpdatedTradeDetails={setTradeDue}
+        onPaymentSuccess={fetchAllData}
       />
       <DocumentModal
         visible={showDocumentModal}

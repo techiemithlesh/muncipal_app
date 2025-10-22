@@ -35,6 +35,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { PROPERTY_API } from '../api/apiRoutes';
 import { useRef } from 'react';
 import { validateExtraChargesDates } from '../Validation/validation.';
+import Assessment from '../Screen/Assessment';
+import { showToast } from '../utils/toast';
 
 const yesNoOptions = [
   { label: 'Yes', value: 'yes' },
@@ -45,12 +47,16 @@ const SurveyPage = ({ route, navigation }) => {
   const { id } = route.params;
 
   console.log(id);
+  const [showError, setShowErrors] = useState(false);
   const hasFetched = useRef(false);
   const [mobileTower, setMobileTower] = useState('no');
   const [towerArea, setTowerArea] = useState('');
   const [installationDate, setInstallationDate] = useState(null);
   const [showInstallationDatePicker, setShowInstallationDatePicker] =
     useState(false);
+
+  const [percentageVerification, setPercentageVerification] = useState(null);
+  const [percentageValue, setPercentageValue] = useState('');
 
   // Hoarding
   const [hoarding, setHoarding] = useState('no');
@@ -206,22 +212,95 @@ const SurveyPage = ({ route, navigation }) => {
   // floor related
   const [isULBUser, setIsULBUser] = useState(false);
 
-  // const handleDateChange1 = (event, date) => {
-  //   setShowDatePicker(false);
+  const validatePreviewForm = () => {
+    const errors = [];
 
-  //   console.log('DateTimePicker event:', event);
-  //   console.log('Selected date object:', date);
-  //   console.log('Selected Date:', date.toISOString().split('T')[0]);
+    // 1. Check Property Type verification
+    if (!propertyVerification) {
+      errors.push('Property Type verification is required');
+    }
 
-  //   // Android fires "dismissed" event
-  //   if (event.type === 'set' && date) {
-  //     setSelectedDate(date);
-  //     // setSelectedDate(prev => ({ ...prev, date }));
-  //     // formatted
-  //   }
-  // };
+    // 2. Check Ward verification
+    if (!wardVerification) {
+      errors.push('Ward No. verification is required');
+    }
 
-  console.log('selected date', selectedDate.toISOString());
+    // 3. Check New Ward verification
+    if (!newWardVerification) {
+      errors.push('New Ward No. verification is required');
+    }
+
+    // 4. Check Zone verification
+    if (!zoneVerification) {
+      errors.push('Zone verification is required');
+    }
+
+    // 5. Check Mutation specific fields
+    if (data?.assessmentType === 'Mutation' && !percentageVerification) {
+      errors.push('Percentage of Property Transfer verification is required');
+    }
+
+    // 6. Check for apartment-specific fields
+    if (selectedPropertyLabel === 'FLATS / UNIT IN MULTI STORIED BUILDING') {
+      if (!selectedDate) {
+        errors.push('Flat Registry Date is required');
+      }
+      if (!apartmentDetail) {
+        errors.push('Apartment Details is required');
+      }
+    }
+
+    // 7. Check floor verifications (if not vacant land)
+    if (
+      shouldShowSections &&
+      selectedPropertyLabel.toUpperCase() !== 'VACANT LAND'
+    ) {
+      floorIds.forEach(floor => {
+        const floorName = floor.floorName;
+
+        if (!getFloorState(floor.id, 'usageType', 'verification')) {
+          errors.push(`${floorName}: Usage Type verification is required`);
+        }
+        if (!getFloorState(floor.id, 'occupancyType', 'verification')) {
+          errors.push(`${floorName}: Occupancy Type verification is required`);
+        }
+        if (!getFloorState(floor.id, 'constructionType', 'verification')) {
+          errors.push(
+            `${floorName}: Construction Type verification is required`,
+          );
+        }
+        if (!getFloorState(floor.id, 'builtupArea', 'verification')) {
+          errors.push(`${floorName}: Built-up Area verification is required`);
+        }
+        if (!getFloorState(floor.id, 'dateFrom', 'verification')) {
+          errors.push(`${floorName}: Date From verification is required`);
+        }
+        if (!getFloorState(floor.id, 'dateTo', 'verification')) {
+          errors.push(`${floorName}: Date To verification is required`);
+        }
+      });
+    }
+
+    // 8. Validate extra charges dates
+    const dateValidation = validateExtraChargesDates({
+      mobileTower,
+      installationDate,
+      hoarding,
+      hoardingInstallationDate,
+      petrolPump,
+      pumpInstallationDate,
+      rainHarvesting,
+      completionDate,
+    });
+
+    if (!dateValidation) {
+      errors.push('Please check extra charges dates');
+    }
+
+    return errors;
+  };
+
+  // console.log('selected date', selectedDate.toISOString());
   useEffect(() => {
     if (data) {
       // console.log('Received data:', data); // <-- Log the whole data object
@@ -294,6 +373,11 @@ const SurveyPage = ({ route, navigation }) => {
 
   const handleSubmitPreview = () => {
     // Get the verified IDs based on selection
+
+    if (!propertyVerification) {
+      setShowErrors(true); // trigger error
+      return;
+    }
     const isValid = validateExtraChargesDates({
       mobileTower,
       installationDate,
@@ -367,15 +451,21 @@ const SurveyPage = ({ route, navigation }) => {
       };
     });
 
+    // console.log('Floor array', floorDataArray);
+
     // // For backwards compatibility, extract parking and basement floors
     const parkingFloorData =
       floorDataArray.find(f => f.floorMasterId === 1) || null;
     const basementFloorData =
       floorDataArray.find(f => f.floorMasterId === 2) || null;
+    console.log('paroig data array', parkingFloorData);
 
     const submissionData = {
       ...previewData,
       // Main property IDs
+      assessmentType: data?.assessmentType,
+      percentageOfPropertyTransfer:
+        percentageValue || data?.percentageOfPropertyTransfer,
       selectedDate: selectedDate
         ? selectedDate.toISOString().split('T')[0]
         : null,
@@ -481,6 +571,7 @@ const SurveyPage = ({ route, navigation }) => {
       id,
       floorIds,
       data,
+      floorDataArray,
     });
   };
 
@@ -770,6 +861,38 @@ const SurveyPage = ({ route, navigation }) => {
             </Text>
           </View>
         )}
+
+        {/* Percentage of Property Transfer Card */}
+        {/* {data?.assessmentType === 'Mutation' && (
+          <VerificationCard
+            label="Percentage of Property Transfer"
+            value={data?.percentageOfPropertyTransfer || '0'}
+            selectedVerification={percentageVerification}
+            setSelectedVerification={setPercentageVerification}
+            showInputOnIncorrect={true}
+            inputValue={percentageValue}
+            setInputValue={setPercentageValue}
+            inputLabel="Enter New Percentage"
+            inputPlaceholder="Enter %"
+            editable={true}
+          />
+        )} */}
+        {data?.assessmentType === 'Mutation' && (
+          <VerificationCard
+            label="Percentage of Property Transfer"
+            value={data?.percentageOfPropertyTransfer}
+            selectedVerification={percentageVerification}
+            setSelectedVerification={setPercentageVerification}
+            showInputOnIncorrect={true}
+            inputValue={percentageValue}
+            setInputValue={setPercentageValue}
+            inputLabel="Enter New Percentage"
+            inputPlaceholder="Enter %"
+            editable={true}
+            showError={showError} // pass boolean
+          />
+        )}
+
         {/* Ward No. Card */}
         <VerificationCard
           label="Ward No."
@@ -779,6 +902,7 @@ const SurveyPage = ({ route, navigation }) => {
           setSelectedVerification={setWardVerification}
           dropdownValue={wardDropdown}
           setDropdownValue={setWardDropdown}
+          showError={showError} // pass boolean
         />
 
         {/* Always show New Ward No., hide 'Correct' only if Ward No is Incorrect */}
@@ -791,6 +915,7 @@ const SurveyPage = ({ route, navigation }) => {
           dropdownValue={newWardDropdown}
           setDropdownValue={setNewWardDropdown}
           hideCorrectOption={wardVerification === 'Incorrect'} // only hide Correct if Ward No is Incorrect
+          showError={showError} // pass boolean
         />
         {/* Zone Card */}
         <VerificationCard
@@ -801,6 +926,7 @@ const SurveyPage = ({ route, navigation }) => {
           setSelectedVerification={setZoneVerification}
           dropdownValue={zoneDropdown}
           setDropdownValue={setZoneDropdown}
+          showError={showError} // pass boolean
         />
         <VerificationCard
           label="Property Type"
@@ -810,6 +936,7 @@ const SurveyPage = ({ route, navigation }) => {
           setSelectedVerification={setPropertyVerification}
           dropdownValue={propertyDropdown}
           setDropdownValue={setPropertyDropdown}
+          showError={showError} // pass boolean
         />
         {selectedPropertyLabel === 'FLATS / UNIT IN MULTI STORIED BUILDING' && (
           <View style={styles.card}>
@@ -829,6 +956,7 @@ const SurveyPage = ({ route, navigation }) => {
                   borderColor: '#ccc',
                   borderRadius: 8,
                 }}
+                showError={showError} // pass boolean
               >
                 <Text>
                   {selectedDate ? formatDate1(selectedDate) : 'Select Date'}
@@ -950,6 +1078,7 @@ const SurveyPage = ({ route, navigation }) => {
                           'dropdown',
                         )
                       }
+                      showError={showError} // pass boolean
                     />
                     <VerificationCard
                       label="Occupancy-Type"
@@ -981,6 +1110,7 @@ const SurveyPage = ({ route, navigation }) => {
                           'dropdown',
                         )
                       }
+                      showError={showError} // pass boolean
                     />
                     <VerificationCard
                       label="Construction-Type"
@@ -1012,6 +1142,7 @@ const SurveyPage = ({ route, navigation }) => {
                           'dropdown',
                         )
                       }
+                      showError={showError} // pass boolean
                     />
                     <VerificationCard
                       label="Builtup-Area"
@@ -1059,6 +1190,7 @@ const SurveyPage = ({ route, navigation }) => {
                       }
                       inputLabel="Enter new builtup area:"
                       inputPlaceholder="Enter new builtup area"
+                      showError={showError} // pass boolean
                     />
                     <VerificationCard
                       label="Date From"
@@ -1097,6 +1229,7 @@ const SurveyPage = ({ route, navigation }) => {
                         else if (floor.floorMasterId === 2)
                           setShowDateFromBasementPicker(true);
                       }}
+                      showError={showError} // pass boolean
                     />
                     <VerificationCard
                       label="Date To"
@@ -1130,6 +1263,7 @@ const SurveyPage = ({ route, navigation }) => {
                         else if (floor.floorMasterId === 2)
                           setShowDateToBasementPicker(true);
                       }}
+                      showError={showError} // pass boolean
                     />
                   </View>
                 ))}
@@ -1404,7 +1538,35 @@ const SurveyPage = ({ route, navigation }) => {
           onPress={() => {
             // Validation can be added here if needed
 
+            const validationErrors = validatePreviewForm();
+
+            if (validationErrors.length > 0) {
+              setShowErrors(true);
+
+              showToast('error', 'fill all requred field frist');
+              // Show alert with all errors
+              // Alert.alert(
+              //   'Validation Error',
+              //   'Please complete all required verifications:\n\n' +
+              //     validationErrors
+              //       .map((err, idx) => `${idx + 1}. ${err}`)
+              //       .join('\n'),
+              //   [{ text: 'OK' }],
+              // );
+              return;
+            }
+
+            // Reset errors if validation passes
+            setShowErrors(false);
+
             const generatedPreview = {
+              Percentage_Transfer: data?.percentageOfPropertyTransfer,
+              Verified_Percentage: getPreviewValue(
+                data?.percentageOfPropertyTransfer,
+                percentageValue,
+                percentageVerification,
+                null,
+              ),
               'Ward No': data?.wardNo,
               Verified_Ward: getPreviewValue(
                 data?.wardNo,
@@ -1547,6 +1709,19 @@ const SurveyPage = ({ route, navigation }) => {
                       <Text style={styles.tableHeaderText}>Current Value</Text>
                       <Text style={styles.tableHeaderText}>Verified Value</Text>
                     </View>
+                    {data?.assessmentType === 'Mutation' && (
+                      <View style={styles.tableRow}>
+                        <Text style={styles.tableCellLabel}>
+                          Percentage of Property Transfer
+                        </Text>
+                        <Text style={styles.tableCell}>
+                          {previewData['Percentage_Transfer'] || 'N/A'}
+                        </Text>
+                        <Text style={styles.tableCell}>
+                          {previewData['Verified_Percentage'] || 'N/A'}
+                        </Text>
+                      </View>
+                    )}
                     <View style={styles.tableRow}>
                       <Text style={styles.tableCellLabel}>Ward No</Text>
                       <Text style={styles.tableCell}>

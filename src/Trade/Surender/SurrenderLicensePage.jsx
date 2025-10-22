@@ -94,7 +94,8 @@ const SurrenderLicensePage = ({ navigation, route }) => {
     };
 
     const payload = {
-      applicationType: 'RENEW LICENSE',
+      priviesLicenseId: id,
+      applicationType: 'SURRENDER',
       firmTypeId: firmType || 1,
       ownershipTypeId: ownershipType || 1,
       wardMstrId: wardNo || 1,
@@ -249,14 +250,15 @@ const SurrenderLicensePage = ({ navigation, route }) => {
   useEffect(() => {
     const fetchTaxData = async () => {
       try {
+        setIsLoading(true);
         const storedToken = await AsyncStorage.getItem('token');
         const token = storedToken ? JSON.parse(storedToken) : null;
 
         const body = {
-          applicationType: 'RENEW LICENSE',
+          applicationType: 'NEW LICENSE',
           firmEstablishmentDate: '2020-02-20',
           areaInSqft: '100',
-          licenseForYears: '2',
+          licenseForYears: licenseFor || '',
           isTobaccoLicense: 0,
         };
 
@@ -267,19 +269,20 @@ const SurrenderLicensePage = ({ navigation, route }) => {
           },
         });
 
-        console.log('✅ Tax Review Response:', response.data?.data);
         setTaxData(response.data.data);
       } catch (error) {
         console.error(
           '❌ Error fetching Tax Review:',
           error.response?.data || error,
         );
+        setTaxData(null);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchTaxData();
-  }, []);
-
+  }, [licenseFor]);
   const fetchTradeMaster = async () => {
     try {
       const storedToken = await AsyncStorage.getItem('token');
@@ -417,7 +420,7 @@ const SurrenderLicensePage = ({ navigation, route }) => {
         <View style={styles.sectionCard}>
           <FormField
             label="Application Type"
-            value={applicationType}
+            value={'SURRENDER'}
             editable={false}
           />
           <FormField
@@ -705,5 +708,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: responsiveFontSize(1.6),
+  },
+  sectionCard: {
+    borderWidth: 1,
+    borderColor: Colors.gray,
+    borderRadius: 10,
+    padding: responsiveWidth(3),
+    marginBottom: responsiveHeight(2),
+    backgroundColor: Colors.white,
+    elevation: 3,
   },
 });

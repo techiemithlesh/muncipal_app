@@ -11,8 +11,10 @@ const HeaderNavigation = ({ title, showBack = true, customBackAction }) => {
   const handleBack = () => {
     if (customBackAction) {
       customBackAction();
-    } else {
+    } else if (navigation.canGoBack()) {
       navigation.goBack();
+    } else {
+      navigation.navigate('DashBoard'); // fallback if there's no previous screen
     }
   };
 

@@ -8,11 +8,12 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import Colors from '../../Constants/Colors';
+import Colors from '../../../Constants/Colors';
 import axios from 'axios';
-import { SAF_API_ROUTES } from '../../api/apiRoutes'; // make sure this is your API route
-import { getToken } from '../../utils/auth';
-import MessageModal from '../../utils/MessageModal';
+import { SAF_API_ROUTES } from '../../../api/apiRoutes'; // make sure this is your API route
+import { getToken } from '../../../utils/auth';
+import HeaderNavigation from '../../../Components/HeaderNavigation';
+import MessageModal from '../../../utils/MessageModal';
 
 const Row = ({ label, value }) => (
   <View style={styles.row}>
@@ -28,10 +29,11 @@ const Section = ({ title, children }) => (
   </View>
 );
 
-const RessesmentSummry = ({ route, navigation }) => {
+const MutationScreen = ({ route, navigation }) => {
   const data = route.params?.data || {};
   const safData = route?.params?.safData || {};
-  console.log('data safData', safData);
+
+  console.log('safData data in MutationScreen:', safData);
   const [loading, setLoading] = useState(false);
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -42,6 +44,7 @@ const RessesmentSummry = ({ route, navigation }) => {
     const [month, year] = date.split('-');
     return `${year}-${month}`;
   }
+
   const handleCloseModal = () => {
     setModalVisible(false);
     if (modalType === 'success') navigation.goBack();
@@ -83,6 +86,7 @@ const RessesmentSummry = ({ route, navigation }) => {
 
     return null; // fallback
   };
+
   function formatDate1(dob) {
     if (!dob) return '2019-02-14'; // fallback if empty
     const parts = dob.split('/'); // ["18", "09", "1901"]
@@ -94,8 +98,6 @@ const RessesmentSummry = ({ route, navigation }) => {
 
     return `${year}-${month}-${day}`; // YYYY-MM-DD
   }
-  console.log('Data before submit:', data);
-  if (!data) return Alert.alert('Error', 'No data available');
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -126,11 +128,14 @@ const RessesmentSummry = ({ route, navigation }) => {
 
       // Map data to API structure
       const payload = {
-        assessmentType: 'Reassessment',
         appartmentDetailsId: data?.appartmentDetailsId || '',
 
+        percentageOfPropertyTransfer: data.propertyTransferPercentage,
+        transferModeMstrId: data.transferMode,
+        assessmentType: 'Mutation',
         previousHoldingId: data.holdingId,
         zoneMstrId: data.zoneId || 1,
+
         wardMstrId: Number(data.oldWard || 1),
         newWardMstrId: data.newWard || 1,
         ownershipTypeMstrId: data.ownershipTypeId || data.ownershipType || 1,
@@ -253,6 +258,7 @@ const RessesmentSummry = ({ route, navigation }) => {
 
   return (
     <ScrollView style={styles.container}>
+      <HeaderNavigation />
       {data.id && (
         <Section title="Assessment ID">
           <Row label="ID" value={data.id} />
@@ -260,7 +266,7 @@ const RessesmentSummry = ({ route, navigation }) => {
       )}
 
       <Section title="Property Details">
-        <Row label="Assessment Type" value="Ressesment" />
+        <Row label="Assessment Type" value="Mutation" />
         <Row label="Zone" value={safData.zone} />
         <Row label="Old Ward" value={safData.wardNo} />
         <Row label="New Ward" value={safData.newWardNo} />
@@ -486,4 +492,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RessesmentSummry;
+export default MutationScreen;

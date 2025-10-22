@@ -50,83 +50,81 @@ const Details = ({ route }) => {
   const id = route?.params?.id;
   const navigation = useNavigation();
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      if (!id) return;
-      setLoading(true);
+  const fetchAllData = async () => {
+    if (!id) return;
+    setLoading(true);
 
-      try {
-        const token = await getToken();
+    try {
+      const token = await getToken();
 
-        // Fetch trade details first to get workflowId
-        const tradeRes = await axios.post(
-          WATER_API_ROUTES.WATER_DETAILS,
-          { id: Number(id) },
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
+      // Fetch trade details first to get workflowId
+      const tradeRes = await axios.post(
+        WATER_API_ROUTES.WATER_DETAILS,
+        { id: Number(id) },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
 
-        console.log('Trade Details Response:', tradeRes?.data);
-        console.log('Payment Status:', tradeRes?.data?.paymentStatus);
-        console.log('Payment Status:', tradeRes?.data?.data?.paymentStatus); // ✅
+      // console.log('Trade Details Response:', tradeRes?.data);
+      // console.log('Payment Status:', tradeRes?.data?.paymentStatus);
+      // console.log('Payment Status:', tradeRes?.data?.data?.paymentStatus); // ✅
 
-        if (tradeRes?.data?.status && tradeRes.data.data) {
-          setTradeDetails(tradeRes.data.data);
-          setPaymentDtl(tradeRes.data.data.tranDtls?.[0] || null);
-          setLevelRemarks(tradeRes.data.data.levelRemarks || []);
-          setTcVerification(tradeRes.data.data.tcVerifications || null);
-        }
-
-        const workflowId = tradeRes?.data?.data?.workflowId || 0;
-        console.log('Trade detaild ID:', tradeRes?.data?.data);
-        // Run other APIs in parallel
-        const [waterDue, workflowRes, paymentRes, receiptRes, documentRes] =
-          await Promise.all([
-            axios.post(
-              WATER_API_ROUTES.WATER_DUE,
-              { id },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-            axios.post(
-              WORK_FLOW_PERMISSION,
-              { wfId: workflowId },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-            axios.post(
-              WATER_API_ROUTES.PAYMENT_RECEIPT,
-              {
-                id,
-              },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-            axios.post(
-              WATER_API_ROUTES.PAY_DEMAND,
-              { id },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-            axios.post(
-              WATER_API_ROUTES.WATER_DOC_LIST,
-              { id },
-              { headers: { Authorization: `Bearer ${token}` } },
-            ),
-          ]);
-        console.log('Payment Receipt:', waterDue?.data);
-
-        if (waterDue?.data?.status) setWaterDue(waterDue.data.data);
-        if (workflowRes?.data?.status) setWorkflowData(workflowRes.data.data);
-        if (paymentRes?.data?.status) setTradeDue(paymentRes.data.data);
-        if (paymentRes?.data?.status)
-          setTradPaymentRecipt(paymentRes.data.data);
-        if (documentRes?.data?.status) setDocuments(documentRes.data.data);
-      } catch (err) {
-        console.log(
-          '❌ Error fetching data:',
-          err.response?.data || err.message,
-        );
-      } finally {
-        setLoading(false);
+      if (tradeRes?.data?.status && tradeRes.data.data) {
+        setTradeDetails(tradeRes.data.data);
+        setPaymentDtl(tradeRes.data.data.tranDtls?.[0] || null);
+        setLevelRemarks(tradeRes.data.data.levelRemarks || []);
+        setTcVerification(tradeRes.data.data.tcVerifications || null);
       }
-    };
 
+      const workflowId = tradeRes?.data?.data?.workflowId || 0;
+      console.log('Trade detaild ID:', tradeRes?.data?.data);
+      // Run other APIs in parallel
+      const [waterDue, workflowRes, paymentRes, receiptRes, documentRes] =
+        await Promise.all([
+          axios.post(
+            WATER_API_ROUTES.WATER_DUE,
+            { id },
+            { headers: { Authorization: `Bearer ${token}` } },
+          ),
+          axios.post(
+            WORK_FLOW_PERMISSION,
+            { wfId: workflowId },
+            { headers: { Authorization: `Bearer ${token}` } },
+          ),
+          axios.post(
+            WATER_API_ROUTES.PAYMENT_RECEIPT,
+            {
+              id,
+            },
+            { headers: { Authorization: `Bearer ${token}` } },
+          ),
+          axios.post(
+            WATER_API_ROUTES.PAY_DEMAND,
+            { id },
+            { headers: { Authorization: `Bearer ${token}` } },
+          ),
+          axios.post(
+            WATER_API_ROUTES.WATER_DOC_LIST,
+            { id },
+            { headers: { Authorization: `Bearer ${token}` } },
+          ),
+        ]);
+      console.log('Payment Receipt:', waterDue?.data);
+
+      if (waterDue?.data?.status) setWaterDue(waterDue.data.data);
+      if (workflowRes?.data?.status) setWorkflowData(workflowRes.data.data);
+      if (paymentRes?.data?.status) setTradeDue(paymentRes.data.data);
+      if (paymentRes?.data?.status) setTradPaymentRecipt(paymentRes.data.data);
+      if (documentRes?.data?.status) setDocuments(documentRes.data.data);
+    } catch (err) {
+      console.log('❌ Error fetching data:', err.response?.data || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // fetchAllData();
+
+  useEffect(() => {
     fetchAllData();
   }, [id]);
 
@@ -386,7 +384,7 @@ const Details = ({ route }) => {
               style={[styles.tradeLicenseBtn, { flex: 1 }]}
               onPress={() => setShowPaymentModal(true)}
             >
-              <Text style={styles.tradeLicenseText}>View Payment</Text>
+              <Text style={styles.tradeLicenseText}>Make Payment</Text>
             </TouchableOpacity>
           )}
 
@@ -424,12 +422,14 @@ const Details = ({ route }) => {
         tradeDetails={waterDue}
         tradeDetails1={tradeDetails}
         id={id}
+        fetchAllData={fetchAllData}
       />
       <PaymentModal
         visible={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         tradeDetails={waterDue}
         id={id}
+        fetchAllData={fetchAllData}
       />
 
       <DocumentModal
