@@ -127,7 +127,7 @@ const VerificationCard = ({
           >
             <Text style={{ color: calendarValue ? '#333' : '#aaa' }}>
               {calendarValue
-                ? moment(calendarValue).format('MMMM YYYY')
+                ? moment(calendarValue).format('YYYY-MM')
                 : 'Select Date'}
             </Text>
           </TouchableOpacity>

@@ -275,9 +275,9 @@ const SurveyPage = ({ route, navigation }) => {
         if (!getFloorState(floor.id, 'dateFrom', 'verification')) {
           errors.push(`${floorName}: Date From verification is required`);
         }
-        if (!getFloorState(floor.id, 'dateTo', 'verification')) {
-          errors.push(`${floorName}: Date To verification is required`);
-        }
+        // if (!getFloorState(floor.id, 'dateTo', 'verification')) {
+        //   errors.push(`${floorName}: Date To verification is required`);
+        // }
       });
     }
 
@@ -601,10 +601,20 @@ const SurveyPage = ({ route, navigation }) => {
 
   const formatDate = date => {
     if (!date) return 'Select Date';
-    const d = new Date(date);
-    return `${d.toLocaleString('default', {
-      month: 'long',
-    })} ${d.getFullYear()}`;
+
+    try {
+      const d = new Date(date);
+
+      // Check if date is valid
+      if (isNaN(d.getTime())) return 'Select Date';
+
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      return `${year}-${month}`;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Select Date';
+    }
   };
 
   useEffect(() => {
@@ -1232,7 +1242,7 @@ const SurveyPage = ({ route, navigation }) => {
                       showError={showError} // pass boolean
                     />
                     <VerificationCard
-                      label="Date To"
+                      label="Date Upto"
                       value={floor.dateUpto || ''}
                       selectedVerification={getFloorState(
                         floor.id,
@@ -1263,7 +1273,6 @@ const SurveyPage = ({ route, navigation }) => {
                         else if (floor.floorMasterId === 2)
                           setShowDateToBasementPicker(true);
                       }}
-                      showError={showError} // pass boolean
                     />
                   </View>
                 ))}

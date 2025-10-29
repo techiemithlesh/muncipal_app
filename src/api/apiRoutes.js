@@ -46,7 +46,10 @@ export const HOLDIGN_API_ROUTES ={
   DETAILS_API:`${BASE_URL}/api/property/get-prop-dtl`,
   MASTER_DATA_API:`${BASE_URL}/api/property/get-saf-master-data`,
   DEMAND_API:`${BASE_URL}/api/property/get-prop-demand`,
-  PAY_DEMAND_API:`${BASE_URL}/api/property/pay-prop-demand`
+  PAY_DEMAND_API:`${BASE_URL}/api/property/pay-prop-demand`,
+  RECEIPT_API:`${BASE_URL}/api/property/payment-receipt`
+
+  
 };
 
 export const Water_Api = `${BASE_URL}/api/water/app`;
@@ -68,6 +71,9 @@ export const WATER_API_ROUTES = {
   TEST_REQUEST:`${Water_Api}/test-request`,
  CONSUMER_FIELD_VERIFICATION_API: `${Water_Api}/field-verification`,
   GET_FIELD_VERIFICATION_API: `${Water_Api}/get-field-verification`,
+  GET_FIELD_VERIFICATION_DTLS_API: `${Water_Api}/field-verification-dtl`,
+
+
 
 }
 
@@ -89,5 +95,14 @@ export const CUSTOMER_API ={
 export const  PAYMENT_MODE = {
   PAYMENT_MODE_API:`${BASE_URL}/api/property/report/payment-mode`
 }
+
+export const FORGET_PASS_API = `${BASE_URL}/api/forgot-password`
+export const OTP_VERIFY_API = `${BASE_URL}/api/otp-verify`
+export const CHANGE_PASS_API = `${BASE_URL}/api/otp-change-pass`
+
+
+
+
+
 
   

@@ -17,6 +17,7 @@ import HeaderNavigation from '../../Components/HeaderNavigation';
 import { useNavigation } from '@react-navigation/native';
 import { getToken } from '../../utils/auth';
 import { showToast } from '../../utils/toast';
+import { PaymentReceiptModal } from './InboxModels';
 
 const InboxDtls = ({ route }) => {
   const [showWorkflowModal, setShowWorkflowModal] = useState(false);
@@ -27,6 +28,10 @@ const InboxDtls = ({ route }) => {
   const [paymentDtl, setPaymentDtl] = useState(null);
   const [levelRemarks, setLevelRemarks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [paymentId, setPaymentId] = useState(null);
+  const [paymentReceipt, setPaymentReceipt] = useState(null);
+
+  const [receiptVisible, setReceiptVisible] = useState(false);
 
   const id = route?.params?.id;
   const navigation = useNavigation();
@@ -43,10 +48,14 @@ const InboxDtls = ({ route }) => {
         { id: Number(id) },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-
+      console.log('trade Details', tradeRes.data.data);
       if (tradeRes?.data?.status && tradeRes.data.data) {
         setTradeDetails(tradeRes.data.data);
+
         setPaymentDtl(tradeRes.data.data.tranDtls?.[0] || null);
+        const tranId = tradeRes.data.data.tranDtls?.[0]?.id || null;
+        setPaymentId(tranId);
+        console.log('Payment ID:', tranId);
         setLevelRemarks(tradeRes.data.data.levelRemarks || []);
       }
     } catch (err) {
@@ -62,6 +71,38 @@ const InboxDtls = ({ route }) => {
     fetchTradeDetails();
   }, [id]);
 
+  const fetchPaymentReceipt = async paymentId => {
+    if (!paymentId) return;
+
+    try {
+      const token = await getToken();
+
+      const receiptRes = await axios.post(
+        API_ROUTES.TRADE_PAYMENT_RECEIPT,
+        { id: paymentId }, // <-- corrected key
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      // console.log('Full Payment Receipt Response:', receiptRes);
+      // console.log('Receipt Data:', receiptRes.data);
+      // console.log('Status:', receiptRes.data.status);
+      // console.log('Message:', receiptRes.data.message);
+      // console.log('Data:', receiptRes.data.data);
+      if (receiptRes?.data?.status) {
+        setPaymentReceipt(receiptRes.data.data); // store in state
+      } else {
+        console.log('No payment receipt found:', receiptRes.data.message);
+      }
+    } catch (err) {
+      console.log(
+        '❌ Error fetching payment receipt:',
+        err.response?.data || err.message,
+      );
+    }
+  };
+
+  if (paymentId) {
+    fetchPaymentReceipt(paymentId);
+  }
   const handleWorkflowAction = async status => {
     if (!id) return;
     if (!remarks.trim()) {
@@ -225,7 +266,12 @@ const InboxDtls = ({ route }) => {
               <Text style={styles.paymentCol}>{paymentDtl.paymentMode}</Text>
               <Text style={styles.paymentCol}>{paymentDtl.tranType}</Text>
               <TouchableOpacity style={styles.viewBtn}>
-                <Text style={styles.viewBtnText}>View</Text>
+                <Text
+                  style={styles.viewBtnText}
+                  onPress={() => setReceiptVisible(true)}
+                >
+                  View
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -286,7 +332,11 @@ const InboxDtls = ({ route }) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-
+      <PaymentReceiptModal
+        visible={receiptVisible}
+        onClose={() => setReceiptVisible(false)}
+        receiptData={paymentReceipt}
+      />
       {/* Workflow Modal */}
       <Modal
         visible={showWorkflowModal}
@@ -427,7 +477,7 @@ const styles = StyleSheet.create({
   },
   paymentCol: { flex: 1, textAlign: 'center' },
   viewBtn: {
-    backgroundColor: '#d71717',
+    backgroundColor: Colors.primary,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 4,

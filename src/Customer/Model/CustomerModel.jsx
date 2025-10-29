@@ -1292,6 +1292,7 @@ export const PaymentReceiptModal1 = ({ visible, onClose, receiptData }) => (
 
 export const PaymentReceiptModal = ({ visible, onClose, receiptData }) => {
   if (!receiptData || !receiptData.data) return null;
+  console.log('recipt data', receiptData);
 
   const { data } = receiptData;
 

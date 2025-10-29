@@ -30,692 +30,692 @@ import { API_ROUTES } from '../../api/apiRoutes';
 import { getToken } from '../../utils/auth';
 import axios from 'axios';
 // 1. View Trade License Modal
-export const ViewTradeLicenseModal = ({ visible, onClose, tradeDetails }) => (
-  <Modal visible={visible} transparent animationType="slide">
-    <View style={styles.overlay}>
-      <View style={styles.modalContent}>
-        <ScrollView nestedScrollEnabled>
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Text style={styles.closeText}>Close</Text>
-          </TouchableOpacity>
+// export const ViewTradeLicenseModal = ({ visible, onClose, tradeDetails }) => (
+//   <Modal visible={visible} transparent animationType="slide">
+//     <View style={styles.overlay}>
+//       <View style={styles.modalContent}>
+//         <ScrollView nestedScrollEnabled>
+//           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+//             <Text style={styles.closeText}>Close</Text>
+//           </TouchableOpacity>
 
-          <Text style={styles.mainTitle}>
-            Municipal Trade Licence Approval Certificate
-          </Text>
+//           <Text style={styles.mainTitle}>
+//             Municipal Trade Licence Approval Certificate
+//           </Text>
 
-          <Text style={styles.mainTitle}>Municipal License</Text>
+//           <Text style={styles.mainTitle}>Municipal License</Text>
 
-          <Text style={styles.subTitle}>RANCHI MUNICIPAL CORPORATION</Text>
-          <Text style={styles.tinyText}>
-            (This certificate relates to Section 455(J) Jharkhand Municipal Act
-            2011)
-          </Text>
+//           <Text style={styles.subTitle}>RANCHI MUNICIPAL CORPORATION</Text>
+//           <Text style={styles.tinyText}>
+//             (This certificate relates to Section 455(J) Jharkhand Municipal Act
+//             2011)
+//           </Text>
 
-          {[
-            [
-              'Municipal Trade Licence No:',
-              tradeDetails?.licenseNo || 'RAN55020319162233',
-            ],
-            ['Issue Date:', tradeDetails?.issueDate || '03-02-2019'],
-            ['Validity:', tradeDetails?.validUpto || '23-01-2020'],
-            [
-              'Owner/Entity Name:',
-              tradeDetails?.firmName || 'GOPAL GENERAL STORE',
-            ],
-            [
-              'Owner Name:',
-              tradeDetails?.owners?.[0]?.ownerName || 'ARVIND KUMAR',
-            ],
-            ['Nature of Entity:', tradeDetails?.firmType || 'GENERAL STORE'],
-            [
-              'Nature of Business:',
-              tradeDetails?.natureOfBusiness ||
-                'GRAIN SELLING WHOLESALE OR STORING FOR WHOLESALE TRADE PARCHING',
-            ],
-            ['Business Code:', tradeDetails?.businessCode || '(83)'],
-            ['Date of Application:', tradeDetails?.applyDate || '24-01-2019'],
-            ['Ward No.:', tradeDetails?.wardNo || '55'],
-            ['Holding No.:', tradeDetails?.holdingNo || 'N/A'],
-            [
-              'Street Address:',
-              tradeDetails?.address ||
-                'NEW NAGAR BANDHGARI DIPATOLI RANCHI834001',
-            ],
-            [
-              'Application No.:',
-              tradeDetails?.applicationNo || '162233240119104140',
-            ],
-            [
-              'Mobile No.:',
-              tradeDetails?.owners?.[0]?.mobileNo || '9709226782',
-            ],
-          ].map(([label, value], index) => (
-            <View style={styles.rowContainer} key={index}>
-              <Text style={styles.label}>{label}</Text>
-              <Text style={styles.value}>{value}</Text>
-            </View>
-          ))}
+//           {[
+//             [
+//               'Municipal Trade Licence No:',
+//               tradeDetails?.licenseNo || 'RAN55020319162233',
+//             ],
+//             ['Issue Date:', tradeDetails?.issueDate || '03-02-2019'],
+//             ['Validity:', tradeDetails?.validUpto || '23-01-2020'],
+//             [
+//               'Owner/Entity Name:',
+//               tradeDetails?.firmName || 'GOPAL GENERAL STORE',
+//             ],
+//             [
+//               'Owner Name:',
+//               tradeDetails?.owners?.[0]?.ownerName || 'ARVIND KUMAR',
+//             ],
+//             ['Nature of Entity:', tradeDetails?.firmType || 'GENERAL STORE'],
+//             [
+//               'Nature of Business:',
+//               tradeDetails?.natureOfBusiness ||
+//                 'GRAIN SELLING WHOLESALE OR STORING FOR WHOLESALE TRADE PARCHING',
+//             ],
+//             ['Business Code:', tradeDetails?.businessCode || '(83)'],
+//             ['Date of Application:', tradeDetails?.applyDate || '24-01-2019'],
+//             ['Ward No.:', tradeDetails?.wardNo || '55'],
+//             ['Holding No.:', tradeDetails?.holdingNo || 'N/A'],
+//             [
+//               'Street Address:',
+//               tradeDetails?.address ||
+//                 'NEW NAGAR BANDHGARI DIPATOLI RANCHI834001',
+//             ],
+//             [
+//               'Application No.:',
+//               tradeDetails?.applicationNo || '162233240119104140',
+//             ],
+//             [
+//               'Mobile No.:',
+//               tradeDetails?.owners?.[0]?.mobileNo || '9709226782',
+//             ],
+//           ].map(([label, value], index) => (
+//             <View style={styles.rowContainer} key={index}>
+//               <Text style={styles.label}>{label}</Text>
+//               <Text style={styles.value}>{value}</Text>
+//             </View>
+//           ))}
 
-          <Text style={styles.declaration}>
-            This is to declare that{' '}
-            <Text style={{ fontWeight: 'bold' }}>
-              {tradeDetails?.firmName || 'GOPAL GENERAL STORE'}
-            </Text>{' '}
-            having application number{' '}
-            <Text style={{ fontWeight: 'bold' }}>
-              {tradeDetails?.applicationNo || '162233240119104140'}
-            </Text>{' '}
-            has been successfully registered with satisfactory compliance of
-            registration criteria.
-          </Text>
+//           <Text style={styles.declaration}>
+//             This is to declare that{' '}
+//             <Text style={{ fontWeight: 'bold' }}>
+//               {tradeDetails?.firmName || 'GOPAL GENERAL STORE'}
+//             </Text>{' '}
+//             having application number{' '}
+//             <Text style={{ fontWeight: 'bold' }}>
+//               {tradeDetails?.applicationNo || '162233240119104140'}
+//             </Text>{' '}
+//             has been successfully registered with satisfactory compliance of
+//             registration criteria.
+//           </Text>
 
-          <View style={{ marginTop: 10 }}>
-            {[
-              '1. The business will run according to the license issued.',
-              '2. Prior permission from the local body is necessary if the business is changed.',
-              '3. Information to the local body is necessary for extension of the area.',
-              '4. Prior intimation to local body regarding winding off business is necessary.',
-              '5. Renewal is necessary one month before expiry.',
-              '6. Penalty may be levied under Section 459.',
-              '7. Illegal parking in front of the firm is non-permissible.',
-              '8. Dustbins must be available at premises and adhere to waste disposal rules.',
-              '9. SWM & Plastic Waste Management Rules 2016 shall be adhered to.',
-            ].map((term, i) => (
-              <Text style={styles.term} key={i}>
-                {term}
-              </Text>
-            ))}
-          </View>
+//           <View style={{ marginTop: 10 }}>
+//             {[
+//               '1. The business will run according to the license issued.',
+//               '2. Prior permission from the local body is necessary if the business is changed.',
+//               '3. Information to the local body is necessary for extension of the area.',
+//               '4. Prior intimation to local body regarding winding off business is necessary.',
+//               '5. Renewal is necessary one month before expiry.',
+//               '6. Penalty may be levied under Section 459.',
+//               '7. Illegal parking in front of the firm is non-permissible.',
+//               '8. Dustbins must be available at premises and adhere to waste disposal rules.',
+//               '9. SWM & Plastic Waste Management Rules 2016 shall be adhered to.',
+//             ].map((term, i) => (
+//               <Text style={styles.term} key={i}>
+//                 {term}
+//               </Text>
+//             ))}
+//           </View>
 
-          <Text style={styles.note}>
-            Note: This is a computer-generated license. No physical signature is
-            required.
-          </Text>
+//           <Text style={styles.note}>
+//             Note: This is a computer-generated license. No physical signature is
+//             required.
+//           </Text>
 
-          <TouchableOpacity style={styles.printBtn}>
-            <Text style={styles.printText}>Print</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
-    </View>
-  </Modal>
-);
+//           <TouchableOpacity style={styles.printBtn}>
+//             <Text style={styles.printText}>Print</Text>
+//           </TouchableOpacity>
+//         </ScrollView>
+//       </View>
+//     </View>
+//   </Modal>
+// );
 
-// 2. View Demand Modal
-export const ViewDemandModal = ({
-  visible,
-  onClose,
-  demandDetails,
-  tradeDetails1,
-}) => {
-  // useEffect(() => {
-  //   if (visible) {
-  //     console.log('Full Response:', demandDetails);
-  //     // console.log('tradeDue:', tradeDetails.data.data);
-  //   }
-  // }, [visible]);
+// // 2. View Demand Modal
+// export const ViewDemandModal = ({
+//   visible,
+//   onClose,
+//   demandDetails,
+//   tradeDetails1,
+// }) => {
+//   // useEffect(() => {
+//   //   if (visible) {
+//   //     console.log('Full Response:', demandDetails);
+//   //     // console.log('tradeDue:', tradeDetails.data.data);
+//   //   }
+//   // }, [visible]);
 
-  return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.overlay}>
-        <View style={styles.modalContent}>
-          <ScrollView>
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-              <Text style={styles.closeText}>Close</Text>
-            </TouchableOpacity>
+//   return (
+//     <Modal visible={visible} transparent animationType="slide">
+//       <View style={styles.overlay}>
+//         <View style={styles.modalContent}>
+//           <ScrollView>
+//             <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+//               <Text style={styles.closeText}>Close</Text>
+//             </TouchableOpacity>
 
-            <Text style={styles.mainTitle}>Demand Details</Text>
+//             <Text style={styles.mainTitle}>Demand Details</Text>
 
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Current Demand</Text>
+//             <View style={styles.sectionContainer}>
+//               <Text style={styles.sectionTitle}>Current Demand</Text>
 
-              <View style={styles.rowContainer}>
-                <Text style={styles.label}>Application No:</Text>
-                <Text style={styles.value}>
-                  {demandDetails?.applicationNo || 'N/A'}
-                </Text>
-              </View>
+//               <View style={styles.rowContainer}>
+//                 <Text style={styles.label}>Application No:</Text>
+//                 <Text style={styles.value}>
+//                   {demandDetails?.applicationNo || 'N/A'}
+//                 </Text>
+//               </View>
 
-              <View style={styles.rowContainer}>
-                <Text style={styles.label}>License Fee:</Text>
-                <Text style={styles.value}>
-                  ₹ {demandDetails?.licenseCharge || '0'}
-                </Text>
-              </View>
+//               <View style={styles.rowContainer}>
+//                 <Text style={styles.label}>License Fee:</Text>
+//                 <Text style={styles.value}>
+//                   ₹ {demandDetails?.licenseCharge || '0'}
+//                 </Text>
+//               </View>
 
-              <View style={styles.rowContainer}>
-                <Text style={styles.label}>Processing Fee:</Text>
-                <Text style={styles.value}>
-                  ₹ {demandDetails?.processingFee || '0'}
-                </Text>
-              </View>
+//               <View style={styles.rowContainer}>
+//                 <Text style={styles.label}>Processing Fee:</Text>
+//                 <Text style={styles.value}>
+//                   ₹ {demandDetails?.processingFee || '0'}
+//                 </Text>
+//               </View>
 
-              <View style={styles.rowContainer}>
-                <Text style={styles.label}>Late Fee:</Text>
-                <Text style={styles.value}>
-                  ₹ {demandDetails?.latePenalty || '0'}
-                </Text>
-              </View>
+//               <View style={styles.rowContainer}>
+//                 <Text style={styles.label}>Late Fee:</Text>
+//                 <Text style={styles.value}>
+//                   ₹ {demandDetails?.latePenalty || '0'}
+//                 </Text>
+//               </View>
 
-              <View style={styles.divider} />
+//               <View style={styles.divider} />
 
-              <View style={styles.rowContainer}>
-                <Text style={[styles.label, styles.totalText]}>
-                  Total Amount:
-                </Text>
-                <Text style={[styles.value, styles.totalText]}>
-                  ₹ {demandDetails?.totalCharge || '0'}
-                </Text>
-              </View>
+//               <View style={styles.rowContainer}>
+//                 <Text style={[styles.label, styles.totalText]}>
+//                   Total Amount:
+//                 </Text>
+//                 <Text style={[styles.value, styles.totalText]}>
+//                   ₹ {demandDetails?.totalCharge || '0'}
+//                 </Text>
+//               </View>
 
-              <View style={styles.rowContainer}>
-                <Text style={styles.label}>Due Date:</Text>
-                <Text style={styles.value}>
-                  {demandDetails?.dueDate || '24-08-2025'}
-                </Text>
-              </View>
+//               <View style={styles.rowContainer}>
+//                 <Text style={styles.label}>Due Date:</Text>
+//                 <Text style={styles.value}>
+//                   {demandDetails?.dueDate || '24-08-2025'}
+//                 </Text>
+//               </View>
 
-              <View style={styles.rowContainer}>
-                <Text style={styles.label}>Payment Status:</Text>
-                <Text
-                  style={[
-                    styles.value,
-                    {
-                      color:
-                        demandDetails?.paymentStatus === 'Paid'
-                          ? 'green'
-                          : 'red',
-                    },
-                  ]}
-                >
-                  {demandDetails?.paymentStatus || 'Pending'}
-                </Text>
-              </View>
-            </View>
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
-  );
-};
+//               <View style={styles.rowContainer}>
+//                 <Text style={styles.label}>Payment Status:</Text>
+//                 <Text
+//                   style={[
+//                     styles.value,
+//                     {
+//                       color:
+//                         demandDetails?.paymentStatus === 'Paid'
+//                           ? 'green'
+//                           : 'red',
+//                     },
+//                   ]}
+//                 >
+//                   {demandDetails?.paymentStatus || 'Pending'}
+//                 </Text>
+//               </View>
+//             </View>
+//           </ScrollView>
+//         </View>
+//       </View>
+//     </Modal>
+//   );
+// };
 
-export const PaymentModal = ({
-  visible,
-  onClose,
-  tradeDetails,
-  demandDetails,
-  setUpdatedTradeDetails,
-}) => {
-  const [year, setYear] = useState(null);
-  const [paymentMode, setPaymentMode] = useState(null);
-  const [refNo, setRefNo] = useState('');
-  const [chequeDate, setChequeDate] = useState(new Date());
-  const [bankName, setBankName] = useState('');
-  const [branchName, setBranchName] = useState('');
-  const [paymentType, setPaymentType] = useState('FULL');
+// export const PaymentModal = ({
+//   visible,
+//   onClose,
+//   tradeDetails,
+//   demandDetails,
+//   setUpdatedTradeDetails,
+// }) => {
+//   const [year, setYear] = useState(null);
+//   const [paymentMode, setPaymentMode] = useState(null);
+//   const [refNo, setRefNo] = useState('');
+//   const [chequeDate, setChequeDate] = useState(new Date());
+//   const [bankName, setBankName] = useState('');
+//   const [branchName, setBranchName] = useState('');
+//   const [paymentType, setPaymentType] = useState('FULL');
 
-  const processPayment = async () => {
-    try {
-      const token = await getToken();
-      if (!token) {
-        Alert.alert('Error', 'Token not found');
-        return { success: false };
-      }
+//   const processPayment = async () => {
+//     try {
+//       const token = await getToken();
+//       if (!token) {
+//         Alert.alert('Error', 'Token not found');
+//         return { success: false };
+//       }
 
-      const paymentData = {
-        id: tradeDetails?.id,
-        paymentType: paymentType.toUpperCase(),
-        paymentMode: paymentMode.toUpperCase(),
-        chequeNo: paymentMode.toUpperCase() === 'CASH' ? '' : refNo,
-        chequeDate:
-          paymentMode.toUpperCase() === 'CASH'
-            ? ''
-            : chequeDate.toISOString().split('T')[0],
-        bankName: paymentMode.toUpperCase() === 'CASH' ? '' : bankName,
-        branchName: paymentMode.toUpperCase() === 'CASH' ? '' : branchName,
-      };
+//       const paymentData = {
+//         id: tradeDetails?.id,
+//         paymentType: paymentType.toUpperCase(),
+//         paymentMode: paymentMode.toUpperCase(),
+//         chequeNo: paymentMode.toUpperCase() === 'CASH' ? '' : refNo,
+//         chequeDate:
+//           paymentMode.toUpperCase() === 'CASH'
+//             ? ''
+//             : chequeDate.toISOString().split('T')[0],
+//         bankName: paymentMode.toUpperCase() === 'CASH' ? '' : bankName,
+//         branchName: paymentMode.toUpperCase() === 'CASH' ? '' : branchName,
+//       };
 
-      console.log('Processing payment:', paymentData);
+//       console.log('Processing payment:', paymentData);
 
-      const response = await axios.post(
-        API_ROUTES.TRADE_PAY_DEMAND,
-        paymentData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
+//       const response = await axios.post(
+//         API_ROUTES.TRADE_PAY_DEMAND,
+//         paymentData,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//             'Content-Type': 'application/json',
+//           },
+//         },
+//       );
 
-      console.log('API Response:', response.data.status);
-      console.log('Message:', response?.data?.message);
-      console.log('Data:', response?.data?.data);
+//       console.log('API Response:', response.data.status);
+//       console.log('Message:', response?.data?.message);
+//       console.log('Data:', response?.data?.data);
 
-      const tranId =
-        response?.data?.data && typeof response.data.data === 'object'
-          ? response.data.data.tranId
-          : null;
+//       const tranId =
+//         response?.data?.data && typeof response.data.data === 'object'
+//           ? response.data.data.tranId
+//           : null;
 
-      console.log('Transaction ID:', tranId);
+//       console.log('Transaction ID:', tranId);
 
-      if (response.data.status === true) {
-        Alert.alert(
-          'Success',
-          response.data.message || 'Payment Successfully Done',
-        );
+//       if (response.data.status === true) {
+//         Alert.alert(
+//           'Success',
+//           response.data.message || 'Payment Successfully Done',
+//         );
 
-        setUpdatedTradeDetails(prev => ({
-          ...prev,
-          demandAmount: 0,
-          payableAmount: 0,
-          realizationPenalty: 0,
-          demandList: prev?.demandList?.map(i => ({
-            ...i,
-            connFee: 0,
-            penalty: 0,
-            amount: 0,
-          })),
-        }));
+//         setUpdatedTradeDetails(prev => ({
+//           ...prev,
+//           demandAmount: 0,
+//           payableAmount: 0,
+//           realizationPenalty: 0,
+//           demandList: prev?.demandList?.map(i => ({
+//             ...i,
+//             connFee: 0,
+//             penalty: 0,
+//             amount: 0,
+//           })),
+//         }));
 
-        return { success: true, tranId };
-      } else {
-        Alert.alert('Payment Error', response.data.message || 'Payment failed');
-        return { success: false };
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      Alert.alert(
-        'Payment Error',
-        error.response?.data?.message ||
-          'Failed to process payment. Please try again.',
-      );
-      return { success: false };
-    }
-  };
+//         return { success: true, tranId };
+//       } else {
+//         Alert.alert('Payment Error', response.data.message || 'Payment failed');
+//         return { success: false };
+//       }
+//     } catch (error) {
+//       console.error('Payment error:', error);
+//       Alert.alert(
+//         'Payment Error',
+//         error.response?.data?.message ||
+//           'Failed to process payment. Please try again.',
+//       );
+//       return { success: false };
+//     }
+//   };
 
-  return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.overlay}>
-        <View style={styles.modalContent}>
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-              <Text style={styles.closeText}>✕</Text>
-            </TouchableOpacity>
+//   return (
+//     <Modal visible={visible} transparent animationType="slide">
+//       <View style={styles.overlay}>
+//         <View style={styles.modalContent}>
+//           <ScrollView contentContainerStyle={styles.scrollContent}>
+//             <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+//               <Text style={styles.closeText}>✕</Text>
+//             </TouchableOpacity>
 
-            <Text style={styles.mainTitle}>Licence Required for the Year</Text>
+//             <Text style={styles.mainTitle}>Licence Required for the Year</Text>
 
-            <View style={styles.row}>
-              <Text style={styles.label}>License For*</Text>
-              <Dropdown
-                style={styles.dropdown}
-                data={[
-                  { label: 'Year 1', value: 1 },
-                  { label: 'Year 2', value: 2 },
-                  { label: 'Year 3', value: 3 },
-                  { label: 'Year 4', value: 4 },
-                  { label: 'Year 5', value: 5 },
-                  { label: 'Year 6', value: 6 },
-                  { label: 'Year 7', value: 7 },
-                  { label: 'Year 8', value: 8 },
-                  { label: 'Year 9', value: 9 },
-                  { label: 'Year 10', value: 10 },
-                ]}
-                labelField="label"
-                valueField="value"
-                placeholder="Choose Year"
-                value={year}
-                onChange={item => setYear(item.value)}
-              />
-            </View>
+//             <View style={styles.row}>
+//               <Text style={styles.label}>License For*</Text>
+//               <Dropdown
+//                 style={styles.dropdown}
+//                 data={[
+//                   { label: 'Year 1', value: 1 },
+//                   { label: 'Year 2', value: 2 },
+//                   { label: 'Year 3', value: 3 },
+//                   { label: 'Year 4', value: 4 },
+//                   { label: 'Year 5', value: 5 },
+//                   { label: 'Year 6', value: 6 },
+//                   { label: 'Year 7', value: 7 },
+//                   { label: 'Year 8', value: 8 },
+//                   { label: 'Year 9', value: 9 },
+//                   { label: 'Year 10', value: 10 },
+//                 ]}
+//                 labelField="label"
+//                 valueField="value"
+//                 placeholder="Choose Year"
+//                 value={year}
+//                 onChange={item => setYear(item.value)}
+//               />
+//             </View>
 
-            <View style={styles.row}>
-              <Text style={styles.label}>Charge Applied*</Text>
-              <TextInput
-                style={styles.input}
-                value={demandDetails?.totalCharge?.toString() || '0'}
-                editable={false}
-              />
-            </View>
+//             <View style={styles.row}>
+//               <Text style={styles.label}>Charge Applied*</Text>
+//               <TextInput
+//                 style={styles.input}
+//                 value={demandDetails?.totalCharge?.toString() || '0'}
+//                 editable={false}
+//               />
+//             </View>
 
-            <View style={styles.row}>
-              <Text style={styles.label}>Penalty*</Text>
-              <TextInput style={styles.input} value="0" editable={false} />
-            </View>
+//             <View style={styles.row}>
+//               <Text style={styles.label}>Penalty*</Text>
+//               <TextInput style={styles.input} value="0" editable={false} />
+//             </View>
 
-            <View style={styles.row}>
-              <Text style={styles.label}>Denial Amount*</Text>
-              <TextInput
-                style={styles.input}
-                value={demandDetails?.latePenalty || '0'}
-                editable={false}
-              />
-            </View>
+//             <View style={styles.row}>
+//               <Text style={styles.label}>Denial Amount*</Text>
+//               <TextInput
+//                 style={styles.input}
+//                 value={demandDetails?.latePenalty || '0'}
+//                 editable={false}
+//               />
+//             </View>
 
-            <View style={styles.row}>
-              <Text style={styles.label}>Total Charge*</Text>
-              <TextInput
-                style={styles.input}
-                value={demandDetails?.totalCharge?.toString() || '0'}
-                editable={false}
-              />
-            </View>
+//             <View style={styles.row}>
+//               <Text style={styles.label}>Total Charge*</Text>
+//               <TextInput
+//                 style={styles.input}
+//                 value={demandDetails?.totalCharge?.toString() || '0'}
+//                 editable={false}
+//               />
+//             </View>
 
-            <View style={styles.row}>
-              <Text style={styles.label}>Payment Mode*</Text>
-              <Dropdown
-                style={styles.dropdown}
-                data={[
-                  { label: 'CASH', value: 'CASH' },
-                  { label: 'CHEQUE', value: 'CHEQUE' },
-                  { label: 'ONLINE', value: 'ONLINE' },
-                  { label: 'DD', value: 'DD' },
-                ]}
-                labelField="label"
-                valueField="value"
-                placeholder="Choose Payment Mode"
-                value={paymentMode}
-                onChange={item => setPaymentMode(item.value)}
-              />
-            </View>
+//             <View style={styles.row}>
+//               <Text style={styles.label}>Payment Mode*</Text>
+//               <Dropdown
+//                 style={styles.dropdown}
+//                 data={[
+//                   { label: 'CASH', value: 'CASH' },
+//                   { label: 'CHEQUE', value: 'CHEQUE' },
+//                   { label: 'ONLINE', value: 'ONLINE' },
+//                   { label: 'DD', value: 'DD' },
+//                 ]}
+//                 labelField="label"
+//                 valueField="value"
+//                 placeholder="Choose Payment Mode"
+//                 value={paymentMode}
+//                 onChange={item => setPaymentMode(item.value)}
+//               />
+//             </View>
 
-            {paymentMode !== 'CASH' && (
-              <>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Ref No*</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={refNo}
-                    onChangeText={setRefNo}
-                    placeholder="Enter Reference Number"
-                  />
-                </View>
+//             {paymentMode !== 'CASH' && (
+//               <>
+//                 <View style={styles.row}>
+//                   <Text style={styles.label}>Ref No*</Text>
+//                   <TextInput
+//                     style={styles.input}
+//                     value={refNo}
+//                     onChangeText={setRefNo}
+//                     placeholder="Enter Reference Number"
+//                   />
+//                 </View>
 
-                <View style={styles.row}>
-                  <Text style={styles.label}>Cheque Date*</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={chequeDate.toISOString().split('T')[0]}
-                    onChangeText={text => setChequeDate(new Date(text))}
-                    placeholder="YYYY-MM-DD"
-                  />
-                </View>
+//                 <View style={styles.row}>
+//                   <Text style={styles.label}>Cheque Date*</Text>
+//                   <TextInput
+//                     style={styles.input}
+//                     value={chequeDate.toISOString().split('T')[0]}
+//                     onChangeText={text => setChequeDate(new Date(text))}
+//                     placeholder="YYYY-MM-DD"
+//                   />
+//                 </View>
 
-                <View style={styles.row}>
-                  <Text style={styles.label}>Bank Name*</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={bankName}
-                    onChangeText={setBankName}
-                    placeholder="Enter Bank Name"
-                  />
-                </View>
+//                 <View style={styles.row}>
+//                   <Text style={styles.label}>Bank Name*</Text>
+//                   <TextInput
+//                     style={styles.input}
+//                     value={bankName}
+//                     onChangeText={setBankName}
+//                     placeholder="Enter Bank Name"
+//                   />
+//                 </View>
 
-                <View style={styles.row}>
-                  <Text style={styles.label}>Branch Name*</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={branchName}
-                    onChangeText={setBranchName}
-                    placeholder="Enter Branch Name"
-                  />
-                </View>
-              </>
-            )}
+//                 <View style={styles.row}>
+//                   <Text style={styles.label}>Branch Name*</Text>
+//                   <TextInput
+//                     style={styles.input}
+//                     value={branchName}
+//                     onChangeText={setBranchName}
+//                     placeholder="Enter Branch Name"
+//                   />
+//                 </View>
+//               </>
+//             )}
 
-            <TouchableOpacity
-              style={styles.submitBtn}
-              onPress={async () => {
-                if (!year || !paymentMode) {
-                  Alert.alert(
-                    'Validation Error',
-                    'Please fill required fields',
-                  );
-                  return;
-                }
+//             <TouchableOpacity
+//               style={styles.submitBtn}
+//               onPress={async () => {
+//                 if (!year || !paymentMode) {
+//                   Alert.alert(
+//                     'Validation Error',
+//                     'Please fill required fields',
+//                   );
+//                   return;
+//                 }
 
-                if (
-                  paymentMode !== 'CASH' &&
-                  (!refNo || !bankName || !branchName)
-                ) {
-                  Alert.alert(
-                    'Validation Error',
-                    'Please fill all payment details',
-                  );
-                  return;
-                }
+//                 if (
+//                   paymentMode !== 'CASH' &&
+//                   (!refNo || !bankName || !branchName)
+//                 ) {
+//                   Alert.alert(
+//                     'Validation Error',
+//                     'Please fill all payment details',
+//                   );
+//                   return;
+//                 }
 
-                const paymentResult = await processPayment();
+//                 const paymentResult = await processPayment();
 
-                if (paymentResult.success) {
-                  console.log('Payment Done:', paymentResult.tranId);
-                  onClose();
-                  // Add additional actions if needed
-                }
-              }}
-            >
-              <Text style={styles.submitText}>Pay Now</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
-  );
-};
+//                 if (paymentResult.success) {
+//                   console.log('Payment Done:', paymentResult.tranId);
+//                   onClose();
+//                   // Add additional actions if needed
+//                 }
+//               }}
+//             >
+//               <Text style={styles.submitText}>Pay Now</Text>
+//             </TouchableOpacity>
+//           </ScrollView>
+//         </View>
+//       </View>
+//     </Modal>
+//   );
+// };
 
-const { width, height } = Dimensions.get('window');
-const downloadPDF = async url => {
-  try {
-    const { fs } = RNBlobUtil;
-    const dir = fs.dirs.DownloadDir; // Downloads folder
-    const path = `${dir}/document_${Date.now()}.pdf`;
+// const { width, height } = Dimensions.get('window');
+// const downloadPDF = async url => {
+//   try {
+//     const { fs } = RNBlobUtil;
+//     const dir = fs.dirs.DownloadDir; // Downloads folder
+//     const path = `${dir}/document_${Date.now()}.pdf`;
 
-    const res = await RNBlobUtil.config({
-      fileCache: true,
-      addAndroidDownloads: {
-        useDownloadManager: true,
-        notification: true,
-        path: path,
-        description: 'Downloading PDF...',
-      },
-    }).fetch('GET', url);
+//     const res = await RNBlobUtil.config({
+//       fileCache: true,
+//       addAndroidDownloads: {
+//         useDownloadManager: true,
+//         notification: true,
+//         path: path,
+//         description: 'Downloading PDF...',
+//       },
+//     }).fetch('GET', url);
 
-    showToast('success', '📄 Success', 'PDF Downloaded Successfully!');
-    console.log('PDF saved to:', res.path());
-  } catch (err) {
-    console.error('Download error:', err);
-    Alert.alert('Error', 'Download failed!');
-  }
-};
+//     showToast('success', '📄 Success', 'PDF Downloaded Successfully!');
+//     console.log('PDF saved to:', res.path());
+//   } catch (err) {
+//     console.error('Download error:', err);
+//     Alert.alert('Error', 'Download failed!');
+//   }
+// };
 
-export const DocumentModal = ({ visible, onClose, documents }) => {
-  const [previewVisible, setPreviewVisible] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const flatListRef = useRef(null);
+// export const DocumentModal = ({ visible, onClose, documents }) => {
+//   const [previewVisible, setPreviewVisible] = useState(false);
+//   const [currentIndex, setCurrentIndex] = useState(0);
+//   const flatListRef = useRef(null);
 
-  const openPreview = index => {
-    setCurrentIndex(index);
-    setPreviewVisible(true);
-  };
+//   const openPreview = index => {
+//     setCurrentIndex(index);
+//     setPreviewVisible(true);
+//   };
 
-  const renderPreviewItem = ({ item }) => {
-    const isPDF = item.docPath?.toLowerCase().endsWith('.pdf');
+//   const renderPreviewItem = ({ item }) => {
+//     const isPDF = item.docPath?.toLowerCase().endsWith('.pdf');
 
-    return (
-      <View
-        style={{
-          width,
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        {isPDF ? (
-          <View style={{ alignItems: 'center' }}>
-            {/* PDF Preview via Google Docs viewer */}
-            <WebView
-              source={{
-                uri: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
-                  item.docPath,
-                )}`,
-              }}
-              style={{
-                width: width * 0.95,
-                height: height * 0.75,
-                borderRadius: 10,
-                backgroundColor: 'white',
-              }}
-            />
+//     return (
+//       <View
+//         style={{
+//           width,
+//           justifyContent: 'center',
+//           alignItems: 'center',
+//         }}
+//       >
+//         {isPDF ? (
+//           <View style={{ alignItems: 'center' }}>
+//             {/* PDF Preview via Google Docs viewer */}
+//             <WebView
+//               source={{
+//                 uri: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
+//                   item.docPath,
+//                 )}`,
+//               }}
+//               style={{
+//                 width: width * 0.95,
+//                 height: height * 0.75,
+//                 borderRadius: 10,
+//                 backgroundColor: 'white',
+//               }}
+//             />
 
-            {/* Download Button */}
-            <TouchableOpacity
-              style={styles.downloadBtn}
-              onPress={() => downloadPDF(item.docPath)}
-            >
-              <Text style={styles.downloadText}>Download PDF</Text>
-            </TouchableOpacity>
-            <View style={{ padding: 20 }}>
-              <Text style={{}}>Trade Documents</Text>
-              <PrintButton fileUrl={item.docPath} title="Print" />
-            </View>
-          </View>
-        ) : (
-          <Image
-            source={{ uri: item.docPath }}
-            style={styles.previewImage}
-            resizeMode="contain"
-          />
-        )}
-      </View>
-    );
-  };
+//             {/* Download Button */}
+//             <TouchableOpacity
+//               style={styles.downloadBtn}
+//               onPress={() => downloadPDF(item.docPath)}
+//             >
+//               <Text style={styles.downloadText}>Download PDF</Text>
+//             </TouchableOpacity>
+//             <View style={{ padding: 20 }}>
+//               <Text style={{}}>Trade Documents</Text>
+//               <PrintButton fileUrl={item.docPath} title="Print" />
+//             </View>
+//           </View>
+//         ) : (
+//           <Image
+//             source={{ uri: item.docPath }}
+//             style={styles.previewImage}
+//             resizeMode="contain"
+//           />
+//         )}
+//       </View>
+//     );
+//   };
 
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      presentationStyle="overFullScreen"
-    >
-      <View style={styles.overlay}>
-        {/* Document List Modal */}
-        <View style={styles.modalContent}>
-          <ScrollView>
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-              <Text style={styles.closeText}>Close</Text>
-            </TouchableOpacity>
+//   return (
+//     <Modal
+//       visible={visible}
+//       transparent
+//       animationType="slide"
+//       presentationStyle="overFullScreen"
+//     >
+//       <View style={styles.overlay}>
+//         {/* Document List Modal */}
+//         <View style={styles.modalContent}>
+//           <ScrollView>
+//             <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+//               <Text style={styles.closeText}>Close</Text>
+//             </TouchableOpacity>
 
-            <Text style={styles.mainTitle}>Uploaded Documents</Text>
+//             <Text style={styles.mainTitle}>Uploaded Documents</Text>
 
-            <View style={styles.sectionContainer}>
-              {documents?.length > 0 ? (
-                documents.map((doc, index) => (
-                  <View key={index} style={styles.documentItem}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.documentName}>
-                        {doc.docName} ({doc.ownerName || 'N/A'})
-                      </Text>
-                      <Text style={styles.documentDate}>
-                        Uploaded By: {doc.uploadedBy || 'N/A'}
-                      </Text>
-                      <Text style={styles.documentDate}>
-                        Owner: {doc.ownerName || 'N/A'}
-                      </Text>
-                      <Text style={styles.documentDate}>
-                        Uploaded At: {doc.createdAt?.split('T')[0] || 'N/A'}
-                      </Text>
-                      {doc.verifiedAt && (
-                        <Text style={styles.documentDate}>
-                          Verified At: {doc.verifiedAt}
-                        </Text>
-                      )}
-                    </View>
+//             <View style={styles.sectionContainer}>
+//               {documents?.length > 0 ? (
+//                 documents.map((doc, index) => (
+//                   <View key={index} style={styles.documentItem}>
+//                     <View style={{ flex: 1 }}>
+//                       <Text style={styles.documentName}>
+//                         {doc.docName} ({doc.ownerName || 'N/A'})
+//                       </Text>
+//                       <Text style={styles.documentDate}>
+//                         Uploaded By: {doc.uploadedBy || 'N/A'}
+//                       </Text>
+//                       <Text style={styles.documentDate}>
+//                         Owner: {doc.ownerName || 'N/A'}
+//                       </Text>
+//                       <Text style={styles.documentDate}>
+//                         Uploaded At: {doc.createdAt?.split('T')[0] || 'N/A'}
+//                       </Text>
+//                       {doc.verifiedAt && (
+//                         <Text style={styles.documentDate}>
+//                           Verified At: {doc.verifiedAt}
+//                         </Text>
+//                       )}
+//                     </View>
 
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text
-                        style={[
-                          styles.documentStatus,
-                          {
-                            color:
-                              doc.verifiedStatus === 1
-                                ? 'green'
-                                : doc.verifiedStatus === 2
-                                ? 'red'
-                                : 'orange',
-                          },
-                        ]}
-                      >
-                        {doc.verifiedStatus === 1
-                          ? 'Verified'
-                          : doc.verifiedStatus === 2
-                          ? 'Rejected'
-                          : 'Pending'}
-                      </Text>
+//                     <View style={{ alignItems: 'flex-end' }}>
+//                       <Text
+//                         style={[
+//                           styles.documentStatus,
+//                           {
+//                             color:
+//                               doc.verifiedStatus === 1
+//                                 ? 'green'
+//                                 : doc.verifiedStatus === 2
+//                                 ? 'red'
+//                                 : 'orange',
+//                           },
+//                         ]}
+//                       >
+//                         {doc.verifiedStatus === 1
+//                           ? 'Verified'
+//                           : doc.verifiedStatus === 2
+//                           ? 'Rejected'
+//                           : 'Pending'}
+//                       </Text>
 
-                      {/* View Button */}
-                      <TouchableOpacity
-                        style={styles.viewBtn}
-                        onPress={() => openPreview(index)}
-                      >
-                        <Text style={styles.viewBtnText}>View</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                ))
-              ) : (
-                <Text style={{ textAlign: 'center', color: '#666' }}>
-                  No Documents Uploaded
-                </Text>
-              )}
-            </View>
-          </ScrollView>
-        </View>
+//                       {/* View Button */}
+//                       <TouchableOpacity
+//                         style={styles.viewBtn}
+//                         onPress={() => openPreview(index)}
+//                       >
+//                         <Text style={styles.viewBtnText}>View</Text>
+//                       </TouchableOpacity>
+//                     </View>
+//                   </View>
+//                 ))
+//               ) : (
+//                 <Text style={{ textAlign: 'center', color: '#666' }}>
+//                   No Documents Uploaded
+//                 </Text>
+//               )}
+//             </View>
+//           </ScrollView>
+//         </View>
 
-        {/* Preview Modal */}
-        <Modal
-          visible={previewVisible}
-          transparent
-          animationType="fade"
-          presentationStyle="overFullScreen"
-        >
-          <View style={styles.previewOverlay}>
-            <TouchableOpacity
-              style={styles.previewCloseBtn}
-              onPress={() => setPreviewVisible(false)}
-            >
-              <Text style={styles.closeText}>Close</Text>
-            </TouchableOpacity>
+//         {/* Preview Modal */}
+//         <Modal
+//           visible={previewVisible}
+//           transparent
+//           animationType="fade"
+//           presentationStyle="overFullScreen"
+//         >
+//           <View style={styles.previewOverlay}>
+//             <TouchableOpacity
+//               style={styles.previewCloseBtn}
+//               onPress={() => setPreviewVisible(false)}
+//             >
+//               <Text style={styles.closeText}>Close</Text>
+//             </TouchableOpacity>
 
-            <FlatList
-              ref={flatListRef}
-              data={documents}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              initialScrollIndex={currentIndex}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={renderPreviewItem}
-              getItemLayout={(data, index) => ({
-                length: width,
-                offset: width * index,
-                index,
-              })}
-              onScrollToIndexFailed={info => {
-                setTimeout(() => {
-                  flatListRef.current?.scrollToIndex({
-                    index: info.index,
-                    animated: true,
-                  });
-                }, 300);
-              }}
-            />
-            {/* Toast inside modal to ensure it appears above modal content */}
-            <Toast config={toastConfig} position="top" topOffset={60} />
-          </View>
-        </Modal>
-      </View>
-    </Modal>
-  );
-};
+//             <FlatList
+//               ref={flatListRef}
+//               data={documents}
+//               horizontal
+//               pagingEnabled
+//               showsHorizontalScrollIndicator={false}
+//               initialScrollIndex={currentIndex}
+//               keyExtractor={(item, index) => index.toString()}
+//               renderItem={renderPreviewItem}
+//               getItemLayout={(data, index) => ({
+//                 length: width,
+//                 offset: width * index,
+//                 index,
+//               })}
+//               onScrollToIndexFailed={info => {
+//                 setTimeout(() => {
+//                   flatListRef.current?.scrollToIndex({
+//                     index: info.index,
+//                     animated: true,
+//                   });
+//                 }, 300);
+//               }}
+//             />
+//             {/* Toast inside modal to ensure it appears above modal content */}
+//             <Toast config={toastConfig} position="top" topOffset={60} />
+//           </View>
+//         </Modal>
+//       </View>
+//     </Modal>
+//   );
+// };
 
 // 5. Payment Receipt Modal
 export const PaymentReceiptModal = ({ visible, onClose, receiptData }) => (

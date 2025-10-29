@@ -119,47 +119,70 @@ const Search = ({ navigation }) => {
 
   const renderItem = ({ item, index }) => (
     <View style={styles.resultCard}>
-      <View style={styles.rowBetween}>
-        <Text style={[styles.label, { flex: 1 }]}>
-          Apply Date: <Text style={styles.value}>{item.applyDate}</Text>
+      {/* Apply Date and Status Row */}
+      <View style={styles.row}>
+        <Text style={styles.label}>Apply Date:</Text>
+        <Text style={styles.value}>{item.applyDate}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Status:</Text>
+        <Text style={styles.value}>{item.appStatus}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>SL No:</Text>
+        <Text style={styles.value}>{index + 1}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Ward No:</Text>
+        <Text style={styles.value}>{item.wardNo}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>New Ward No:</Text>
+        <Text style={styles.value}>{item.newWardNo}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Application No:</Text>
+        <Text style={styles.value}>{item.applicationNo}</Text>
+      </View>
+      {/* 
+      <View style={styles.row}>
+        <Text style={styles.label}>Firm Name:</Text>
+        <Text style={[styles.value, { flex: 1 }]} numberOfLines={1}>
+          {item.firmName}
         </Text>
-        <Text style={[styles.label, { flex: 1, textAlign: 'right' }]}>
-          Status: <Text style={styles.value}>{item.appStatus}</Text>
+      </View> */}
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Owner Name:</Text>
+        <Text style={styles.value}>{item.ownerName}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Guardian Name:</Text>
+        <Text style={styles.value}>{item.guardianName}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Address:</Text>
+        <Text
+          style={[styles.value, { flex: 1, textAlign: 'right' }]}
+          numberOfLines={2}
+        >
+          {item.address}
         </Text>
       </View>
 
-      <Text style={styles.label}>
-        🏷️ SL No: <Text style={styles.value}>{index + 1}</Text>
-      </Text>
-      <Text style={styles.label}>
-        🏠 Ward No: <Text style={styles.value}>{item.wardNo}</Text>
-      </Text>
-      <Text style={styles.label}>
-        🆕 New Ward No: <Text style={styles.value}>{item.newWardNo}</Text>
-      </Text>
-      <Text style={styles.label}>
-        📄 Application No:{' '}
-        <Text style={styles.value}>{item.applicationNo}</Text>
-      </Text>
-      <Text style={styles.label}>
-        🏢 firmName Type: <Text style={styles.value}>{item.firmName}</Text>
-      </Text>
-      <Text style={styles.label}>
-        👤 Owner: <Text style={styles.value}>{item.ownerName}</Text>
-      </Text>
-      <Text style={styles.label}>
-        👨‍👩‍👧 Guardian Name: <Text style={styles.value}>{item.guardianName}</Text>
-      </Text>
-      <Text style={styles.label}>
-        🏡 Property Type: <Text style={styles.value}>{item.propertyType}</Text>
-      </Text>
-      <Text style={styles.label}>
-        📍 Address: <Text style={styles.value}>{item.propAddress}</Text>
-      </Text>
-      <Text style={styles.label}>
-        📞 Mobile: <Text style={styles.value}>{item.mobileNo}</Text>
-      </Text>
+      <View style={[styles.row, { borderBottomWidth: 0 }]}>
+        <Text style={styles.label}>Mobile:</Text>
+        <Text style={styles.value}>{item.mobileNo}</Text>
+      </View>
 
+      {/* View Button */}
       <TouchableOpacity
         style={styles.viewButton}
         onPress={() => handleViewPress(item)}
@@ -282,6 +305,39 @@ const styles = StyleSheet.create({
     fontSize: responsiveFontSize(2),
     fontWeight: 'bold',
   },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: responsiveHeight(1),
+    marginRight: responsiveWidth(5),
+  },
+  optionLabel: {
+    fontSize: responsiveFontSize(1.9),
+    color: Colors.textPrimary,
+    marginLeft: responsiveWidth(1.5),
+  },
+  circle: {
+    width: responsiveWidth(6),
+    height: responsiveWidth(6),
+    borderRadius: responsiveWidth(3),
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  unselected: {
+    backgroundColor: 'transparent',
+    borderColor: Colors.borderColor,
+  },
+  selected: {
+    backgroundColor: Colors.borderColor,
+    borderColor: Colors.borderColor,
+  },
+  innerDot: {
+    width: responsiveWidth(2.5),
+    height: responsiveWidth(2.5),
+    borderRadius: responsiveWidth(1.25),
+    backgroundColor: Colors.background,
+  },
   dropdown: {
     height: responsiveHeight(5),
     width: responsiveWidth(40),
@@ -318,30 +374,36 @@ const styles = StyleSheet.create({
   },
   resultCard: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: responsiveHeight(2),
-    marginBottom: responsiveHeight(2),
-    marginLeft: responsiveHeight(2),
-    marginRight: responsiveHeight(2),
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 10,
+    paddingHorizontal: responsiveWidth(4),
+    paddingVertical: responsiveHeight(2),
+    marginHorizontal: responsiveWidth(3),
+    marginVertical: responsiveHeight(1),
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
   },
-  label: {
-    fontSize: responsiveFontSize(1.9),
-    color: '#333',
-    marginBottom: responsiveHeight(0.5),
-  },
-  value: {
-    fontWeight: '600',
-    color: '#000',
-  },
-  rowBetween: {
+
+  row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    paddingVertical: responsiveHeight(0.8),
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+
+  label: {
+    fontSize: responsiveFontSize(1.8),
+    color: '#555',
+    width: '45%',
+    fontWeight: '500',
+  },
+
+  value: {
+    fontSize: responsiveFontSize(1.8),
+    color: '#111',
+    width: '55%',
+    textAlign: 'right',
+    fontWeight: '600',
   },
   viewButton: {
     marginTop: responsiveHeight(1),

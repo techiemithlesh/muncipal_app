@@ -23,6 +23,7 @@ import ExtraChargesSection from './components/ExtraChargesSection';
 import FloorDetailsSection from './components/FloorDetailsSection';
 import PropertyDetails from './components/PropertyDetails';
 import { showToast } from '../utils/toast';
+import HeaderNavigation from '../Components/HeaderNavigation';
 
 const ApplyAssessmentComponentized = ({ navigation, route }) => {
   // Get data from route params if it's a reassessment or mutation
@@ -283,7 +284,7 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
         uptoDate: floor.uptoDate,
       }));
     }
-
+    console.log('formData', formData);
     if (isRessessment) {
       navigation.navigate('RessesmentSummry', {
         data: formData,
@@ -297,7 +298,6 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
     } else {
       navigation.navigate('AssessmentSummary', { data: formData });
     }
-    console.log('Frprm saata', fromData);
   };
 
   const clearFieldError = field => {
@@ -611,7 +611,7 @@ const ApplyAssessmentComponentized = ({ navigation, route }) => {
 
   return (
     <View style={{ flex: 1 }}>
-      <Header />
+      <HeaderNavigation />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.header}>
           {isRessessment

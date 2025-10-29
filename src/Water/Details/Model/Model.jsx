@@ -526,133 +526,136 @@ export const RemarksModal = ({
 };
 // 5. Payment Receipt Modal
 
-export const PaymentReceiptModal = ({ visible, onClose, receiptData }) => (
-  <Modal visible={visible} transparent animationType="slide">
-    <View style={styles.overlay}>
-      <View style={styles.modalContent}>
-        <ScrollView nestedScrollEnabled>
-          {/* Close Button */}
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Text style={styles.closeText}>Close</Text>
-          </TouchableOpacity>
-          {/* Title */}
-          <Text style={styles.mainTitle}>Payment Receipt</Text>
-          <Text style={styles.modalTitle}>
-            {receiptData?.ulbDtl?.ulbName || 'Municipal Corporation'}
-          </Text>
-
-          <View style={styles.receiptContainer}>
-            <Text style={styles.receiptTitle}>
-              Water Connection Charge Payment Receipt
+export const PaymentReceiptModal = ({ visible, onClose, receiptData }) => {
+  // console.log("reciept data",receiptData)
+  return (
+    <Modal visible={visible} transparent animationType="slide">
+      <View style={styles.overlay}>
+        <View style={styles.modalContent}>
+          <ScrollView nestedScrollEnabled>
+            {/* Close Button */}
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+              <Text style={styles.closeText}>Close</Text>
+            </TouchableOpacity>
+            {/* Title */}
+            <Text style={styles.mainTitle}>Payment Receipt</Text>
+            <Text style={styles.modalTitle}>
+              {receiptData?.ulbDtl?.ulbName || 'Municipal Corporation'}
             </Text>
 
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Receipt No:</Text>
-              <Text style={styles.infoValue}>
-                {receiptData?.tranNo || 'N/A'}
+            <View style={styles.receiptContainer}>
+              <Text style={styles.receiptTitle}>
+                Water Connection Charge Payment Receipt
               </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Date:</Text>
-              <Text style={styles.infoValue}>
-                {receiptData?.tranDate || 'N/A'}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Ward No:</Text>
-              <Text style={styles.infoValue}>
-                {receiptData?.wardNo || 'N/A'}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>New Ward No:</Text>
-              <Text style={styles.infoValue}>
-                {receiptData?.newWardNo || 'N/A'}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Received From:</Text>
-              <Text style={styles.infoValue}>
-                {receiptData?.ownerName || 'N/A'}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Address:</Text>
-              <Text style={styles.infoValue}>
-                {receiptData?.address || 'N/A'}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Amount:</Text>
-              <Text style={styles.infoValue}>
-                ₹ {receiptData?.amount || '0.00'}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>In Words:</Text>
-              <Text style={styles.infoValue}>
-                {receiptData?.amountInWords || ''}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Towards:</Text>
-              <Text style={styles.infoValue}>
-                {receiptData?.accountDescription || ''}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Via:</Text>
-              <Text style={styles.infoValue}>
-                {receiptData?.paymentMode || 'Cash'}
-              </Text>
-            </View>
 
-            {/* Table Section */}
-            <View style={styles.receiptTable}>
-              <View style={styles.receiptTableHeader}>
-                <Text style={styles.receiptTableHeaderText}>Description</Text>
-                <Text style={styles.receiptTableHeaderText}>Period</Text>
-                <Text style={styles.receiptTableHeaderText}>Amount</Text>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Receipt No:</Text>
+                <Text style={styles.infoValue}>
+                  {receiptData?.tranNo || 'N/A'}
+                </Text>
               </View>
-              {(receiptData?.charges || []).map((item, index) => (
-                <View style={styles.receiptTableRow} key={index}>
-                  <Text style={styles.receiptTableCell}>
-                    {item.description}
-                  </Text>
-                  <Text style={styles.receiptTableCell}>{item.period}</Text>
-                  <Text style={styles.receiptTableCell}>₹ {item.amount}</Text>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Date:</Text>
+                <Text style={styles.infoValue}>
+                  {receiptData?.tranDate || 'N/A'}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Ward No:</Text>
+                <Text style={styles.infoValue}>
+                  {receiptData?.wardNo || 'N/A'}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>New Ward No:</Text>
+                <Text style={styles.infoValue}>
+                  {receiptData?.newWardNo || 'N/A'}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Received From:</Text>
+                <Text style={styles.infoValue}>
+                  {receiptData?.ownerName || 'N/A'}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Address:</Text>
+                <Text style={styles.infoValue}>
+                  {receiptData?.address || 'N/A'}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Amount:</Text>
+                <Text style={styles.infoValue}>
+                  ₹ {receiptData?.amount || '0.00'}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>In Words:</Text>
+                <Text style={styles.infoValue}>
+                  {receiptData?.amountInWords || ''}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Towards:</Text>
+                <Text style={styles.infoValue}>
+                  {receiptData?.accountDescription || ''}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Via:</Text>
+                <Text style={styles.infoValue}>
+                  {receiptData?.paymentMode || 'Cash'}
+                </Text>
+              </View>
+
+              {/* Table Section */}
+              <View style={styles.receiptTable}>
+                <View style={styles.receiptTableHeader}>
+                  <Text style={styles.receiptTableHeaderText}>Description</Text>
+                  <Text style={styles.receiptTableHeaderText}>Period</Text>
+                  <Text style={styles.receiptTableHeaderText}>Amount</Text>
                 </View>
-              ))}
-            </View>
-
-            <Text style={styles.receiptTotal}>
-              Total Paid Amount: ₹ {receiptData?.amount || '0.00'}
-            </Text>
-
-            {/* QR Code */}
-            {receiptData?.qrImage && (
-              <View style={styles.qrCodeContainer}>
-                <Image
-                  source={{ uri: receiptData.qrImage }}
-                  style={{ width: 80, height: 80 }}
-                />
+                {(receiptData?.charges || []).map((item, index) => (
+                  <View style={styles.receiptTableRow} key={index}>
+                    <Text style={styles.receiptTableCell}>
+                      {item.description}
+                    </Text>
+                    <Text style={styles.receiptTableCell}>{item.period}</Text>
+                    <Text style={styles.receiptTableCell}>₹ {item.amount}</Text>
+                  </View>
+                ))}
               </View>
-            )}
 
-            <Text style={styles.receiptNote}>
-              ** This is a computer-generated receipt and does not require
-              signature. **
-            </Text>
-          </View>
-          {/* Download / Print Button */}
-          <TouchableOpacity style={styles.printBtn}>
-            <Text style={styles.printText}>Download / Print</Text>
-          </TouchableOpacity>
-        </ScrollView>
+              <Text style={styles.receiptTotal}>
+                Total Paid Amount: ₹ {receiptData?.amount || '0.00'}
+              </Text>
+
+              {/* QR Code */}
+              {receiptData?.qrImage && (
+                <View style={styles.qrCodeContainer}>
+                  <Image
+                    source={{ uri: receiptData.qrImage }}
+                    style={{ width: 80, height: 80 }}
+                  />
+                </View>
+              )}
+
+              <Text style={styles.receiptNote}>
+                ** This is a computer-generated receipt and does not require
+                signature. **
+              </Text>
+            </View>
+            {/* Download / Print Button */}
+            <TouchableOpacity style={styles.printBtn}>
+              <Text style={styles.printText}>Download / Print</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
       </View>
-    </View>
-  </Modal>
-);
+    </Modal>
+  );
+};
 
 export const PaymentModal = ({
   visible,

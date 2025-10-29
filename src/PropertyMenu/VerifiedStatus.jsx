@@ -46,8 +46,8 @@ const VerifiedStatus = ({ route }) => {
     floorIds,
     floorDataArray,
   } = route.params || {};
-  console.log('floorDataArray ', floorDataArray);
-  // console.log('After floor', floorIds);
+  console.log('submissionData submissionData submissionData ', submissionData);
+  console.log('After floor', floorIds);
   // console.log('After data', data);
 
   useEffect(() => {
@@ -245,14 +245,14 @@ const VerifiedStatus = ({ route }) => {
           'occupancyType',
           'usageType',
           'builtupArea',
-          'fromDate',
-          'toDate',
+          'dateFrom',
+          'dateUpto',
         ].map(field => (
           <View style={styles.floorRow} key={field}>
             <Text style={styles.floorLabel}>
               {field.replace(/([A-Z])/g, ' $1')}:
             </Text>
-            <Text>
+            <Text style={styles.floorValue}>
               {field.includes('Date')
                 ? parseDate(floor[field])
                 : floor[field] || 'N/A'}
@@ -800,20 +800,47 @@ const styles = StyleSheet.create({
   },
 
   extraFloorCard: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#ddd',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  extraFloorTitle: { fontWeight: '700', fontSize: 16, marginBottom: 8 },
+
+  extraFloorTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 8,
+  },
+
   floorRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
     marginBottom: 4,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#eee',
+    paddingVertical: 3,
   },
-  floorLabel: { fontWeight: '600' },
+
+  floorLabel: {
+    flex: 1,
+    fontWeight: '600',
+    color: '#444',
+    fontSize: 14,
+  },
+
+  floorValue: {
+    width: 100, // fixed width
+    textAlign: 'right', // keep value right-aligned
+    color: '#000',
+    fontSize: 14,
+  },
 });
 
 export default VerifiedStatus;

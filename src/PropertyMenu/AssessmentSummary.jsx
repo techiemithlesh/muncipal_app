@@ -43,6 +43,7 @@ const AssessmentSummary = ({ route, navigation }) => {
   // console.log('owner Datails', ownerDetails);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(route.params?.data || {});
+  const [savedSafId, setSavedSafId] = useState(null);
 
   const masterData = route.params?.masterData || {};
   const getMasterName = (list, id, labelKey) => {
@@ -289,6 +290,9 @@ const AssessmentSummary = ({ route, navigation }) => {
       console.log('Full Response:', response.data);
       if (response.data.status) {
         const { message, data } = response.data;
+        const safId = data?.safId; // ✅ get SAF ID
+
+        setSavedSafId(safId);
 
         // Show success message immediately
         showToast('success', message);
@@ -312,7 +316,10 @@ const AssessmentSummary = ({ route, navigation }) => {
 
   const handleOk = () => {
     setModalVisible(false);
-    navigation.navigate('SearchAssesment'); // replace with your screen
+
+    if (savedSafId) {
+      navigation.navigate('SafDueDetails', { id: savedSafId }); // ✅ correct navigation
+    }
   };
 
   return (

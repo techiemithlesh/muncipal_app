@@ -104,14 +104,11 @@ const HoldingDetails = ({ route, navigation }) => {
 
         const responseData = response?.data?.data;
 
-        // console.log('API Response Data:', responseData);
+        console.log('API Response Data:', responseData);
 
         // Set both state variables with the same data
         setHoldingData(responseData);
         setSafData(responseData);
-
-        // ✅ If you want to see updated safData, log responseData instead
-        // console.log(safData, 'my holding data');
 
         setWorkflowId(responseData?.workflowId);
         setOwnerList(responseData?.owners || []);
@@ -120,12 +117,6 @@ const HoldingDetails = ({ route, navigation }) => {
         setTranDtls(responseData?.tranDtls || []);
         setMemoDtls(responseData?.memoDtls || []);
         setTcVerfivication(responseData?.tcVerifications || []);
-
-        // console.log('Data successfully loaded:', {
-        //   workflowId: responseData?.workflowId,
-        //   ownersCount: responseData?.owners?.length || 0,
-        //   floorsCount: responseData?.floors?.length || 0,
-        // });
       } catch (error) {
         console.error('fetchSafDetails error:', error);
         Alert.alert(
@@ -209,16 +200,36 @@ const HoldingDetails = ({ route, navigation }) => {
     }
   };
 
+  // const handleViewReceipt = async tranDtlId => {
+  //   try {
+  //     const response = await api.getPaymentReceipt(tranDtlId);
+  //     setPaynemtDtls(response?.data);
+  //     setModalVisible(true);
+  //   } catch (error) {
+  //     console.error(
+  //       'Error fetching payment receipt:',
+  //       error?.response || error,
+  //     );
+  //   }
+  // };
   const handleViewReceipt = async tranDtlId => {
+    console.log('trans is', tranDtlId);
     try {
-      const response = await api.getPaymentReceipt(tranDtlId);
-      setPaynemtDtls(response?.data);
+      setLoading(true);
+
+      const response = await axios.post(HOLDIGN_API_ROUTES.RECEIPT_API, {
+        id: tranDtlId, // sending transaction ID in body
+      });
+
+      setPaynemtDtls(response?.data.data);
       setModalVisible(true);
     } catch (error) {
       console.error(
         'Error fetching payment receipt:',
         error?.response || error,
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -377,15 +388,30 @@ const HoldingDetails = ({ route, navigation }) => {
             <Text style={styles.value}>{safData?.newHoldingNo || 'N/A'}</Text>
           </View>
 
-          {/* <View style={styles.row}>
-            <Text style={styles.labelFixed}>Assessment Type:</Text>
-            <Text style={styles.value}>{safData?.assessmentType || 'N/A'}</Text>
-          </View> */}
+          {/* propTypeMstrId */}
 
           <View style={styles.row}>
             <Text style={styles.labelFixed}>Property Type:</Text>
             <Text style={styles.value}>{safData?.propertyType || 'N/A'}</Text>
           </View>
+
+          {safData?.propTypeMstrId == 3 && (
+            <>
+              <View style={styles.row}>
+                <Text style={styles.labelFixed}>Apartment Name:</Text>
+                <Text style={styles.value}>
+                  {safData?.apartmentName || 'N/A'}
+                </Text>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.labelFixed}>Flat Registry Date:</Text>
+                <Text style={styles.value}>
+                  {safData?.flatRegistryDate || 'N/A'}
+                </Text>
+              </View>
+            </>
+          )}
 
           <View style={styles.row}>
             <Text style={styles.labelFixed}>Ownership Type:</Text>
@@ -824,72 +850,6 @@ const HoldingDetails = ({ route, navigation }) => {
           </View>
         </View>
 
-        {taxDetails.length > 0 && (
-          <View style={styles.card}>
-            <Text style={styles.heading}>Tax Details</Text>
-
-            <ScrollView horizontal>
-              <View>
-                {/* Table Header */}
-                <View style={[styles.tableRow, styles.tableHeader]}>
-                  <Text style={[styles.tableCell, styles.headerText]}>SL</Text>
-                  <Text style={[styles.tableCell, styles.headerText]}>ARV</Text>
-                  <Text style={[styles.tableCell, styles.headerText]}>
-                    Effect From
-                  </Text>
-                  <Text style={[styles.tableCell, styles.headerText]}>
-                    Holding Tax
-                  </Text>
-                  <Text style={[styles.tableCell, styles.headerText]}>
-                    Water Tax
-                  </Text>
-                  <Text style={[styles.tableCell, styles.headerText]}>
-                    Conservancy
-                  </Text>
-                  <Text style={[styles.tableCell, styles.headerText]}>
-                    Edu. Cess
-                  </Text>
-                  <Text style={[styles.tableCell, styles.headerText]}>
-                    RWH Penalty
-                  </Text>
-                  <Text style={[styles.tableCell, styles.headerText]}>
-                    Quarterly Tax
-                  </Text>
-                </View>
-
-                {/* Table Body */}
-                {/* {taxDetails.map((item, index) => (
-                  <View style={styles.tableRow} key={index}>
-                    <Text style={styles.tableCell}>{index + 1}</Text>
-                    <Text style={styles.tableCell}>{item?.arv ?? 'NA'}</Text>
-                    <Text style={styles.tableCell}>
-                      {item?.fromQtr ?? 'NA'} / {item?.fromFyear ?? 'NA'}
-                    </Text>
-                    <Text style={styles.tableCell}>
-                      {item?.holdingTax ?? 'NA'}
-                    </Text>
-                    <Text style={styles.tableCell}>
-                      {item?.waterTax ?? 'NA'}
-                    </Text>
-                    <Text style={styles.tableCell}>
-                      {item?.conservancyTax ?? 'NA'}
-                    </Text>
-                    <Text style={styles.tableCell}>
-                      {item?.educationCess ?? 'NA'}
-                    </Text>
-                    <Text style={styles.tableCell}>
-                      {item?.rwhPenalty ?? 'NA'}
-                    </Text>
-                    <Text style={styles.tableCell}>
-                      {item?.quarterlyTax ?? 'NA'}
-                    </Text>
-                  </View>
-                ))} */}
-              </View>
-            </ScrollView>
-          </View>
-        )}
-
         {transDtls.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.heading}>Payment Details</Text>
@@ -1174,7 +1134,7 @@ const HoldingDetails = ({ route, navigation }) => {
           }}
           style={styles.viewButton}
         >
-          <Text style={styles.viewButtonText}>👁️ View Demand</Text>
+          <Text style={styles.viewButtonText}>View Demand</Text>
         </TouchableOpacity>
         {/* 
         {safData?.paymentStatus == 0 && (
@@ -1349,6 +1309,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 4,
     padding: 4,
+    width: '100%',
   },
   rowTable: {
     flexDirection: 'row',
@@ -1366,6 +1327,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#222',
   },
+
   headerRow: {
     backgroundColor: Colors.textSecondary,
   },

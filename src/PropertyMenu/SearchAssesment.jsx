@@ -35,55 +35,73 @@ const SearchAssesment = ({ navigation }) => {
   const [searchResults, setSearchResults] = useState([]);
   const renderItem = ({ item, index }) => (
     <View style={styles.resultCard}>
-      {/* Row with Apply Date and Application Status */}
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          marginBottom: 4,
-        }}
-      >
-        <Text style={[styles.label, { flex: 1 }]}>
-          Apply Date: <Text style={styles.value}>{item.applyDate}</Text>
-        </Text>
-        <Text style={[styles.label, { flex: 1, textAlign: 'right' }]}>
-          Status: <Text style={styles.value}>{item.appStatus}</Text>
+      {/* Apply Date + Status */}
+
+      <View style={styles.row}>
+        <Text style={styles.label}>SL No:</Text>
+        <Text style={styles.value}>{index + 1}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.label}>Apply Date:</Text>
+        <Text style={styles.value}>{item.applyDate}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Status:</Text>
+        <Text style={styles.value}>{item.appStatus}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Ward No:</Text>
+        <Text style={styles.value}>{item.wardNo}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>New Ward No:</Text>
+        <Text style={styles.value}>{item.newWardNo}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Application No:</Text>
+        <Text style={styles.value}>{item.safNo}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Assessment Type:</Text>
+        <Text style={styles.value}>{item.assessmentType}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Owner:</Text>
+        <Text style={styles.value}>{item.ownerName}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Guardian Name:</Text>
+        <Text style={styles.value}>{item.guardianName}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Property Type:</Text>
+        <Text style={styles.value}>{item.propertyType}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Address:</Text>
+        <Text
+          style={[styles.value, { flex: 1, textAlign: 'right' }]}
+          numberOfLines={2}
+        >
+          {item.propAddress}
         </Text>
       </View>
 
-      <Text style={styles.label}>
-        🏷️ SL No: <Text style={styles.value}>{index + 1}</Text>
-      </Text>
-      <Text style={styles.label}>
-        🏠 Ward No: <Text style={styles.value}>{item.wardNo}</Text>
-      </Text>
-      <Text style={styles.label}>
-        🆕 New Ward No: <Text style={styles.value}>{item.newWardNo}</Text>
-      </Text>
-      <Text style={styles.label}>
-        📄 Application No: <Text style={styles.value}>{item.safNo}</Text>
-      </Text>
-      <Text style={styles.label}>
-        🏢 Assessment Type:{' '}
-        <Text style={styles.value}>{item.assessmentType}</Text>
-      </Text>
-      <Text style={styles.label}>
-        👤 Owner: <Text style={styles.value}>{item.ownerName}</Text>
-      </Text>
-      <Text style={styles.label}>
-        👨‍👩‍👧 Guardian Name: <Text style={styles.value}>{item.guardianName}</Text>
-      </Text>
+      <View style={[styles.row, { borderBottomWidth: 0 }]}>
+        <Text style={styles.label}>Mobile:</Text>
+        <Text style={styles.value}>{item.mobileNo}</Text>
+      </View>
 
-      <Text style={styles.label}>
-        🏡 Property Type: <Text style={styles.value}>{item.propertyType}</Text>
-      </Text>
-      <Text style={styles.label}>
-        📍 Address: <Text style={styles.value}>{item.propAddress}</Text>
-      </Text>
-      <Text style={styles.label}>
-        📞 Mobile: <Text style={styles.value}>{item.mobileNo}</Text>
-      </Text>
-
+      {/* View Button */}
       <TouchableOpacity
         style={styles.viewButton}
         onPress={() => handleViewPress(item)}
@@ -338,54 +356,36 @@ const styles = StyleSheet.create({
   },
   resultCard: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: responsiveHeight(2),
-    marginBottom: responsiveHeight(1),
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
-    margin: 15,
-  },
-  resultText: {
-    fontSize: responsiveFontSize(1.8),
-    color: Colors.textPrimary,
-    fontWeight: 500,
-  },
-  card: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: responsiveHeight(1.5),
+    borderRadius: 10,
+    paddingHorizontal: responsiveWidth(4),
+    paddingVertical: responsiveHeight(2),
+    marginHorizontal: responsiveWidth(3),
     marginVertical: responsiveHeight(1),
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
   },
-  cardText: {
-    color: Colors.textPrimary,
-    fontSize: responsiveFontSize(1.8),
-    marginBottom: 3,
+
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: responsiveHeight(0.8),
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
   },
-  slNoText: {
-    fontSize: responsiveFontSize(2.2),
-    fontWeight: 'bold',
-    color: '#4A90E2',
-    marginBottom: responsiveHeight(1),
-    alignSelf: 'flex-end',
-  },
+
   label: {
-    fontSize: responsiveFontSize(1.9),
-    color: '#333',
-    marginBottom: responsiveHeight(0.5),
+    fontSize: responsiveFontSize(1.8),
+    color: '#555',
+    width: '45%',
+    fontWeight: '500',
   },
+
   value: {
+    fontSize: responsiveFontSize(1.8),
+    color: '#111',
+    width: '55%',
+    textAlign: 'right',
     fontWeight: '600',
-    color: '#000',
   },
   viewButton: {
     marginTop: responsiveHeight(1),

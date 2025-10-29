@@ -203,26 +203,18 @@ const MutationScreen = ({ route, navigation }) => {
           data.floors && data.floors.length > 0
             ? data.floors.map(floor => ({
                 builtupArea: String(floor.builtUpArea || '100'),
-                dateFrom:
-                  convertToYearMonth(floor.fromDate.replace('/', '-')) || '',
-                dateUpto:
-                  convertToYearMonth(floor.uptoDate.replace('/', '-')) || '',
-                floorMasterId: String(floor.floorNameId || '2'),
-                usageTypeMasterId: String(floor.usageTypeId || '1'),
-                constructionTypeMasterId: floor.constructionTypeId || 1,
-                occupancyTypeMasterId: floor.occupancyTypeId || 1,
+                dateFrom: floor.fromDate
+                  ? convertToYearMonth(floor.fromDate.replace('/', '-'))
+                  : '',
+                dateUpto: floor.uptoDate
+                  ? convertToYearMonth(floor.uptoDate.replace('/', '-'))
+                  : '',
+                floorMasterId: String(floor.floorName || '2'), // floorName instead of floorNameId
+                usageTypeMasterId: String(floor.usageType || '1'), // usageType instead of usageTypeId
+                constructionTypeMasterId: floor.constructionType || 1,
+                occupancyTypeMasterId: floor.occupancyType || 1,
               }))
-            : [
-                {
-                  builtupArea: '100',
-                  dateFrom: '2014-01',
-                  dateUpto1: '2012-04',
-                  floorMasterId: '2',
-                  usageTypeMasterId: '1',
-                  constructionTypeMasterId: 1,
-                  occupancyTypeMasterId: 1,
-                },
-              ],
+            : [],
       };
       console.log('Final payload:', JSON.stringify(payload, null, 2));
       // console.log('floor data', data.floors);

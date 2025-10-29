@@ -26,6 +26,7 @@ const ApplyLicenseSummary = ({ route, navigation }) => {
   const apiPayload = submittedData?.apiPayload || null;
   const [modalVisible, setModalVisible] = useState(false);
   const [copiedLicenseNo, setCopiedLicenseNo] = useState('');
+  const [licenseId, setLicenseId] = useState(null);
 
   const formatDate = date => {
     if (!date) return 'Not specified';
@@ -110,7 +111,7 @@ const ApplyLicenseSummary = ({ route, navigation }) => {
   };
   const handleOk = () => {
     setModalVisible(false);
-    navigation.navigate('Search'); // replace with your screen
+    navigation.navigate('TradeDetails', { id: licenseId }); // replace with your screen
   };
 
   const handleSubmit = async () => {
@@ -192,11 +193,9 @@ const ApplyLicenseSummary = ({ route, navigation }) => {
       if (response.data.status) {
         const safNo = response.data.data?.applicationNo; // or safNo if API returns that key
 
-        // alert(`✅ Application Submitted!\nApplication No: ${safNo}`);
-
         const licenseNo = response.data.data?.applicationNo; // License Number from API
-
-        // alert(`✅ Application Submitted!\nLicense No: ${licenseNo}`);
+        const licenseId = response.data.data?.licenseId;
+        setLicenseId(licenseId);
 
         if (licenseNo) {
           Clipboard.setString(licenseNo); // copy License No
@@ -277,15 +276,15 @@ const ApplyLicenseSummary = ({ route, navigation }) => {
       )}
 
       <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          <Text style={styles.submitButtonText}>Submit Application</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <Text style={styles.backButtonText}>Back to Form</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Submit Application</Text>
         </TouchableOpacity>
       </View>
       <Modal

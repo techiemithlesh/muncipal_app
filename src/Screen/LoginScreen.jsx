@@ -108,7 +108,7 @@ const LoginScreen = ({ navigation }) => {
         await AsyncStorage.setItem('userDetails', JSON.stringify(userDetails));
         await AsyncStorage.setItem('tokenExpiry', JSON.stringify(expiryTime)); // store expiry
         showToast('success', 'Login Successfully!');
-        navigation.navigate('DashBoard');
+        navigation.replace('DashBoard');
       } else {
         showToast('error', 'Check email & password please!');
       }

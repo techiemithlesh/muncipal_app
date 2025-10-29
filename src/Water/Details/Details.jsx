@@ -22,6 +22,10 @@ import {
   RemarksModal,
 } from './Model/Model';
 
+import FieldVerificationModal from './Model/FieldVerificationModal';
+
+// In your component
+
 import { useNavigation } from '@react-navigation/native';
 import { getToken } from '../../utils/auth';
 import { WATER_API_ROUTES } from '../../api/apiRoutes';
@@ -34,7 +38,7 @@ const Details = ({ route }) => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
-
+  const [isVisible, setIsVisible] = useState(false);
   const [receiptData, setTradPaymentRecipt] = useState(null);
   const [waterDue, setWaterDue] = useState(null);
   const [tradeDetails, setTradeDetails] = useState(null);
@@ -44,8 +48,37 @@ const Details = ({ route }) => {
   const [levelRemarks, setLevelRemarks] = useState([]);
   const [tradeDue, setTradeDue] = useState(null);
   const [tcVerification, setTcVerification] = useState(null);
+  const [tradeId, setTradeId] = useState(null);
 
   const [loading, setLoading] = useState(false);
+  const [modalVerificationData, setModalVerificationData] = useState(null);
+  const [yourVerificationData, setYourVerificationData] = useState(null);
+
+  const handleViewVerification = async id => {
+    try {
+      const token = await getToken();
+      console.log('id', id);
+
+      // Fetch field verification for this specific ID
+      const res = await axios.post(
+        WATER_API_ROUTES.GET_FIELD_VERIFICATION_DTLS_API,
+        { id: id }, // API expects an array of IDs
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      console.log('Full Axios response:', res);
+      console.log('Response data:', res.data);
+      console.log('Response data.data:', res.data.data);
+      if (res?.data?.status) {
+        setModalVerificationData(res.data.data); // store data for modal
+        setIsVisible(true); // show modal immediately
+      } else {
+        console.error('API returned false status:', res.data.message);
+      }
+    } catch (err) {
+      console.error('Error fetching field verification:', err.message);
+    }
+  };
+  // console.log('Modal Visible:', isVisible);
 
   const id = route?.params?.id;
   const navigation = useNavigation();
@@ -76,39 +109,58 @@ const Details = ({ route }) => {
       }
 
       const workflowId = tradeRes?.data?.data?.workflowId || 0;
-      console.log('Trade detaild ID:', tradeRes?.data?.data);
+      // console.log('Trade details ID:', tradeRes?.data?.data?.tranDtls?.[0]?.id);
+      const newTradeId = tradeRes?.data?.data?.tranDtls?.[0]?.id;
+      setTradeId(newTradeId);
+      console.log('jbdfjads', newTradeId); // ✅ Logs immediately
+
       // Run other APIs in parallel
-      const [waterDue, workflowRes, paymentRes, receiptRes, documentRes] =
-        await Promise.all([
-          axios.post(
-            WATER_API_ROUTES.WATER_DUE,
-            { id },
-            { headers: { Authorization: `Bearer ${token}` } },
-          ),
-          axios.post(
-            WORK_FLOW_PERMISSION,
-            { wfId: workflowId },
-            { headers: { Authorization: `Bearer ${token}` } },
-          ),
-          axios.post(
-            WATER_API_ROUTES.PAYMENT_RECEIPT,
-            {
-              id,
-            },
-            { headers: { Authorization: `Bearer ${token}` } },
-          ),
-          axios.post(
-            WATER_API_ROUTES.PAY_DEMAND,
-            { id },
-            { headers: { Authorization: `Bearer ${token}` } },
-          ),
-          axios.post(
-            WATER_API_ROUTES.WATER_DOC_LIST,
-            { id },
-            { headers: { Authorization: `Bearer ${token}` } },
-          ),
-        ]);
-      console.log('Payment Receipt:', waterDue?.data);
+      const [
+        waterDue,
+        workflowRes,
+        paymentRes,
+        receiptRes,
+        documentRes,
+        fieldverification,
+      ] = await Promise.all([
+        axios.post(
+          WATER_API_ROUTES.WATER_DUE,
+          { id },
+          { headers: { Authorization: `Bearer ${token}` } },
+        ),
+        axios.post(
+          WORK_FLOW_PERMISSION,
+          { wfId: workflowId },
+          { headers: { Authorization: `Bearer ${token}` } },
+        ),
+        axios.post(
+          WATER_API_ROUTES.PAYMENT_RECEIPT,
+          { id: newTradeId },
+          { headers: { Authorization: `Bearer ${token}` } },
+        ),
+
+        axios.post(
+          WATER_API_ROUTES.PAY_DEMAND,
+          { id },
+          { headers: { Authorization: `Bearer ${token}` } },
+        ),
+        axios.post(
+          WATER_API_ROUTES.WATER_DOC_LIST,
+          { id },
+          { headers: { Authorization: `Bearer ${token}` } },
+        ),
+        axios.post(
+          WATER_API_ROUTES.GET_FIELD_VERIFICATION_DTLS_API,
+          { id },
+          { headers: { Authorization: `Bearer ${token}` } },
+        ),
+      ]);
+      console.log(
+        'fieldverification fieldverification:',
+        fieldverification.data.data,
+      );
+      if (fieldverification?.data?.status)
+        setModalVerificationData(fieldverification.data.data);
 
       if (waterDue?.data?.status) setWaterDue(waterDue.data.data);
       if (workflowRes?.data?.status) setWorkflowData(workflowRes.data.data);
@@ -127,6 +179,13 @@ const Details = ({ route }) => {
   useEffect(() => {
     fetchAllData();
   }, [id]);
+
+  useEffect(() => {
+    if (tradeId) {
+      console.log('Trade ID updated:', tradeId);
+      // you can call next API here, e.g. fetchReceipt(tradeId);
+    }
+  }, [tradeId]);
 
   if (loading) {
     return (
@@ -298,7 +357,7 @@ const Details = ({ route }) => {
                 </Text>
                 <TouchableOpacity
                   style={styles.viewBtn}
-                  onPress={() => handleViewVerification(item)}
+                  onPress={() => handleViewVerification(item.id)}
                 >
                   <Text style={styles.viewBtnText}>View</Text>
                 </TouchableOpacity>
@@ -314,11 +373,11 @@ const Details = ({ route }) => {
         </Section>
 
         {/* Memo Details */}
-        <Section title="Memo Details">
+        {/* <Section title="Memo Details">
           <View style={styles.noDataContainer}>
             <Text style={styles.noDataText}>No Memo Details Available!</Text>
           </View>
-        </Section>
+        </Section> */}
 
         {/* Level Remarks */}
         <Section title="Level Remarks">
@@ -416,6 +475,12 @@ const Details = ({ route }) => {
         tradeDetails={tradeDetails}
         id={id}
       /> */}
+
+      <FieldVerificationModal
+        visible={isVisible}
+        onClose={() => setIsVisible(false)}
+        verifiedData={modalVerificationData}
+      />
       <ViewDemandModal
         visible={showDemandModal}
         onClose={() => setShowDemandModal(false)}

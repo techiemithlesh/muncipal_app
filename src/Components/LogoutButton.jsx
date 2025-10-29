@@ -13,15 +13,11 @@ const LogoutButton = () => {
     try {
       await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('userDetails');
+      await AsyncStorage.removeItem('tokenExpiry');
 
       showToast('success', 'Logged out successfully!');
 
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'LoginScreen' }],
-        }),
-      );
+      navigation.navigate('LoginScreen');
     } catch (error) {
       showToast('error', 'Logout failed!');
     }

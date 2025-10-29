@@ -6,7 +6,8 @@ import moment from 'moment';
 
 export const submitFieldVerification = async (submissionData, floorIds, id, data) => {
   const token = await getToken();
-console.log("Api Submisison data",submissionData)
+console.log("Api Submisison data", submissionData?.extraFloors
+)
   const convertMonthYear = str => {
     if (!str) return null;
     const months = {
@@ -37,49 +38,35 @@ console.log("Api Submisison data",submissionData)
     return `${year}-${month}-${day}`;
   };
 
-  const finalFloors =
-    (submissionData?.extraFloors?.length > 0
-      ? submissionData.extraFloors.map(floor => ({
-          safFloorDetailId: floor.safFloorDetailId || 0,
-          builtupArea: Number(floor.builtupArea ?? 0),
-          dateFrom: convertMonthYear(floor.dateFrom),
-          dateUpto: convertMonthYear(floor.dateUpto),
-          floorMasterId: floor.floorMasterId
-            ? String(floor.floorMasterId)
-            : null,
-          usageTypeMasterId: floor.usageTypeMasterId
-            ? String(floor.usageTypeMasterId)
-            : null,
-          constructionTypeMasterId: floor.constructionTypeMasterId
-            ? String(floor.constructionTypeMasterId)
-            : null,
-          occupancyTypeMasterId: floor.occupancyTypeMasterId
-            ? String(floor.occupancyTypeMasterId)
-            : null,
-        }))
-      : floorIds?.map(floor => ({
-          safFloorDetailId: floor.id,
-          builtupArea: Number(floor.builtupArea ?? 0),
-          carpetArea: Number(floor.carpetArea ?? 0),
-          dateFrom: floor.dateFrom,
-          dateUpto: floor.dateUpto,
-          floorMasterId: floor.floorMasterId
-            ? String(floor.floorMasterId)
-            : null,
-          usageTypeMasterId: floor.usageTypeMasterId
-            ? String(floor.usageTypeMasterId)
-            : null,
-          constructionTypeMasterId: floor.constructionTypeMasterId
-            ? String(floor.constructionTypeMasterId)
-            : null,
-          occupancyTypeMasterId: floor.occupancyTypeMasterId
-            ? String(floor.occupancyTypeMasterId)
-            : null,
-          floorName: floor.floorName || null,
-          usageType: floor.usageType || null,
-          occupancyName: floor.occupancyName || null,
-          constructionType: floor.constructionType || null,
-        }))) || [];
+ const finalFloors = [
+  ...(submissionData?.extraFloors?.map(floor => ({
+    safFloorDetailId: floor.safFloorDetailId || 0,
+    builtupArea: Number(floor.builtupArea ?? 0),
+    dateFrom: floor.dateFrom,
+    dateUpto: floor.dateUpto,
+    floorMasterId: floor.floorMasterId ? String(floor.floorMasterId) : null,
+    usageTypeMasterId: floor.usageTypeMasterId ? String(floor.usageTypeMasterId) : null,
+    constructionTypeMasterId: floor.constructionTypeMasterId ? String(floor.constructionTypeMasterId) : null,
+    occupancyTypeMasterId: floor.occupancyTypeMasterId ? String(floor.occupancyTypeMasterId) : null,
+  })) || []),
+
+  ...(id?.map(floor => ({
+    safFloorDetailId: floor.safFloorDetailId || 0,
+    builtupArea: Number(floor.builtupArea ?? 0),
+    carpetArea: Number(floor.carpetArea ?? 0),
+    dateFrom: floor.dateFrom,
+    dateUpto: floor.dateUpto,
+    floorMasterId: floor.floorMasterId ? String(floor.floorMasterId) : null,
+    usageTypeMasterId: floor.usageTypeMasterId ? String(floor.usageTypeMasterId) : null,
+    constructionTypeMasterId: floor.constructionTypeMasterId ? String(floor.constructionTypeMasterId) : null,
+    occupancyTypeMasterId: floor.occupancyTypeMasterId ? String(floor.occupancyTypeMasterId) : null,
+    floorName: floor.floorName || null,
+    usageType: floor.usageType || null,
+    occupancyName: floor.occupancyName || null,
+    constructionType: floor.constructionType || null,
+  })) || []),
+];
+
 
   const fieldPayload = {
     //  percentageOfPropertyTransfer:
@@ -87,7 +74,7 @@ console.log("Api Submisison data",submissionData)
           percentageOfPropertyTransfer:
   Number(submissionData?.percentageOfPropertyTransfer || 0),
 
-    
+    flatRegistryDate: submissionData?.selectedDate,
     appartmentDetailsId: submissionData?.apartmentDetail,
     isMobileTower: submissionData?.mobileTower === 'yes',
   towerArea:

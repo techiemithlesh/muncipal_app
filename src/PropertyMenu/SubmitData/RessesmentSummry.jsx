@@ -5,12 +5,11 @@ import {
   ScrollView,
   StyleSheet,
   Button,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import Colors from '../../Constants/Colors';
 import axios from 'axios';
-import { SAF_API_ROUTES } from '../../api/apiRoutes'; // make sure this is your API route
+import { SAF_API_ROUTES } from '../../api/apiRoutes';
 import { getToken } from '../../utils/auth';
 import MessageModal from '../../utils/MessageModal';
 
@@ -31,111 +30,64 @@ const Section = ({ title, children }) => (
 const RessesmentSummry = ({ route, navigation }) => {
   const data = route.params?.data || {};
   const safData = route?.params?.safData || {};
-  console.log('data safData', safData);
-  const [loading, setLoading] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+  const [safId, setSafId] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState('success');
   const [modalMessage, setModalMessage] = useState('');
 
-  function convertToYearMonth1(date) {
-    const [month, year] = date.split('-');
-    return `${year}-${month}`;
-  }
-  const handleCloseModal = () => {
+  const handleCloseModal = id => {
     setModalVisible(false);
-    if (modalType === 'success') navigation.goBack();
+    if (id) {
+      navigation.navigate('SafDueDetails', { id });
+    } else {
+      console.warn('SAF ID is missing. Navigation cancelled.');
+    }
   };
+
+  const formatDate1 = dob => {
+    if (!dob) return '2019-02-14';
+    const parts = dob.split('/');
+    if (parts.length !== 3) return '2019-02-14';
+
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    const year = parts[2];
+
+    return `${year}-${month}-${day}`;
+  };
+
   const convertToYearMonth = dateStr => {
     if (!dateStr) return null;
     const parts = dateStr.includes('/')
       ? dateStr.split('/')
       : dateStr.split('-');
     if (parts.length === 2) {
-      const [month, year] = parts; // if input is "MM/YYYY"
+      const [month, year] = parts;
       return `${year}-${month.padStart(2, '0')}`;
     }
     if (parts.length === 3) {
-      // if input is "YYYY-MM-DD"
       const [year, month] = parts;
       return `${year}-${month}`;
     }
     return dateStr;
   };
-  const parseDate = str => {
-    if (!str) return null;
-
-    // If string includes 'T', assume ISO format
-    if (str.includes('T')) {
-      return new Date(str);
-    }
-
-    // If string is DD/MM/YYYY
-    if (str.includes('/')) {
-      const [day, month, year] = str.split('/');
-      return new Date(`${year}-${month}-${day}`);
-    }
-
-    // If string is YYYY-MM-DD
-    if (str.includes('-')) {
-      return new Date(str);
-    }
-
-    return null; // fallback
-  };
-  function formatDate1(dob) {
-    if (!dob) return '2019-02-14'; // fallback if empty
-    const parts = dob.split('/'); // ["18", "09", "1901"]
-    if (parts.length !== 3) return '2019-02-14'; // fallback for invalid format
-
-    const day = parts[0].padStart(2, '0');
-    const month = parts[1].padStart(2, '0');
-    const year = parts[2];
-
-    return `${year}-${month}-${day}`; // YYYY-MM-DD
-  }
-  console.log('Data before submit:', data);
-  if (!data) return Alert.alert('Error', 'No data available');
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const token = await getToken(); // if async
+      const token = await getToken();
 
-      // Convert DD/MM/YYYY to YYYY-MM-DD format
-      const formatDate = dateStr => {
-        if (!dateStr) return '2024-01';
-
-        if (dateStr.includes('T')) {
-          const [year, month] = dateStr.split('T')[0].split('-');
-          return `${year}-${month}`;
-        }
-
-        if (dateStr.includes('/')) {
-          const [day, month, year] = dateStr.split('/');
-          return `${year}-${month.padStart(2, '0')}`;
-        }
-
-        if (dateStr.includes('-')) {
-          const [year, month] = dateStr.split('-');
-          return `${year}-${month.padStart(2, '0')}`;
-        }
-
-        return dateStr;
-      };
-
-      // Map data to API structure
       const payload = {
         assessmentType: 'Reassessment',
         appartmentDetailsId: data?.appartmentDetailsId || '',
-
         previousHoldingId: data.holdingId,
         zoneMstrId: data.zoneId || 1,
         wardMstrId: Number(data.oldWard || 1),
         newWardMstrId: data.newWard || 1,
         ownershipTypeMstrId: data.ownershipTypeId || data.ownershipType || 1,
         propTypeMstrId: data.propertyTypeId || data.propertyType || 1,
-        // appartmentDetailsId: '',
         flatRegistryDate: '2024-01-01',
         roadWidth: String(data.roadWidth || '40'),
         khataNo: data.khataNo || 'a',
@@ -176,6 +128,8 @@ const RessesmentSummry = ({ route, navigation }) => {
             : '2020-04-10',
         ownerDtl: [
           {
+            email: '',
+            guardianName: '',
             ownerName: data.ownerName || '10',
             mobileNo: data.mobile || '1234567890',
             gender:
@@ -185,12 +139,7 @@ const RessesmentSummry = ({ route, navigation }) => {
                 ? 'Female'
                 : 'Male',
             dob: formatDate1(data.dob) || '2019-02-14',
-            isArmedForce:
-              data.armedForces === 'yes'
-                ? 1
-                : data.armedForces === 'no'
-                ? 0
-                : 1,
+            isArmedForce: data.armedForces === 'yes' ? 1 : 0,
             isSpeciallyAbled: data.speciallyAbled === 'yes' ? 1 : 0,
           },
         ],
@@ -198,46 +147,38 @@ const RessesmentSummry = ({ route, navigation }) => {
           data.floors && data.floors.length > 0
             ? data.floors.map(floor => ({
                 builtupArea: String(floor.builtUpArea || '100'),
-                dateFrom:
-                  convertToYearMonth(floor.fromDate.replace('/', '-')) || '',
-                dateUpto:
-                  convertToYearMonth(floor.uptoDate.replace('/', '-')) || '',
-                floorMasterId: String(floor.floorNameId || '2'),
-                usageTypeMasterId: String(floor.usageTypeId || '1'),
-                constructionTypeMasterId: floor.constructionTypeId || 1,
-                occupancyTypeMasterId: floor.occupancyTypeId || 1,
+                dateFrom: floor.fromDate
+                  ? convertToYearMonth(floor.fromDate.replace('/', '-'))
+                  : '',
+                dateUpto: floor.uptoDate
+                  ? convertToYearMonth(floor.uptoDate.replace('/', '-'))
+                  : '',
+                floorMasterId: String(floor.floorName || '2'), // floorName instead of floorNameId
+                usageTypeMasterId: String(floor.usageType || '1'), // usageType instead of usageTypeId
+                constructionTypeMasterId: floor.constructionType || 1,
+                occupancyTypeMasterId: floor.occupancyType || 1,
               }))
-            : [
-                {
-                  builtupArea: '100',
-                  dateFrom: '2014-01',
-                  dateUpto1: '2012-04',
-                  floorMasterId: '2',
-                  usageTypeMasterId: '1',
-                  constructionTypeMasterId: 1,
-                  occupancyTypeMasterId: 1,
-                },
-              ],
+            : [],
       };
-      console.log('Final payload:', JSON.stringify(payload, null, 2));
-      // console.log('floor data', data.floors);
-      console.log('payload', payload);
+      console.log(JSON.stringify(payload));
+
+      // Log as a pretty-printed string (with indentation)
+      console.log(JSON.stringify(payload, null, 2));
       const response = await axios.post(
         SAF_API_ROUTES.APPLY_SAF_RESSESMENT_API,
         payload,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
 
       setLoading(false);
-      console.log('Ressesment', response?.data);
+      const safIdValue = response?.data?.data?.safId;
+      setSafId(safIdValue);
 
       if (response.data.success) {
         setModalType('success');
-        setModalMessage('Ressessment submitted successfully');
+        setModalMessage('Reassessment submitted successfully');
         setModalVisible(true);
       } else {
         setModalType('error');
@@ -245,20 +186,24 @@ const RessesmentSummry = ({ route, navigation }) => {
         setModalVisible(true);
       }
     } catch (error) {
+      setLoading(false);
       setModalType('error');
       setModalMessage('Something went wrong');
       setModalVisible(true);
+      console.error(error);
     }
   };
 
   return (
     <ScrollView style={styles.container}>
+      {/* Assessment Section */}
       {data.id && (
         <Section title="Assessment ID">
           <Row label="ID" value={data.id} />
         </Section>
       )}
 
+      {/* Property Details */}
       <Section title="Property Details">
         <Row label="Assessment Type" value="Ressesment" />
         <Row label="Zone" value={safData.zone} />
@@ -269,6 +214,7 @@ const RessesmentSummry = ({ route, navigation }) => {
         <Row label="Road Width (ft)" value={data.roadWidth} />
       </Section>
 
+      {/* Property Address */}
       <Section title="Property Address">
         <Row label="Property Address" value={data.propertyAddress} />
         <Row label="City" value={data.city} />
@@ -293,6 +239,7 @@ const RessesmentSummry = ({ route, navigation }) => {
         )}
       </Section>
 
+      {/* Owner Details */}
       <Section title="Owner Details">
         <Row label="Owner Name" value={data.ownerName} />
         <Row label="Guardian Name" value={data.guardianName} />
@@ -307,6 +254,7 @@ const RessesmentSummry = ({ route, navigation }) => {
         <Row label="Is Specially Abled?" value={data.speciallyAbled} />
       </Section>
 
+      {/* Electricity Details */}
       <Section title="Electricity Details">
         <Row label="KNO" value={data.kno} />
         <Row label="ACC No" value={data.accNo} />
@@ -314,6 +262,7 @@ const RessesmentSummry = ({ route, navigation }) => {
         <Row label="Electricity Category" value={data.electricityCategory} />
       </Section>
 
+      {/* Water Connection Details */}
       <Section title="Water Connection Details">
         <Row label="Water Connection No" value={data.waterConnectionNo} />
         <Row
@@ -326,6 +275,7 @@ const RessesmentSummry = ({ route, navigation }) => {
         />
       </Section>
 
+      {/* Extra Charges */}
       <Section title="Extra Charges">
         <Row label="Have Mobile Tower?" value={data.mobileTower} />
         {data.mobileTower === 'yes' && (
@@ -386,43 +336,33 @@ const RessesmentSummry = ({ route, navigation }) => {
         )}
       </Section>
 
+      {/* Floor Details */}
       {Array.isArray(data.floors) && data.floors.length > 0 && (
         <Section title="Floor Details">
-          {data.floors.map((floor, index) => {
-            console.log(floor, 'floor');
-            return (
-              <View key={index} style={{ marginBottom: 10 }}>
-                <Text style={{ fontWeight: '600', marginBottom: 4 }}>
-                  Floor {index + 1}
-                </Text>
-                <Row label="Floor Name" value={floor.floorName} />
-                <Row label="Usage Type" value={floor.usageType} />
-                <Row label="Occupancy Type" value={floor.occupancyType} />
-                <Row label="Construction Type" value={floor.constructionType} />
-                <Row label="Built-Up Area" value={floor.builtUpArea} />
-                <Row
-                  label="From Date"
-                  value={
-                    floor.fromDate
-                      ? parseDate(floor.fromDate).toLocaleDateString('en-GB')
-                      : ''
-                  }
-                />
-
-                <Row
-                  label="Upto Date"
-                  value={
-                    floor.uptoDate
-                      ? parseDate(floor.uptoDate).toLocaleDateString('en-GB')
-                      : ''
-                  }
-                />
-              </View>
-            );
-          })}
+          {data.floors.map((floor, index) => (
+            <View key={index} style={{ marginBottom: 10 }}>
+              <Text style={{ fontWeight: '600', marginBottom: 4 }}>
+                Floor {index + 1}
+              </Text>
+              <Row label="Floor Name" value={floor.floorName} />
+              <Row label="Usage Type" value={floor.usageType} />
+              <Row label="Occupancy Type" value={floor.occupancyType} />
+              <Row label="Construction Type" value={floor.constructionType} />
+              <Row label="Built-Up Area" value={floor.builtUpArea} />
+              <Row
+                label="From Date"
+                value={convertToYearMonth(floor.fromDate)}
+              />
+              <Row
+                label="Upto Date"
+                value={convertToYearMonth(floor.uptoDate)}
+              />
+            </View>
+          ))}
         </Section>
       )}
 
+      {/* Submit Buttons */}
       <View style={{ margin: 20 }}>
         {loading ? (
           <ActivityIndicator size="large" color={Colors.headignColor} />
@@ -439,22 +379,20 @@ const RessesmentSummry = ({ route, navigation }) => {
           </>
         )}
       </View>
+
+      {/* Message Modal */}
       <MessageModal
         visible={modalVisible}
         type={modalType}
         message={modalMessage}
-        onClose={handleCloseModal}
+        onClose={() => handleCloseModal(safId)}
       />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    padding: 10,
-  },
+  container: { flex: 1, backgroundColor: '#fff', padding: 10 },
   section: {
     marginBottom: 20,
     padding: 10,
@@ -465,7 +403,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     marginBottom: 8,
-    color: '#ffffffff',
+    color: '#fff',
     padding: 10,
     backgroundColor: Colors.headignColor,
   },
@@ -474,16 +412,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 6,
   },
-  label: {
-    fontWeight: '600',
-    color: '#555',
-    flex: 1,
-  },
-  value: {
-    flex: 1,
-    color: '#222',
-    textAlign: 'right',
-  },
+  label: { fontWeight: '600', color: '#555', flex: 1 },
+  value: { flex: 1, color: '#222', textAlign: 'right' },
 });
 
 export default RessesmentSummry;

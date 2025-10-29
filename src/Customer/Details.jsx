@@ -78,7 +78,11 @@ const Details = ({ route }) => {
           setConnectionDtl(tradeRes.data.data.connectionDtl);
         }
 
+        console.log('Consumer Deatails', tradeDetails);
+
         const workflowId = tradeRes?.data?.data?.workflowId || 0;
+        const transId = tradeRes?.data?.data?.tranDtls?.[0]?.id || 0;
+        console.log('Transaction ID:', transId); // 9
 
         const [customerDue, workflowRes, paymentRes, receiptRes, documentRes] =
           await Promise.all([
@@ -107,7 +111,7 @@ const Details = ({ route }) => {
             // ),
             axios.post(
               CUSTOMER_API.CUSTOMER_PAYMENT_RECIPT_API,
-              { id },
+              { id: transId },
               { headers: { Authorization: `Bearer ${token}` } },
             ),
             axios.post(
@@ -116,7 +120,7 @@ const Details = ({ route }) => {
               { headers: { Authorization: `Bearer ${token}` } },
             ),
           ]);
-        console.log('Customer Deatails', customerDue.data.data);
+        console.log('Customer receiptData', receiptData);
 
         if (customerDue?.data?.status)
           setCustomerDueDetails(customerDue.data.data);
@@ -124,7 +128,7 @@ const Details = ({ route }) => {
           setCustomerDue(customerDue.data.data.demandList);
         if (workflowRes?.data?.status) setWorkflowData(workflowRes.data.data);
         if (receiptRes?.data?.status)
-          setTradPaymentRecipt(receiptRes.data.data);
+          setTradPaymentRecipt(paymentRes.data.data);
         if (documentRes?.data?.status) setDocuments(documentRes.data.data);
       } catch (err) {
         console.log(
@@ -138,22 +142,6 @@ const Details = ({ route }) => {
 
     fetchAllData();
   }, [id]);
-
-  const handleViewReceipt = async id => {
-    setSelectedReceiptId(id);
-    setShowReceipt(true);
-
-    try {
-      const response = await axios.post(
-        CUSTOMER_API.CUSTOMER_PAYMENT_RECIPT_API,
-        { id },
-      );
-      setReceiptData(response.data); // Save API response
-      console.log('Receipt Data:', response.data);
-    } catch (error) {
-      console.error('Error fetching receipt:', error);
-    }
-  };
 
   if (loading) {
     return (
@@ -175,7 +163,7 @@ const Details = ({ route }) => {
             <Text style={styles.appId}>{tradeDetails?.consumerNo}</Text>. You
             can use this for future reference.
           </Text>
-
+          {/* 
           <Text style={styles.statusText}>
             Current Status:{' '}
             <Text
@@ -187,7 +175,7 @@ const Details = ({ route }) => {
             >
               {tradeDetails?.appStatus || 'N/A'}
             </Text>
-          </Text>
+          </Text> */}
         </View>
         {/* Basic Details */}
         <Section title="Basic Details">
@@ -266,7 +254,7 @@ const Details = ({ route }) => {
         </Section>
 
         {/* Document Details */}
-        <Section title="Document Details">
+        {/* <Section title="Document Details">
           <View style={styles.docHeader}>
             <Text style={styles.docCol}>Document Name</Text>
             <Text style={styles.docCol}>Image</Text>
@@ -287,7 +275,7 @@ const Details = ({ route }) => {
                 }
               />
             ))}
-        </Section>
+        </Section> */}
         <Section title="Payment Detail">
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View>
@@ -328,7 +316,7 @@ const Details = ({ route }) => {
 
                     <TouchableOpacity
                       style={styles.viewBtn}
-                      onPress={() => handleViewReceipt(item.id)}
+                      onPress={() => setShowReceipt(true)}
                     >
                       <Text style={styles.viewBtnText}>View</Text>
                     </TouchableOpacity>
@@ -439,23 +427,23 @@ const Details = ({ route }) => {
         </Section>
 
         {/* Field Verification */}
-        <Section title="Field Verification">
+        {/* <Section title="Field Verification">
           <View style={styles.noDataContainer}>
             <Text style={styles.noDataText}>
               No Field Verification Available!
             </Text>
           </View>
-        </Section>
+        </Section> */}
 
         {/* Memo Details */}
-        <Section title="Memo Details">
+        {/* <Section title="Memo Details">
           <View style={styles.noDataContainer}>
             <Text style={styles.noDataText}>No Memo Details Available!</Text>
           </View>
-        </Section>
+        </Section> */}
 
         {/* Level Remarks */}
-        <Section title="Level Remarks">
+        {/* <Section title="Level Remarks">
           {Array.isArray(levelRemarks) && levelRemarks.length > 0 ? (
             <View style={styles.container}>
               <View
@@ -497,7 +485,7 @@ const Details = ({ route }) => {
               </Text>
             </View>
           )}
-        </Section>
+        </Section> */}
 
         {/* Buttons */}
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 15 }}>
@@ -551,7 +539,7 @@ const Details = ({ route }) => {
       <PaymentReceiptModal
         visible={showReceipt}
         onClose={() => setShowReceipt(false)}
-        receiptData={receiptDatas}
+        receiptData={receiptData}
       />
       <GenerateDemandModal
         visible={modalVisible}
