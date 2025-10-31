@@ -21,7 +21,7 @@ import {
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
 import { BASE_URL } from '../config';
-import Colors from '../Constants/Colors';
+import Colors from '../Module/Constants/Colors';
 
 const LoginScreen = ({ navigation }) => {
   const [checked, setChecked] = useState(false);
@@ -108,7 +108,7 @@ const LoginScreen = ({ navigation }) => {
         await AsyncStorage.setItem('userDetails', JSON.stringify(userDetails));
         await AsyncStorage.setItem('tokenExpiry', JSON.stringify(expiryTime)); // store expiry
         showToast('success', 'Login Successfully!');
-        navigation.replace('DashBoard');
+        navigation.navigate('DashBoard');
       } else {
         showToast('error', 'Check email & password please!');
       }

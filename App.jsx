@@ -7,59 +7,59 @@ import { MasterDataProvider } from './src/Context/MasterDataContext';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from './src/utils/toastConfig';
 // Reports All Urls
-import PropertyCollection from './src/PropertyMenu/Report/Collection';
-import PaymentWiseReportPorpty from './src/PropertyMenu/Report/PaymentWiseReport';
-// Water Url Screen
-import WaterInbox from './src/Water/Inbox/Inbox';
-import WaterSurvey from './src/Water/Inbox/WaterSurvey';
-import SubmitSurey from './src/Water/Inbox/SubmitSurey';
-import MutationScreen from './src/PropertyMenu/SubmitData/Verification/MutationScreen';
+import PropertyCollection from './src/Module/PropertyMenu/Report/Collection';
+import PaymentWiseReportPorpty from './src/Module/PropertyMenu/Report/PaymentWiseReport';
+// Water Url Screenimport
+
+import WaterInbox from './src/Module/Water/Inbox/Inbox';
+import WaterSurvey from './src/Module/Water/Inbox/WaterSurvey';
+import SubmitSurey from './src/Module/Water/Inbox/SubmitSurey';
+import MutationScreen from './src/Module/PropertyMenu/Saf/SubmitData/Verification/MutationScreen';
 // Screens
 import DashBoard from './src/Screen/DashBoard';
 import StaffCard from './src/Screen/StaffCard';
 import Property from './src/Screen/Property';
 import Assessment from './src/Screen/Assessment';
 import Inbox from './src/Screen/Inbox';
-import FieldVarification from './src/PropertyMenu/FieldVarification';
-import SurveyPage from './src/PropertyMenu/SurveyPage';
+import FieldVarification from './src/Module/PropertyMenu/Saf/FieldVarification';
+import SurveyPage from './src/Module/PropertyMenu/Saf/SurveyPage';
 import ForgotPassword from './src/Screen/ForgetPassword';
-import VerifiedStatus from './src/PropertyMenu/VerifiedStatus';
-import SearchAssesment from './src/PropertyMenu/SearchAssesment';
-import SafDueDetails from './src/PropertyMenu/SafDueDetails';
-import ApplyAssessment from './src/PropertyMenu/ApplyAssessment';
-import AssessmentSummary from './src/PropertyMenu/AssessmentSummary';
-import ApplyAssessmentComponentized from './src/PropertyMenu/ApplyAssessmentComponentized';
-import ApplyLicense from './src/Trade/ApplyLicense';
-import Search from './src/Trade/Details/Search';
-import InboxScreen from './src/Trade/Inbox/InboxScreen';
-import TradeDetails from './src/Trade/Details/TradeDetails';
-import ApplyLicenseSummary from './src/Trade/ApplyLicenseSummary';
-import SubmitVarification from './src/PropertyMenu/SubmitVarification';
-import DocUpload from './src/Trade/DocUpload';
-import ApplyWaterConnectionForm from './src/Water/ApplyWater/ApplyWaterConnectionForm';
+import VerifiedStatus from './src/Module/PropertyMenu/Saf/VerifiedStatus';
+import SearchAssesment from './src/Module/PropertyMenu/Saf/SearchAssesment';
+import SafDueDetails from './src/Module/PropertyMenu/Saf/SafDueDetails';
+import ApplyAssessment from './src/Module/PropertyMenu/Saf/ApplyAssessment';
+import AssessmentSummary from './src/Module/PropertyMenu/Saf/AssessmentSummary';
+import ApplyAssessmentComponentized from './src/Module/PropertyMenu/Saf/ApplyAssessmentComponentized';
+import ApplyLicense from './src/Module/Trade/ApplyLicense';
+import Search from './src/Module/Trade/Details/Search';
+import InboxScreen from './src/Module/Trade/Inbox/InboxScreen';
+import TradeDetails from './src/Module/Trade/Details/TradeDetails';
+import ApplyLicenseSummary from './src/Module/Trade/ApplyLicenseSummary';
+import SubmitVarification from './src/Module/PropertyMenu/Saf/SubmitVarification';
+import DocUpload from './src/Module/Trade/DocUpload';
+import ApplyWaterConnectionForm from './src/Module/Water/ApplyWater/ApplyWaterConnectionForm';
 import LoginScreen from './src/Screen/LoginScreen';
-import SearchWater from './src/Water/Details/SearchWater';
-import WaterDetails from './src/Water/Details/Details';
-import WaterBillScreen from './src/Water/WaterBillScreen';
-import SurrenderLicense from './src/Trade/Surender/SurrenderLicense';
-import SurrenderLicensePage from './src/Trade/Surender/SurrenderLicensePage';
-import RenewLicensePage from './src/Trade/Renew/RenewLicensePage';
-import RenewLicense from './src/Trade/Renew/RenewLicense';
-import EditTrade from './src/Trade/Details/EditTrade';
-import InboxDtls from './src/Trade/Inbox/InboxDtls';
-import SearchHolding from './src/PropertyMenu/Holding/Search';
-import HoldingDetails from './src/PropertyMenu/Holding/HoldingDetails';
-import RessesmentSummry from './src/PropertyMenu/SubmitData/RessesmentSummry';
-import SubmitApply from './src/Water/ApplyWater/SubmitApply';
-import MyInput from './src/Water/ApplyWater/MyInput';
+import SearchWater from './src/Module/Water/Details/Search';
+import WaterDetails from './src/Module/Water/Details/Details';
+// import WaterBillScreen from './src/Module/Water/WaterBillScreen';
+import SurrenderLicense from './src/Module/Trade/Surender/SurrenderLicense';
+import SurrenderLicensePage from './src/Module/Trade/Surender/SurrenderLicensePage';
+import RenewLicensePage from './src/Module/Trade/Renew/RenewLicensePage';
+import RenewLicense from './src/Module/Trade/Renew/RenewLicense';
+import InboxDtls from './src/Module/Trade/Inbox/InboxDtls';
+import SearchHolding from './src/Module/PropertyMenu/Holding/Search';
+import HoldingDetails from './src/Module/PropertyMenu/Holding/HoldingDetails';
+import RessesmentSummry from './src/Module/PropertyMenu/Saf/SubmitData/RessesmentSummry';
+import SubmitApply from './src/Module/Water/ApplyWater/SubmitApply';
+import MyInput from './src/Module/Water/ApplyWater/MyInput';
 // customer urls
-import SearchCustomer from './src/Customer/Search';
+import SearchCustomer from './src/Module/Customer/Search';
 
-import Amedment from './src/Trade/Amedment/Amedment';
-import AmedmentSummery from './src/Trade/Amedment/AmedmentSummery';
+import Amedment from './src/Module/Trade/Amedment/Amedment';
+import AmedmentSummery from './src/Module/Trade/Amedment/AmedmentSummery';
 
-import CustomerDetails from './src/Customer/Details';
-import SubmitSummaryPage from './src/PropertyMenu/SubmitData/Verification/SubmitSummaryPage';
+import CustomerDetails from './src/Module/Customer/Details';
+import SubmitSummaryPage from './src/Module/PropertyMenu/Saf/SubmitData/Verification/SubmitSummaryPage';
 
 const Stack = createNativeStackNavigator();
 
@@ -69,17 +69,28 @@ const App = () => {
       <MasterDataProvider>
         <AlertNotificationRoot>
           <NavigationContainer>
-            <Stack.Navigator initialRouteName="Login">
+            <Stack.Navigator
+              initialRouteName="Login"
+              screenOptions={{ gestureEnabled: false }}
+            >
               <Stack.Screen
                 name="Login"
                 component={LoginScreen}
-                options={{ headerShown: false }}
+                options={{
+                  headerShown: false,
+                }}
               />
+
               <Stack.Screen
                 name="DashBoard"
                 component={DashBoard}
-                options={{ headerShown: false }}
+                options={{
+                  gestureEnabled: false,
+                  headerShown: false,
+                  headerBackVisible: false,
+                }}
               />
+
               <Stack.Screen
                 name="StaffCard"
                 component={StaffCard}
@@ -200,11 +211,7 @@ const App = () => {
                 component={SearchWater}
                 options={{ headerShown: false }}
               />
-              <Stack.Screen
-                name="WaterBillScreen"
-                component={WaterBillScreen}
-                options={{ headerShown: false }}
-              />
+
               <Stack.Screen
                 name="SurrenderLicensePage"
                 component={SurrenderLicensePage}
@@ -215,11 +222,7 @@ const App = () => {
                 component={RenewLicensePage}
                 options={{ headerShown: false }}
               />
-              <Stack.Screen
-                name="EditTrade"
-                component={EditTrade}
-                options={{ headerShown: false }}
-              />
+
               <Stack.Screen
                 name="InboxDtls"
                 component={InboxDtls}

@@ -5,8 +5,7 @@ import {
   responsiveWidth as rw,
   responsiveFontSize as rf,
 } from 'react-native-responsive-dimensions';
-import Colors from '../Constants/Colors'; // or replace with your Colors config
-
+import Colors from '../Module/Constants/Colors';
 const Card = ({
   applicationNo,
   wardNo,

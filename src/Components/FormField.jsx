@@ -7,7 +7,7 @@ import React, {
 import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native';
 import { Dropdown, MultiSelect } from 'react-native-element-dropdown';
 import DatePicker from 'react-native-date-picker';
-import Colors from '../Constants/Colors';
+import Colors from '../Module/Constants/Colors';
 
 const FormField = forwardRef(
   (

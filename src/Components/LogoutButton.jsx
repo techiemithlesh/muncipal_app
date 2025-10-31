@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet, Modal, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions, useNavigation } from '@react-navigation/native';
-import Colors from '../Constants/Colors';
+import Colors from '../Module/Constants/Colors';
 import { showToast } from '../utils/toast';
 
 const LogoutButton = () => {

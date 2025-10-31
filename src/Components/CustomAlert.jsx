@@ -1,7 +1,7 @@
 // Components/CustomAlert.js
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Colors from '../Constants/Colors';
+import Colors from '../Module/Constants/Colors';
 import {
   responsiveHeight,
   responsiveWidth,
