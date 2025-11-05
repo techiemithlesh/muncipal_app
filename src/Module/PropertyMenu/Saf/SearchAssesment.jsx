@@ -170,7 +170,7 @@ const SearchAssessment = ({ navigation }) => {
       {/* 🔹 Search Form */}
       <View style={styles.seacrhCont}>
         <View style={styles.searchhead}>
-          <Text style={styles.text}>Search Saf Application</Text>
+          <Text style={styles.text}>Search Application</Text>
         </View>
 
         <View style={styles.selectWardKey}>
@@ -223,6 +223,7 @@ const SearchAssessment = ({ navigation }) => {
                 total={total}
                 onNext={() => page < lastPage && onSearch(page + 1)}
                 onPrev={() => page > 1 && onSearch(page - 1)}
+                onPageChange={(pageNo) => onSearch(pageNo)}
               />
             ) : null
           }
@@ -337,7 +338,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: responsiveWidth(5),
     borderRadius: 5,
     alignItems: 'center',
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-end',
   },
   viewButtonText: {
     color: '#fff',

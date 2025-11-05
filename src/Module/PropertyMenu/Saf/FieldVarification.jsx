@@ -6,14 +6,12 @@ import {
   TouchableOpacity,
   TextInput,
   FlatList,
-  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { Dropdown } from 'react-native-element-dropdown';
 import HeaderNavigation from '../../../Components/HeaderNavigation';
 import Clipboard from '@react-native-clipboard/clipboard';
-import { MaterialIcons } from '@expo/vector-icons';
 import {
   responsiveHeight,
   responsiveWidth,
@@ -22,56 +20,58 @@ import {
 import { BASE_URL } from '../../../config';
 import Colors from '../../Constants/Colors';
 import { showToast } from '../../../utils/toast';
+import Pagination from '../../../Components/Pagination';
 
 const FieldVarification = ({ navigation }) => {
-  const wardData = [
-    { label: 'Select Ward', value: '1' },
-    { label: 'Ward 2', value: '2' },
-    { label: 'Ward 3', value: '3' },
-  ];
-
-  const [value, setValue] = useState(null);
   const [data, setData] = useState([]);
   const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const storedToken = await AsyncStorage.getItem('token');
-        const token = storedToken ? JSON.parse(storedToken) : null;
-        setToken(token);
+    fetchData(page);
+  }, [page]);
 
-        if (!token) return console.warn('No token found');
+  const fetchData = async pageNo => {
+    setLoading(true);
+    try {
+      const storedToken = await AsyncStorage.getItem('token');
+      const token = storedToken ? JSON.parse(storedToken) : null;
+      setToken(token);
 
-        const response = await axios.post(
-          `${BASE_URL}/api/property/inbox`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+      if (!token) return console.warn('No token found');
 
-        setData(response.data?.data?.data || []);
-        // console.log('data Field Verification', data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
+      const response = await axios.post(
+        `${BASE_URL}/api/property/inbox?page=${pageNo}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
-    fetchData();
-  }, []);
+      const res = response.data?.data || {};
 
-  const handleSearch = () => {
-    // Add your search logic here
+      setData(res.data || []);
+      setLastPage(res.lastPage || 1);
+      setTotal(res.total || 0);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const copyToClipboard = safNo => {
     if (!safNo) {
-      showToast('sucess', 'No SAF number to copy');
+      showToast('error', 'No SAF number to copy');
       return;
     }
-    Clipboard.setString(String(safNo)); // ensure it's a string
-    showToast('error', `${safNo} copied to clipboard`);
+    Clipboard.setString(String(safNo));
+    showToast('success', `${safNo} copied to clipboard`);
   };
 
   const renderItem = ({ item }) => (
@@ -106,11 +106,6 @@ const FieldVarification = ({ navigation }) => {
         </TouchableOpacity>
         <Text style={styles.value}>{item?.safNo}</Text>
       </View>
-
-      {/* <View style={styles.row}>
-        <Text style={styles.cardLabel}>Holding No.:</Text>
-        <Text style={styles.value}>{item?.propertyAddress}</Text>
-      </View> */}
       <View style={styles.row}>
         <Text style={styles.cardLabel}>Property Address:</Text>
         <Text style={styles.value}>{item?.propAddress}</Text>
@@ -143,61 +138,37 @@ const FieldVarification = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <HeaderNavigation />
-
-      {/* Form with orange design and shadows */}
-      {/* <View style={styles.formWrapper}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-          <Text style={styles.title}>Field Verification</Text>
-
-          <View style={styles.formGrid}>
-            <View style={styles.inputBox}>
-              <Text style={styles.label}>Ward No</Text>
-              <Dropdown
-                style={styles.dropdown}
-                placeholderStyle={styles.placeholderStyle}
-                selectedTextStyle={styles.selectedTextStyle}
-                data={wardData}
-                labelField="label"
-                valueField="value"
-                placeholder="Select Ward"
-                value={value}
-                onChange={item => setValue(item.value)}
-              />
-            </View>
-
-            <View style={styles.inputBox}>
-              <Text style={styles.label}>Keyword</Text>
-              <TextInput style={styles.input} placeholder="Enter Keyword" />
-            </View>
-
-            <TouchableOpacity style={styles.button} onPress={handleSearch}>
-              <Text style={styles.buttonText}>Search</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </View> */}
-
-      {/* FlatList for Application List */}
       <View style={styles.applicationList}>
         <Text style={styles.title}>Application List</Text>
-        <FlatList
-          data={data}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={renderItem}
-          ListEmptyComponent={
-            <Text
-              style={{
-                textAlign: 'center',
-                marginTop: responsiveHeight(2),
-                backgroundColor: 'red',
-                color: 'white',
-                padding: 10,
-              }}
-            >
-              No data found.
-            </Text>
-          }
-        />
+
+        {loading ? (
+          <ActivityIndicator
+            size="large"
+            color={Colors.primary}
+            style={{ marginTop: 30 }}
+          />
+        ) : (
+          <FlatList
+            data={data}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={renderItem}
+            ListEmptyComponent={
+              <Text style={styles.noData}>No data found.</Text>
+            }
+          />
+        )}
+
+        {/* ✅ Pagination Added */}
+        {total > 0 && (
+          <Pagination
+            page={page}
+            lastPage={lastPage}
+            total={total}
+            onNext={() => setPage(prev => prev + 1)}
+            onPrev={() => setPage(prev => prev - 1)}
+            onPageChange={(pageNo) => setPage(pageNo)}
+          />
+        )}
       </View>
     </View>
   );

@@ -16,8 +16,6 @@ import {
 import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Colors from '../../../Constants/Colors';
-import { BASE_URL } from '../../../../config';
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const getToken = async () => {

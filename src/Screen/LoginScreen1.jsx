@@ -26,7 +26,6 @@ import Colors from '../Module/Constants/Colors';
 // import back_1 from './assets/back_1.jpg';
 import back_2 from '../assets/back_3.png';
 import RMC_LOGO from '../assets/RMC_LOGO.png';
-import top from '../assets/top.png';
 
 const LoginScreen = ({ navigation }) => {
   const [checked, setChecked] = useState(false);
@@ -109,22 +108,17 @@ const LoginScreen = ({ navigation }) => {
       style={styles.backgroundImage}
       resizeMode="cover"
     >
-      <Image source={top} style={styles.top} resizeMode="contain" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView>
+        <View style={styles.topSection}>
+          <Image source={RMC_LOGO} style={styles.logo} resizeMode="contain" />
+        </View>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.loginContainer}>
-            <View style={styles.topSection}>
-              <Image
-                source={RMC_LOGO}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-            </View>
-
-            <Text style={styles.login}>Login</Text>
+            <Text style={styles.welcomeText}>Welcome Back!</Text>
+            <Text style={styles.subtitleText}>Log in your account</Text>
 
             {/* Email / Username Selection */}
             <View style={styles.emailuser}>
@@ -157,11 +151,10 @@ const LoginScreen = ({ navigation }) => {
 
             {/* Email or Username Input */}
             <View style={styles.emailContainer}>
-              <Text>{selected === 'email' ? 'Email' : 'Username'}</Text>
               <TextInput
                 style={styles.input}
-                placeholder={`Enter your ${selected}`}
-                placeholderTextColor="#000"
+                placeholder={selected === 'email' ? 'Email' : 'Username'}
+                placeholderTextColor="#999"
                 value={selected === 'email' ? email : userName}
                 onChangeText={text =>
                   selected === 'email' ? setEmail(text) : setUserName(text)
@@ -169,17 +162,17 @@ const LoginScreen = ({ navigation }) => {
                 keyboardType={
                   selected === 'email' ? 'email-address' : 'default'
                 }
+                autoCapitalize="none"
               />
             </View>
 
             {/* Password Field with Eye */}
             <View style={styles.emailContainer}>
-              <Text>Password</Text>
               <View style={styles.passwordContainer}>
                 <TextInput
                   style={styles.passwordInput}
-                  placeholder="Enter your password"
-                  placeholderTextColor="#000"
+                  placeholder="Password"
+                  placeholderTextColor="#999"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
@@ -195,26 +188,29 @@ const LoginScreen = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Remember Me and Forgot Password */}
+            {/* Remember Me */}
             <View style={styles.remfogpass}>
               <TouchableOpacity
-                style={[styles.checkbox, checked && styles.checked]}
+                style={styles.checkboxRow}
                 onPress={() => setChecked(!checked)}
               >
-                {checked && <Text style={styles.checkmark}>✓</Text>}
-              </TouchableOpacity>
-              <Text>Remember Me</Text>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('ForgotPassword')}
-              >
-                <Text style={styles.forgotText}>Forgot Password?</Text>
+                <View style={[styles.checkbox, checked && styles.checked]}>
+                  {checked && <Text style={styles.checkmark}>✓</Text>}
+                </View>
+                <Text style={styles.rememberText}>Remember Me</Text>
               </TouchableOpacity>
             </View>
 
             {/* Login Button */}
-            <View style={styles.emailContainer}>
-              <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                <Text style={styles.buttonText}>Login</Text>
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
+              <Text style={styles.buttonText}>Login</Text>
+            </TouchableOpacity>
+
+            {/* Register Link */}
+            <View style={styles.registerContainer}>
+              <Text style={styles.registerText}>Don't have an account? </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                <Text style={styles.registerLink}>Register</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -232,81 +228,50 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  login: {
-    color: Colors.primary,
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
-    textAlign: 'center',
-    fontWeight: '800',
-    marginTop: responsiveHeight(2),
-    fontSize: responsiveFontSize(3),
   },
   loginContainer: {
-    justifyContent: 'center',
-    padding: 22,
-    borderRadius: 10,
-    // backgroundColor: Colors.background,
-    marginTop: responsiveHeight(25),
-    marginLeft: responsiveWidth(5),
-    marginRight: responsiveWidth(5),
-
-    marginTop: responsiveHeight(15),
+    marginBottom: 2,
+    backgroundColor: 'rgba(4, 35, 86, 0.95)',
+    marginHorizontal: responsiveWidth(8),
+    // marginVertical: responsiveHeight(10),
+    padding: 40,
+    borderRadius: 25,
+    shadowColor: '#3f0202ff',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+  },
+  topSection: {
+    alignItems: 'center',
+    // marginBottom: 15,
+    marginTop: responsiveHeight(10),
+  },
+  logo: {
+    width: 150,
+    height: 150,
+  },
+  welcomeText: {
+    fontSize: responsiveFontSize(3.2),
+    fontWeight: 'bold',
+    color: '#ffffffff',
+    textAlign: 'center',
+    marginBottom: 5,
+  },
+  subtitleText: {
+    fontSize: responsiveFontSize(1.8),
+    color: '#ffffffff',
+    textAlign: 'center',
+    marginBottom: 20,
   },
   emailuser: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 10,
-  },
-  input: {
-    height: responsiveHeight(5),
-    borderColor: Colors.primary,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    marginTop: 5,
-    color: '#000',
-  },
-  button: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: responsiveFontSize(2),
-    fontWeight: '600',
-  },
-  forgotText: {
-    color: 'blue',
-    marginLeft: responsiveWidth(13),
-  },
-  remfogpass: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderWidth: 2,
-    borderColor: '#555',
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  checked: {
-    backgroundColor: Colors.primary,
-  },
-  checkmark: {
-    color: '#fff',
-    fontSize: 14,
-  },
-  label: {
-    fontSize: 16,
-    color: '#000',
+    marginBottom: 15,
   },
   optionRow: {
     flexDirection: 'row',
@@ -317,45 +282,111 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#777',
-    marginRight: 10,
+    borderColor: 'rgba(247, 244, 242, 1)',
+    marginRight: 8,
   },
   selected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: '#c96',
+    borderColor: '#c96',
+  },
+  label: {
+    fontSize: responsiveFontSize(1.9),
+    color: '#ffffffff',
   },
   emailContainer: {
-    marginTop: 10,
+    marginBottom: 15,
+  },
+  input: {
+    height: responsiveHeight(6),
+    borderColor: '#ddd',
+    borderWidth: 1.5,
+    paddingHorizontal: 15,
+    borderRadius: 12,
+    backgroundColor: '#f9f9f9',
+    fontSize: responsiveFontSize(2),
+    color: '#333',
   },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    borderRadius: 8,
-    marginTop: 5,
-    paddingHorizontal: 10,
-    height: responsiveHeight(5),
+    borderWidth: 1.5,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    backgroundColor: '#f9f9f9',
+    paddingHorizontal: 15,
+    height: responsiveHeight(6),
   },
   passwordInput: {
     flex: 1,
-    color: '#000',
+    fontSize: responsiveFontSize(2),
+    color: '#333',
   },
   eyeIcon: {
-    marginLeft: 10,
+    padding: 5,
   },
-  topSection: {
+  remfogpass: {
+    marginVertical: 10,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
   },
-  logo: {
-    width: 150,
-    height: 150,
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#c96',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
   },
-  top: {
-    // position: 'absolute',
-    top: 0,
-    width: 1500,
-    height: 120,
+  checked: {
+    backgroundColor: '#c96',
+    borderColor: '#c96',
+  },
+  checkmark: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  rememberText: {
+    fontSize: responsiveFontSize(1.8),
+    color: '#fffefeff',
+  },
+  button: {
+    backgroundColor: 'rgba(255, 255, 255, 1)',
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+    shadowColor: 'rgba(12, 20, 94, 1)',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  buttonText: {
+    color: '#01114dff',
+    fontSize: responsiveFontSize(2.2),
+    fontWeight: 'bold',
+  },
+  registerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  registerText: {
+    fontSize: responsiveFontSize(1.8),
+    color: '#ffffffff',
+  },
+  registerLink: {
+    fontSize: responsiveFontSize(1.8),
+    color: 'rgba(255, 255, 255, 1)',
+    fontWeight: 'bold',
   },
 });

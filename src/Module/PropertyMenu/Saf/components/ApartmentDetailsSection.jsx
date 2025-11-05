@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Platform, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Platform,
+  StyleSheet,
+} from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { responsiveWidth } from 'react-native-responsive-dimensions';
@@ -13,6 +19,7 @@ const ApartmentDetailsSection = ({
   apartmentList,
   apartmentDetail,
   setApartmentDetail,
+  setApartmentLabel,
   error,
 }) => {
   return (
@@ -40,11 +47,7 @@ const ApartmentDetailsSection = ({
               setShowDatePicker(false);
               if (event.type === 'set' && date) {
                 setSelectedDate(
-                  new Date(
-                    date.getFullYear(),
-                    date.getMonth(),
-                    date.getDate(),
-                  ),
+                  new Date(date.getFullYear(), date.getMonth(), date.getDate()),
                 );
               }
             }}
@@ -55,16 +58,16 @@ const ApartmentDetailsSection = ({
           Appartment Datails *
         </Text>
         <Dropdown
-          style={[
-            styles.dropdown,
-            error.propertyType && styles.errorInput,
-          ]}
+          style={[styles.dropdown, error.propertyType && styles.errorInput]}
           data={apartmentList}
           labelField="label"
           valueField="value"
           placeholder="Select Apartment"
           value={apartmentDetail}
-          onChange={item => setApartmentDetail(item.value)}
+          onChange={item => {
+            setApartmentDetail(item.value);
+            setApartmentLabel(item.label);
+          }}
         />
       </View>
     </View>

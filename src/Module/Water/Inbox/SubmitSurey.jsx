@@ -229,17 +229,16 @@ const SubmitSurey = () => {
 
             <View style={styles.buttonRow}>
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: '#22c55e' }]}
-                onPress={handleForward}
-              >
-                <Text style={styles.buttonText}>Forward</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: '#ef4444' }]}
                 onPress={handleBackward}
               >
                 <Text style={styles.buttonText}>Backward</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: '#22c55e' }]}
+                onPress={handleForward}
+              >
+                <Text style={styles.buttonText}>Forward</Text>
               </TouchableOpacity>
             </View>
           </View>

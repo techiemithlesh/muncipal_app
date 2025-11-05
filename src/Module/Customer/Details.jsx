@@ -24,7 +24,7 @@ import { useNavigation } from '@react-navigation/native';
 import { getToken } from '../../utils/auth';
 import { WORK_FLOW_PERMISSION, API_ROUTES } from '../../api/apiRoutes';
 import GenerateDemandModal from './Model/GenerateDemandModal';
-
+import styles from '../../style/DetailsStyle';
 const Details = ({ route }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [showTradeLicenseModal, setShowTradeLicenseModal] = useState(false);
@@ -49,6 +49,7 @@ const Details = ({ route }) => {
   const [selectedReceiptId, setSelectedReceiptId] = useState(null);
   const [receiptDatas, setReceiptData] = useState(null);
   const [connectionDetails, setConnectionDetails] = useState({});
+  const [meterStatusId, setMeterStatusId] = useState('');
 
   const id = route?.params?.id;
   const navigation = useNavigation();
@@ -69,6 +70,7 @@ const Details = ({ route }) => {
 
         setConnectionDetails(tradeRes.data.data.connectionDtl || {});
         const paymentIds = paymentDtl.map(item => item.id);
+        console.log('Consumer Deatails', tradeRes.data.data.connectionDtl);
 
         if (tradeRes?.data?.status && tradeRes.data.data) {
           setTradeDetails(tradeRes.data.data);
@@ -78,11 +80,13 @@ const Details = ({ route }) => {
           setConnectionDtl(tradeRes.data.data.connectionDtl);
         }
 
-        console.log('Consumer Deatails', tradeDetails);
-
         const workflowId = tradeRes?.data?.data?.workflowId || 0;
         const transId = tradeRes?.data?.data?.tranDtls?.[0]?.id || 0;
         console.log('Transaction ID:', transId); // 9
+
+        const meterStatusId1 = tradeRes.data.data.meterStatusId;
+        console.log('Consumer Details', meterStatusId1);
+        setMeterStatusId(meterStatusId1);
 
         const [customerDue, workflowRes, paymentRes, receiptRes, documentRes] =
           await Promise.all([
@@ -120,15 +124,16 @@ const Details = ({ route }) => {
               { headers: { Authorization: `Bearer ${token}` } },
             ),
           ]);
-        console.log('Customer receiptData', receiptData);
 
         if (customerDue?.data?.status)
           setCustomerDueDetails(customerDue.data.data);
         if (customerDue?.data?.status)
           setCustomerDue(customerDue.data.data.demandList);
         if (workflowRes?.data?.status) setWorkflowData(workflowRes.data.data);
-        if (receiptRes?.data?.status)
+        if (paymentRes?.data?.status) {
           setTradPaymentRecipt(paymentRes.data.data);
+          console.log('Customer receiptData from API', paymentRes.data.data);
+        }
         if (documentRes?.data?.status) setDocuments(documentRes.data.data);
       } catch (err) {
         console.log(
@@ -158,11 +163,11 @@ const Details = ({ route }) => {
       <ScrollView style={styles.container}>
         {/* Banner */}
         <View style={styles.banner}>
-          <Text style={styles.bannerText}>
+          {/* <Text style={styles.bannerText}>
             Your applied application no.{' '}
             <Text style={styles.appId}>{tradeDetails?.consumerNo}</Text>. You
             can use this for future reference.
-          </Text>
+          </Text> */}
           {/* 
           <Text style={styles.statusText}>
             Current Status:{' '}
@@ -328,7 +333,7 @@ const Details = ({ route }) => {
             </View>
           </ScrollView>
         </Section>
-        <Section title="Customer Connection Details">
+        <Section title="Consumer Connection Details">
           <View style={styles.customerCard}>
             <DetailRow
               label="Connection Type"
@@ -376,36 +381,6 @@ const Details = ({ route }) => {
             />
 
             <DetailRow
-              label="Is Meter Working"
-              value={connectionDtl.isMeterWorking || 'N/A'}
-            />
-
-            <DetailRow
-              label="Lock Status"
-              value={connectionDtl.lockStatus ? 'Locked' : 'Unlocked'}
-            />
-
-            <DetailRow
-              label="Meter Type ID"
-              value={connectionDtl.meterTypeId || 'N/A'}
-            />
-
-            <DetailRow
-              label="Reference Unique No"
-              value={connectionDtl.refUniqueNo || 'N/A'}
-            />
-
-            <DetailRow
-              label="Updated At"
-              value={
-                connectionDtl.updatedAt
-                  ? new Date(connectionDtl.updatedAt).toLocaleString()
-                  : 'N/A'
-              }
-            />
-
-            <DetailRow label="User ID" value={connectionDtl.userId || 'N/A'} />
-            <DetailRow
               label="User Name"
               value={connectionDtl.userName || 'N/A'}
             />
@@ -426,92 +401,38 @@ const Details = ({ route }) => {
           </View>
         </Section>
 
-        {/* Field Verification */}
-        {/* <Section title="Field Verification">
-          <View style={styles.noDataContainer}>
-            <Text style={styles.noDataText}>
-              No Field Verification Available!
-            </Text>
-          </View>
-        </Section> */}
-
-        {/* Memo Details */}
-        {/* <Section title="Memo Details">
-          <View style={styles.noDataContainer}>
-            <Text style={styles.noDataText}>No Memo Details Available!</Text>
-          </View>
-        </Section> */}
-
-        {/* Level Remarks */}
-        {/* <Section title="Level Remarks">
-          {Array.isArray(levelRemarks) && levelRemarks.length > 0 ? (
-            <View style={styles.container}>
-              <View
-                style={[
-                  styles.row,
-                  { borderBottomWidth: 1, borderBottomColor: '#000' },
-                ]}
-              >
-                <Text style={[styles.label, { fontWeight: 'bold' }]}>Role</Text>
-                <Text style={[styles.label, { fontWeight: 'bold' }]}>
-                  Remark
-                </Text>
-                <Text style={[styles.label, { fontWeight: 'bold' }]}>Time</Text>
-                <Text style={[styles.label, { fontWeight: 'bold' }]}>
-                  Action
-                </Text>
-              </View>
-              {levelRemarks.map((remark, index) => (
-                <View key={remark.id || index} style={styles.row}>
-                  <Text style={styles.value}>{remark.senderRole || 'N/A'}</Text>
-                  <Text style={styles.value}>
-                    {remark.senderRemarks || '-'}
-                  </Text>
-                  <Text style={styles.value}>
-                    {new Date(remark.createdAt).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}{' '}
-                    • {new Date(remark.createdAt).toLocaleDateString()}
-                  </Text>
-                  <Text style={styles.value}>{remark.actions || '-'}</Text>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.noRemarksContainer}>
-              <Text style={styles.noRemarksText}>
-                No level remarks available
-              </Text>
-            </View>
-          )}
-        </Section> */}
-
         {/* Buttons */}
-        <View style={{ flexDirection: 'row', gap: 10, marginTop: 15 }}>
+        <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
+            style={[
+              styles.actionBtn,
+              (!meterStatusId || meterStatusId === null) && styles.disabledBtn,
+            ]}
             onPress={() => setModalVisible(true)}
+            disabled={!meterStatusId || meterStatusId === null}
           >
-            <Text style={styles.tradeLicenseText}>Genetrate Demand</Text>
+            <Text style={styles.actionBtnText}>Generate Demand</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
+            style={styles.actionBtn}
             onPress={() => setShowDemandModal(true)}
           >
-            <Text style={styles.tradeLicenseText}>View Demand</Text>
+            <Text style={styles.actionBtnText}>View Demand</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
+            style={styles.actionBtn}
             onPress={() => setShowPaymentModal(true)}
           >
-            <Text style={styles.tradeLicenseText}>View Payment</Text>
+            <Text style={styles.actionBtnText}>Pay Demand</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
+            style={styles.actionBtn}
             onPress={() => setShowDocumentModal(true)}
           >
-            <Text style={styles.tradeLicenseText}>View Documents</Text>
+            <Text style={styles.actionBtnText}>View Application</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -585,186 +506,5 @@ const DocRow = ({ name, status }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { padding: 10, backgroundColor: '#f4faff' },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-
-  banner: {
-    backgroundColor: '#e6f0ff',
-    borderRadius: 6,
-    padding: 10,
-    marginBottom: 10,
-  },
-  bannerText: { fontSize: 14 },
-  appId: { color: '#ff6600', fontWeight: 'bold' },
-  statusText: { marginTop: 5 },
-  expired: { color: 'red', fontWeight: 'bold' },
-
-  section: {
-    backgroundColor: '#fff',
-    borderRadius: 6,
-    padding: 10,
-    marginVertical: 6,
-    elevation: 1,
-  },
-  sectionTitle: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 8,
-    color: Colors.background,
-    backgroundColor: Colors.primary,
-    padding: 10,
-  },
-
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-    borderBottomWidth: 0.4,
-    borderBottomColor: '#ccc',
-    paddingBottom: 4,
-  },
-  label: { fontWeight: '600', color: '#333', flex: 1 },
-  value: { flex: 1, textAlign: 'right', color: '#000' },
-
-  ownerHeader: { flexDirection: 'row', backgroundColor: '#f2f2f2', padding: 8 },
-  ownerRow: {
-    flexDirection: 'row',
-    padding: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  ownerCol: { flex: 1, fontWeight: 'bold' },
-
-  docHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  docRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-    alignItems: 'center',
-  },
-  docCol: { flex: 1, textAlign: 'center', fontSize: 10 },
-
-  paymentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  paymentCol: { flex: 1, textAlign: 'center', fontSize: 10 },
-  viewBtn: {
-    backgroundColor: '#0c3c78',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 4,
-    marginTop: 10,
-  },
-  viewBtnText: { color: '#fff', fontWeight: '600' },
-
-  noRemarksContainer: { padding: 10, alignItems: 'center' },
-  noRemarksText: { color: '#999' },
-
-  noDataContainer: {
-    padding: 20,
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
-    borderRadius: 6,
-  },
-  noDataText: {
-    color: '#666',
-    fontSize: 14,
-    fontStyle: 'italic',
-  },
-
-  tradeLicenseBtn: {
-    backgroundColor: '#0f3969ff',
-    marginBottom: 40,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center', // centers content horizontally
-    flexDirection: 'row', // ensures content is in a row
-    // paddingHorizontal: 10, // optional, adds spacing inside the button
-    // paddingVertical: 5, // optional, adjusts height
-    borderWidth: 1, // sets border thickness
-    borderColor: 'red',
-    padding: 2,
-  },
-  tradeLicenseText: {
-    color: '#fff',
-    fontSize: 8,
-    fontWeight: 'bold',
-    marginLeft: 5, // optional, if you have an icon next to text
-  },
-  customerCard: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginVertical: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-
-  customerCardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomColor: '#eee',
-    borderBottomWidth: 1,
-  },
-
-  customerCardLabel: {
-    fontWeight: '600',
-    color: '#333',
-    flex: 1,
-  },
-
-  customerCardValue: {
-    flex: 1,
-    textAlign: 'right',
-    color: '#555',
-  },
-
-  linkText: {
-    color: '#007bff',
-    textDecorationLine: 'underline',
-  },
-  imageContainer: {
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  image: {
-    width: 300,
-    height: 300,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  text: {
-    fontSize: 16,
-    marginRight: 8, // space between text and image
-    backgroundColor: Colors.primary,
-    color: Colors.background,
-    padding: 5,
-  },
-  //   image: {
-  //     width: 24,
-  //     height: 24,
-  //   },
-});
 
 export default Details;

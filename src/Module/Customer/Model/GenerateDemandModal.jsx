@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,8 +13,8 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import { getToken } from '../../utils/auth';
-import { CUSTOMER_API } from '../../api/apiRoutes';
+import { getToken } from '../../../utils/auth';
+import { CUSTOMER_API } from '../../../api/apiRoutes';
 import axios from 'axios';
 
 const GenerateDemandModal = ({ visible, onClose, connectionDetails, id }) => {
@@ -27,6 +27,9 @@ const GenerateDemandModal = ({ visible, onClose, connectionDetails, id }) => {
     meterPhoto: null,
     showDatePicker: false,
   });
+  useEffect(() => {
+    console.log('STATE UPDATED ✅', state);
+  }, [state]);
 
   const handleInputChange = (field, value) => {
     setState(prev => ({
@@ -102,7 +105,7 @@ const GenerateDemandModal = ({ visible, onClose, connectionDetails, id }) => {
         },
       );
 
-      console.log('apiResponse', apiResponse.data);
+      console.log('apiResponse', apiResponse);
       Alert.alert('Success', 'Demand generated successfully!');
       onClose();
     } catch (error) {

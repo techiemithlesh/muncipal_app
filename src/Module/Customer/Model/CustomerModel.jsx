@@ -1291,27 +1291,29 @@ export const PaymentReceiptModal1 = ({ visible, onClose, receiptData }) => (
 );
 
 export const PaymentReceiptModal = ({ visible, onClose, receiptData }) => {
-  if (!receiptData || !receiptData.data) return null;
+  if (!receiptData) return null;
   console.log('recipt data', receiptData);
 
-  const { data } = receiptData;
+  const data = receiptData;
 
   const qrCodeUrl = data.qrCode || '';
+  const purpose = data.description || 'Water Connection';
+  const mode = data.paymentMode || 'CASH';
 
-  const lineItems = data.collection.map(item => ({
-    description: data.description,
+  const lineItems = data.collection?.map(item => ({
+    description: data.description || 'Water Connection',
     fromQTR: item.demandFrom || '',
     fromFY: item.fromDate || '',
     toQTR: item.uptoDate || '',
     toFY: item.uptoDate || '',
-    amount: item.amount || '',
-  }));
+    amount: item.amount || '0',
+  })) || [];
 
   const totalAmount = lineItems
-    .reduce((sum, item) => sum + parseFloat(item.amount), 0)
+    .reduce((sum, item) => sum + parseFloat(item.amount || 0), 0)
     .toFixed(2);
 
-  const totalPaid = parseFloat(amount).toFixed(2);
+  const totalPaid = parseFloat(data.amount || 0).toFixed(2);
 
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -1328,20 +1330,24 @@ export const PaymentReceiptModal = ({ visible, onClose, receiptData }) => {
           {/* Receipt Info */}
           <View style={styles.receiptInfo}>
             <Text>
-              Trans No: <Text style={styles.bold}>{data.tranNo}</Text>
+              Trans No: <Text style={styles.bold}>{data.tranNo || 'N/A'}</Text>
             </Text>
             <Text>
               Received From:{' '}
-              <Text style={styles.bold}>{data.ownerDtl[0]?.ownerName}</Text>
+              <Text style={styles.bold}>
+                {data.ownerDtl?.[0]?.ownerName || 'N/A'}
+              </Text>
             </Text>
             <Text>
-              Address: <Text style={styles.bold}>{data.address}</Text>
+              Address: <Text style={styles.bold}>{data.address || 'N/A'}</Text>
             </Text>
             <Text>
-              A Sum of Rs.: <Text style={styles.bold}>{data.amount}</Text>
+              A Sum of Rs.:{' '}
+              <Text style={styles.bold}>{data.amount || '0.00'}</Text>
             </Text>
             <Text>
-              In Words: <Text style={styles.bold}>{data.amountInWords}</Text>
+              In Words:{' '}
+              <Text style={styles.bold}>{data.amountInWords || 'N/A'}</Text>
             </Text>
             <Text>
               Towards: <Text style={styles.bold}>{purpose}</Text> Vide:{' '}

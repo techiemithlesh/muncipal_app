@@ -104,7 +104,7 @@ const Search = ({ navigation }) => {
   const renderHeader = () => (
     <View style={styles.seacrhCont}>
       <View style={styles.searchhead}>
-        <Text style={styles.text}>Search Holding Application</Text>
+        <Text style={styles.text}>Search Application</Text>
       </View>
 
       <View style={styles.selectWardKey}>
@@ -182,6 +182,10 @@ const Search = ({ navigation }) => {
   return (
     <View style={{ flex: 1 }}>
       <HeaderNavigation />
+
+      {/* ✅ Search Header OUTSIDE FlatList */}
+      {renderHeader()}
+
       <View style={styles.container}>
         <FlatList
           data={searchResults}
@@ -189,7 +193,6 @@ const Search = ({ navigation }) => {
             item.id ? item.id.toString() : index.toString()
           }
           renderItem={renderItem}
-          ListHeaderComponent={renderHeader}
           ListEmptyComponent={
             !loadingSearch && (
               <Text style={{ textAlign: 'center', marginTop: 10 }}>
@@ -214,6 +217,7 @@ const Search = ({ navigation }) => {
                   total={total}
                   onNext={() => search(page + 1)}
                   onPrev={() => search(page - 1)}
+                  onPageChange={(pageNo) => search(pageNo)}
                 />
               )}
             </>
@@ -331,7 +335,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: responsiveWidth(5),
     borderRadius: 5,
     alignItems: 'center',
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-end',
   },
   viewButtonText: {
     color: '#fff',

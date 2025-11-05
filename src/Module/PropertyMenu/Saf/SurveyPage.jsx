@@ -60,6 +60,8 @@ const SurveyPage = ({ route, navigation }) => {
   const [previewData, setPreviewData] = useState({});
   const [newWardOptions, setNewWardOptions] = useState([]);
   const [apartmentList, setApartmentList] = useState([]);
+  const [apartmentLabel, setApartmentLabel] = useState('');
+
   const [loadingApartments, setLoadingApartments] = useState(false);
   const [isULBUser, setIsULBUser] = useState(false);
 
@@ -187,6 +189,7 @@ const SurveyPage = ({ route, navigation }) => {
           label: `${item.apartmentName} (${item.aptCode})`,
           value: item.id,
         }));
+        console.log('formatted', formatted);
         setApartmentList(formatted);
       }
     } catch (error) {
@@ -325,6 +328,7 @@ const SurveyPage = ({ route, navigation }) => {
         ? selectedDate.toISOString().split('T')[0]
         : null,
       apartmentDetail: apartmentDetail,
+      apartmentLabel,
       safDetailId: id,
       wardMstrId: getVerifiedId(
         wardVerification,
@@ -494,6 +498,7 @@ const SurveyPage = ({ route, navigation }) => {
         ? selectedDate.toISOString().split('T')[0]
         : null,
       apartmentDetail: apartmentDetail,
+      apartmentLabel: apartmentLabel,
     };
 
     if (data?.propertyType !== 'VACANT LAND') {
@@ -663,18 +668,29 @@ const SurveyPage = ({ route, navigation }) => {
         />
 
         {/* Apartment Details Section */}
-        {selectedPropertyLabel === 'FLATS / UNIT IN MULTI STORIED BUILDING' && (
-          <ApartmentDetailsSection
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            showDatePicker={showDatePicker}
-            setShowDatePicker={setShowDatePicker}
-            apartmentList={apartmentList}
-            apartmentDetail={apartmentDetail}
-            setApartmentDetail={setApartmentDetail}
-            error={error}
-          />
-        )}
+        {selectedPropertyLabel === 'FLATS / UNIT IN MULTI STORIED BUILDING' &&
+          (() => {
+            console.log('✅ Rendering ApartmentDetailsSection');
+            console.log('selectedDate:', selectedDate);
+            console.log('showDatePicker:', showDatePicker);
+            console.log('apartmentList:', apartmentList);
+            console.log('apartmentDetail:', apartmentLabel);
+            console.log('error:', error);
+
+            return (
+              <ApartmentDetailsSection
+                selectedDate={selectedDate}
+                setSelectedDate={setSelectedDate}
+                showDatePicker={showDatePicker}
+                setShowDatePicker={setShowDatePicker}
+                apartmentList={apartmentList}
+                apartmentDetail={apartmentDetail}
+                setApartmentDetail={setApartmentDetail}
+                setApartmentLabel={setApartmentLabel}
+                error={error}
+              />
+            );
+          })()}
 
         {/* Floor Verification Section */}
         {shouldShowSections &&

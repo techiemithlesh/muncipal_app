@@ -12,7 +12,7 @@ import { getUserDetails } from '../utils/auth';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import Colors from '../Module/Constants/Colors';
-import { ImageBackground } from 'react-native';
+// import { ImageBackground } from 'react-native';
 
 const { width } = Dimensions.get('window');
 

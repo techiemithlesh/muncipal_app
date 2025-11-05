@@ -75,7 +75,6 @@ const Search = ({ navigation }) => {
     }
   };
 
-  // 🔍 Search with Pagination
   const search = async (pageNumber = 1) => {
     try {
       setLoadingSearch(true);
@@ -86,7 +85,7 @@ const Search = ({ navigation }) => {
       }
 
       const body = {
-        perPage: 5, // show 5 records per page
+        perPage: 5,
         page: pageNumber,
         keyWord: keyword?.trim() || '',
         wardId: value ? [value] : [],
@@ -171,42 +170,43 @@ const Search = ({ navigation }) => {
     </View>
   );
 
-  const renderHeader = () => (
-    <View style={styles.seacrhCont}>
-      <View style={styles.searchhead}>
-        <Text style={styles.text}>Search Trade Application</Text>
-      </View>
-
-      <View style={styles.selectWardKey}>
-        <Dropdown
-          style={styles.dropdown}
-          data={wardDropdownOptions}
-          labelField="label"
-          valueField="value"
-          placeholder={loadingMaster ? 'Loading wards...' : 'Select Ward'}
-          value={value}
-          onChange={item => setValue(item.value)}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Search Keyword"
-          placeholderTextColor="black"
-          value={keyword}
-          onChangeText={setKeyword}
-        />
-      </View>
-
-      <TouchableOpacity style={styles.button} onPress={() => search(1)}>
-        <Text style={styles.buttonText}>
-          {loadingSearch ? 'Searching...' : 'Search'}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
     <View style={{ flex: 1 }}>
       <HeaderNavigation />
+
+      {/* ✅ Search UI moved OUTSIDE FlatList */}
+      <View style={styles.seacrhCont}>
+        <View style={styles.searchhead}>
+          <Text style={styles.text}>Search Application</Text>
+        </View>
+
+        <View style={styles.selectWardKey}>
+          <Dropdown
+            style={styles.dropdown}
+            data={wardDropdownOptions}
+            labelField="label"
+            valueField="value"
+            placeholder={loadingMaster ? 'Loading wards...' : 'Select Ward'}
+            value={value}
+            onChange={item => setValue(item.value)}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Search Keyword"
+            placeholderTextColor="black"
+            value={keyword}
+            onChangeText={setKeyword}
+          />
+        </View>
+
+        <TouchableOpacity style={styles.button} onPress={() => search(1)}>
+          <Text style={styles.buttonText}>
+            {loadingSearch ? 'Searching...' : 'Search'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ✅ Now FlatList no longer re-renders input */}
       <View style={styles.container}>
         <FlatList
           data={searchResults}
@@ -214,7 +214,6 @@ const Search = ({ navigation }) => {
             item.id ? item.id.toString() : index.toString()
           }
           renderItem={renderItem}
-          ListHeaderComponent={renderHeader}
           ListEmptyComponent={
             !loadingSearch && (
               <Text style={{ textAlign: 'center', marginTop: 10 }}>
@@ -231,8 +230,6 @@ const Search = ({ navigation }) => {
                   style={{ marginVertical: 10 }}
                 />
               )}
-
-              {/* 🧩 Replace manual pagination view with component */}
               {searchResults.length > 0 && !loadingSearch && (
                 <Pagination
                   page={page}
@@ -240,6 +237,7 @@ const Search = ({ navigation }) => {
                   total={total}
                   onNext={() => search(page + 1)}
                   onPrev={() => search(page - 1)}
+                  onPageChange={(pageNo) => search(pageNo)}
                 />
               )}
             </>
@@ -358,32 +356,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: responsiveWidth(5),
     borderRadius: 5,
     alignItems: 'center',
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-end',
   },
   viewButtonText: {
     color: '#fff',
     fontSize: responsiveFontSize(1.8),
     fontWeight: 'bold',
-  },
-  paginationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginHorizontal: responsiveWidth(3),
-    marginVertical: responsiveHeight(2),
-  },
-  pageButton: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: responsiveWidth(5),
-    paddingVertical: responsiveHeight(1),
-    borderRadius: 5,
-  },
-  pageButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  pageInfo: {
-    fontSize: responsiveFontSize(1.8),
-    color: '#333',
   },
 });

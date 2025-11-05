@@ -315,7 +315,7 @@ const VerifiedStatus = ({ route }) => {
                     },
                     {
                       label: 'Apartment Detail Type',
-                      value: submissionData['apartmentDetail'],
+                      value: submissionData['apartmentLabel'],
                     },
                   ]
                 : []),

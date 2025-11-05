@@ -21,6 +21,7 @@ import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import { API_ROUTES, CUSTOMER_API } from '../../api/apiRoutes';
 import { getToken } from '../../utils/auth';
+import Pagination from '../../Components/Pagination';
 
 const Search = ({ navigation }) => {
   const [value, setValue] = useState(null); // selected ward id
@@ -31,7 +32,7 @@ const Search = ({ navigation }) => {
   const [loadingMaster, setLoadingMaster] = useState(false);
   const [loadingSearch, setLoadingSearch] = useState(false);
 
-  // Pagination states
+  // Pagination
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -86,7 +87,7 @@ const Search = ({ navigation }) => {
       }
 
       const body = {
-        perPage: 5, // show limited per page
+        perPage: 5,
         page: pageNo,
         keyWord: keyword?.trim() || '',
         wardId: value ? [value] : [],
@@ -99,8 +100,6 @@ const Search = ({ navigation }) => {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-
-      console.log('Search Response:', response.data);
 
       if (response.data?.status) {
         const results = response.data.data?.data ?? [];
@@ -120,20 +119,9 @@ const Search = ({ navigation }) => {
     }
   };
 
-  // 🟡 Pagination handlers
-  const handleNext = () => {
-    if (page < lastPage) search(page + 1);
-  };
-  const handlePrev = () => {
-    if (page > 1) search(page - 1);
-  };
-
-  // 🟢 View Details
-  const handleViewPress = item => {
+  const handleViewPress = item =>
     navigation.navigate('CustomerDetails', { id: item.id });
-  };
 
-  // 🔵 Render Search Result Card
   const renderItem = ({ item, index }) => (
     <View style={styles.resultCard}>
       <View style={styles.row}>
@@ -167,99 +155,78 @@ const Search = ({ navigation }) => {
     </View>
   );
 
-  // 🧭 Render Search Header
-  const renderHeader = () => (
-    <View style={styles.searchCont}>
-      <View style={styles.searchhead}>
-        <Text style={styles.text}>Search Consumer Application</Text>
-      </View>
-
-      <View style={styles.selectWardKey}>
-        <Dropdown
-          style={styles.dropdown}
-          data={wardDropdownOptions}
-          labelField="label"
-          valueField="value"
-          placeholder={loadingMaster ? 'Loading wards...' : 'Select Ward'}
-          value={value}
-          onChange={item => setValue(item.value)}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Search Keyword"
-          placeholderTextColor="#666"
-          value={keyword}
-          onChangeText={setKeyword}
-        />
-      </View>
-
-      <TouchableOpacity style={styles.button} onPress={() => search(1)}>
-        <Text style={styles.buttonText}>
-          {loadingSearch ? 'Searching...' : 'Search'}
-        </Text>
-      </TouchableOpacity>
-
-      {searchResults.length === 0 && !loadingSearch && (
-        <Text style={styles.noResults}>No results to show</Text>
-      )}
-    </View>
-  );
-
   return (
     <View style={{ flex: 1 }}>
       <HeaderNavigation />
-      <View style={styles.container}>
-        <FlatList
-          data={searchResults}
-          keyExtractor={(item, index) =>
-            item.id ? item.id.toString() : index.toString()
-          }
-          renderItem={renderItem}
-          ListHeaderComponent={renderHeader}
-          ListFooterComponent={
-            loadingSearch ? (
+
+      {/* 🔵 SEARCH UI OUTSIDE FLATLIST (Fixes Input Focus Issue) */}
+      <View style={styles.searchCont}>
+        <View style={styles.searchhead}>
+          <Text style={styles.text}>Search Consumer</Text>
+        </View>
+
+        <View style={styles.selectWardKey}>
+          <Dropdown
+            style={styles.dropdown}
+            data={wardDropdownOptions}
+            labelField="label"
+            valueField="value"
+            placeholder={loadingMaster ? 'Loading wards...' : 'Select Ward'}
+            value={value}
+            onChange={item => setValue(item.value)}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Search Keyword"
+            placeholderTextColor="black"
+            value={keyword}
+            onChangeText={setKeyword}
+          />
+        </View>
+
+        <TouchableOpacity style={styles.button} onPress={() => search(1)}>
+          <Text style={styles.buttonText}>
+            {loadingSearch ? 'Searching...' : 'Search'}
+          </Text>
+        </TouchableOpacity>
+
+        {searchResults.length === 0 && !loadingSearch && (
+          <Text style={styles.noResults}>No results to show</Text>
+        )}
+      </View>
+
+      {/* 🔵 RESULT LIST */}
+      <FlatList
+        data={searchResults}
+        keyExtractor={(item, index) =>
+          item.id ? item.id.toString() : index.toString()
+        }
+        renderItem={renderItem}
+        keyboardShouldPersistTaps="handled"
+        ListFooterComponent={
+          <>
+            {loadingSearch && (
               <ActivityIndicator
                 size="large"
                 color={Colors.primary}
                 style={{ marginVertical: 15 }}
               />
-            ) : searchResults.length > 0 ? (
-              <View style={styles.paginationContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.pageButton,
-                    { backgroundColor: page === 1 ? '#ccc' : Colors.primary },
-                  ]}
-                  disabled={page === 1}
-                  onPress={handlePrev}
-                >
-                  <Text style={styles.pageButtonText}>Previous</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.pageInfo}>
-                  Page {page} of {lastPage} ({total} total)
-                </Text>
-
-                <TouchableOpacity
-                  style={[
-                    styles.pageButton,
-                    {
-                      backgroundColor:
-                        page === lastPage ? '#ccc' : Colors.primary,
-                    },
-                  ]}
-                  disabled={page === lastPage}
-                  onPress={handleNext}
-                >
-                  <Text style={styles.pageButtonText}>Next</Text>
-                </TouchableOpacity>
-              </View>
-            ) : null
-          }
-          contentContainerStyle={{ paddingBottom: responsiveHeight(8) }}
-        />
-      </View>
+            )}
+            {searchResults.length > 0 && !loadingSearch && (
+              <Pagination
+                page={page}
+                lastPage={lastPage}
+                total={total}
+                onNext={() => search(page + 1)}
+                onPrev={() => search(page - 1)}
+                onPageChange={(pageNo) => search(pageNo)}
+              />
+            )}
+          </>
+        }
+        contentContainerStyle={{ paddingBottom: responsiveHeight(8) }}
+      />
     </View>
   );
 };
@@ -365,32 +332,12 @@ const styles = StyleSheet.create({
     paddingVertical: responsiveHeight(1),
     borderRadius: 5,
     alignItems: 'center',
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-end',
     paddingHorizontal: responsiveWidth(5),
   },
   viewButtonText: {
     color: '#fff',
     fontSize: responsiveFontSize(1.8),
     fontWeight: 'bold',
-  },
-  paginationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginHorizontal: responsiveWidth(4),
-    marginVertical: responsiveHeight(2),
-  },
-  pageButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-  },
-  pageButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  pageInfo: {
-    fontSize: responsiveFontSize(1.8),
-    color: '#333',
   },
 });

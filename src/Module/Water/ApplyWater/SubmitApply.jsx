@@ -21,14 +21,21 @@ const SubmitApply = ({ route }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [copiedWaterNo, setCopiedWaterNo] = useState('');
   const [copiedLicenseNo, setCopiedLicenseNo] = useState('');
+  const [idApp, setIdApp] = useState('');
 
   const navigation = useNavigation();
-  const { formData, masterData } = route.params;
+  const { formData, masterData, resetForm } = route.params;
   console.log('Form Data:', formData);
   // const {}
   const handleOk = () => {
     setModalVisible(false);
-    navigation.navigate('SearchWater'); // replace with your screen
+
+    // Reset the form fields after successful submission
+    if (resetForm) {
+      resetForm();
+    }
+
+    navigation.navigate('WaterDetails', { id: idApp }); // replace with your screen
   };
   // Mapping field keys to their label property
   const labelKeyMap = {
@@ -124,10 +131,14 @@ const SubmitApply = ({ route }) => {
         },
       );
 
-      console.log('Response:', response.data);
+      console.log('Response:', response);
+      const applicationId = response.data.data?.applicationId;
+      setIdApp(applicationId);
+      console.log('applicationId:', applicationId);
 
       if (response.data.status) {
         const licenseNo = response.data.data?.applicationNo; // License Number from API
+        // License Number from API
 
         // alert(`✅ Application Submitted!\nLicense No: ${licenseNo}`);
 
@@ -145,7 +156,7 @@ const SubmitApply = ({ route }) => {
           [
             {
               text: 'OK',
-              onPress: () => navigation.navigate('SearchWater'),
+              onPress: () => navigation.navigate('WaterDetails', { id: idApp }),
             },
           ],
           { cancelable: false },
@@ -219,26 +230,6 @@ const SubmitApply = ({ route }) => {
           ))}
         </View>
 
-        {/* Electricity Details */}
-        {/* <View style={styles.card}>
-          <Text style={styles.heading}>Electricity Details</Text>
-          <RowItem
-            label="K No"
-            value={formData.electricityDetails?.kNo || 'N/A'}
-          />
-          <RowItem
-            label="Bind Book No"
-            value={formData.electricityDetails?.bindBookNo || 'N/A'}
-          />
-          <RowItem
-            label="Account No"
-            value={formData.electricityDetails?.accountNo || 'N/A'}
-          />
-          <RowItem
-            label="Electricity Type"
-            value={formData.electricityDetails?.electricityType || 'N/A'}
-          />
-        </View> */}
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>FINAL SUBMIT</Text>
         </TouchableOpacity>

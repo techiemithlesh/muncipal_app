@@ -37,6 +37,10 @@ export const scrollToInput = (inputRef, scrollViewRef, offset = -100) => {
     }
   }
 };
+const getAge = (dob) => {
+  const diff = Date.now() - new Date(dob).getTime();
+  return new Date(diff).getUTCFullYear() - 1970;
+};
 
 
 export const handleValidation = ({
@@ -189,6 +193,24 @@ if (connectionThrough === 1 && !holdingNo) {
       return false;
     }
 
+     if (!applicant.ownerName || applicant.ownerName.trim() === '') {
+      setError({ [`ownerName-${index}`]: 'Owner name is required' });
+      if (applicantRefs.current[index * 2]) {
+        scrollToInput({ current: applicantRefs.current[index * 2] }, scrollViewRef);
+      }
+      return false;
+    }
+if (!applicant.dob || applicant.dob.trim() === '') {
+  setError({ [`dob-${index}`]: 'DOB is required' });
+  scrollToInput({ current: applicantRefs.current[index * 3 + 2] }, scrollViewRef);
+  return false;
+}
+
+if (getAge(applicant.dob) < 18) {
+  setError({ [`dob-${index}`]: 'Applicant must be 18+ years old' });
+  scrollToInput({ current: applicantRefs.current[index * 3 + 2] }, scrollViewRef);
+  return false;
+}
     // Check Email if provided
     if (applicant.email && applicant.email.trim() !== '') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

@@ -59,7 +59,7 @@ const ApplyWaterConnectionForm = () => {
   const [safNo, setSafNo] = useState('');
   const [holdingNo, setHoldingNo] = useState('');
   const [applicants, setApplicants] = useState([
-    { ownerName: '', guardianName: '', mobileNo: '', email: '' },
+    { ownerName: '', guardianName: '', mobileNo: '', email: '', dob: '' },
   ]);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -250,6 +250,35 @@ const ApplyWaterConnectionForm = () => {
       setPipelineType(pipelineTypeOptions[0].value);
     }
   }, [pipelineTypeOptions]);
+
+  // Reset all form fields
+  const resetForm = () => {
+    setTypeOfConnection(null);
+    setConnectionThroughValue(null);
+    setPropertyType(null);
+    setOwnerType(null);
+    setWardNo(null);
+    setWardNo2(null);
+    setNewWardOptions([]);
+    setTotalArea('');
+    setLandmark('');
+    setPin('');
+    setAddress('');
+    setKNo('');
+    setBindBookNo('');
+    setAccountNo('');
+    setElectricityType('');
+    setSafNo('');
+    setHoldingNo('');
+    setCategoryType(categoryTypeOptions.length > 0 ? categoryTypeOptions[0].value : null);
+    setPipelineType(pipelineTypeOptions.length > 0 ? pipelineTypeOptions[0].value : null);
+    setApplicants([
+      { ownerName: '', guardianName: '', mobileNo: '', email: '', dob: '' },
+    ]);
+    setError({});
+    setFocusedField(null);
+  };
+
   const handleSubmit = async () => {
     const isValid = handleValidation({
       totalArea,
@@ -322,14 +351,15 @@ const ApplyWaterConnectionForm = () => {
 
       if (result.status) {
         showToast('success', result.message || 'Valid Request');
+
+        navigation.navigate('SubmitApply', {
+          formData: payload,
+          masterData: data,
+          resetForm: resetForm,
+        });
       } else {
         showToast('error', result.message || 'Invalid Request');
       }
-
-      navigation.navigate('SubmitApply', {
-        formData: payload,
-        masterData: data,
-      });
     } catch (error) {
       showToast('error', 'Something went wrong');
       console.error(error);
@@ -797,6 +827,11 @@ const ApplyWaterConnectionForm = () => {
                         }
                       }}
                     />
+                  )}
+                  {error[`dob-${index}`] && (
+                    <Text style={{ color: 'red' }}>
+                      {error[`dob-${index}`]}
+                    </Text>
                   )}
                 </View>
               </View>

@@ -1,7 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-const PropertyDetailsTable = ({ previewData, assessmentType, selectedPropertyLabel }) => {
+const PropertyDetailsTable = ({
+  previewData,
+  assessmentType,
+  selectedPropertyLabel,
+}) => {
   return (
     <View style={styles.tableContainer}>
       <Text style={styles.tableTitle}>Property Details</Text>
@@ -70,16 +74,14 @@ const PropertyDetailsTable = ({ previewData, assessmentType, selectedPropertyLab
           <>
             <View style={styles.tableRow}>
               <Text style={styles.tableCellLabel}>Selected Date</Text>
-              <Text style={styles.tableCell}>
-                {previewData.selectedDate}
-              </Text>
+              <Text style={styles.tableCell}>{previewData.selectedDate}</Text>
               <Text style={styles.tableCell}> </Text>
             </View>
 
             <View style={[styles.tableRow, styles.tableRowAlternate]}>
               <Text style={styles.tableCellLabel}>Apartment Detail</Text>
               <Text style={styles.tableCell}>
-                {previewData.apartmentDetail || 'N/A'}
+                {previewData.apartmentLabel || 'N/A'}
               </Text>
               <Text style={styles.tableCell}> </Text>
             </View>

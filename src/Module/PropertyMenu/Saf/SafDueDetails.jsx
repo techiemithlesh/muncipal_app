@@ -1019,20 +1019,12 @@ const SafDueDetails = ({ route, navigation }) => {
           </View>
         )}
       </View>
-      <View
-        style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          backgroundColor: Colors.background,
-          marginBottom: 20,
-          marginVertical: 10,
-        }}
-      >
+      <View style={styles.buttonContainer}>
         <TouchableOpacity
           onPress={() => documentview(id)}
-          style={styles.viewButton}
+          style={styles.actionBtn}
         >
-          <Text style={styles.viewButtonText}>👁️ View Document</Text>
+          <Text style={styles.actionBtnText}> View Document</Text>
         </TouchableOpacity>
 
         {safData?.paymentStatus == 0 && (
@@ -1042,12 +1034,11 @@ const SafDueDetails = ({ route, navigation }) => {
               setViewDemandVisible(true);
               viewdemand(id);
             }}
-            style={styles.viewButton}
+            style={styles.actionBtn}
           >
-            <Text style={styles.viewButtonText}>👁️ View Demand</Text>
+            <Text style={styles.actionBtnText}> View Demand</Text>
           </TouchableOpacity>
         )}
-
         {safData?.paymentStatus == 0 && (
           <TouchableOpacity
             onPress={() => {
@@ -1055,9 +1046,9 @@ const SafDueDetails = ({ route, navigation }) => {
               setViewDemandVisible(true);
               viewdemand(id);
             }}
-            style={styles.viewButton}
+            style={styles.actionBtn}
           >
-            <Text style={styles.viewButtonText}>🔄 Proceed Payment</Text>
+            <Text style={styles.actionBtnText}>🔄 Proceed Payment</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -1604,20 +1595,33 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
   },
-  viewButton: {
+  buttonContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 15,
+    marginBottom: 20,
+    paddingHorizontal: 5,
+  },
+  actionBtn: {
+    width: 85,
+    backgroundColor: Colors.primary,
+    borderRadius: 6,
+    paddingVertical: 8,
     paddingHorizontal: 4,
-    paddingVertical: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 2,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
-  viewButtonText: {
-    color: Colors.background,
-    backgroundColor: Colors.primary,
-    fontSize: 11,
-    padding: 8,
-    borderRadius: 8,
+  actionBtnText: {
+    color: '#fff',
+    fontSize: 9,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   disabledButton: {
     opacity: 0.5,

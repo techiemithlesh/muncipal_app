@@ -20,6 +20,13 @@ import {
 } from '../Details/Modals/TradeModels';
 import { useNavigation } from '@react-navigation/native';
 import { getToken } from '../../../utils/auth';
+import {
+  responsiveHeight,
+  responsiveWidth,
+  responsiveFontSize,
+} from 'react-native-responsive-dimensions';
+// import styles from DetailsStyle
+import styles from '../../../style/DetailsStyle';
 
 const TradeDetails = ({ route }) => {
   const [showTradeLicenseModal, setShowTradeLicenseModal] = useState(false);
@@ -296,36 +303,37 @@ const TradeDetails = ({ route }) => {
         {/* Level Remarks */}
         <Section title="Level Remarks">
           {Array.isArray(levelRemarks) && levelRemarks.length > 0 ? (
-            <View style={styles.container}>
-              <View
-                style={[
-                  styles.row,
-                  { borderBottomWidth: 1, borderBottomColor: '#000' },
-                ]}
-              >
-                <Text style={[styles.label, { fontWeight: 'bold' }]}>Role</Text>
-                <Text style={[styles.label, { fontWeight: 'bold' }]}>
-                  Remark
-                </Text>
-                <Text style={[styles.label, { fontWeight: 'bold' }]}>Time</Text>
-                <Text style={[styles.label, { fontWeight: 'bold' }]}>
-                  Action
-                </Text>
+            <View style={styles.remarksTableContainer}>
+              <View style={styles.remarksHeader}>
+                <Text style={styles.remarksHeaderCol}>Role</Text>
+                <Text style={styles.remarksHeaderCol}>Remark</Text>
+                <Text style={styles.remarksHeaderCol}>Time</Text>
+                <Text style={styles.remarksHeaderCol}>Action</Text>
               </View>
               {levelRemarks.map((remark, index) => (
-                <View key={remark.id || index} style={styles.row}>
-                  <Text style={styles.value}>{remark.senderRole || 'N/A'}</Text>
-                  <Text style={styles.value}>
+                <View
+                  key={remark.id || index}
+                  style={[
+                    styles.remarksRow,
+                    { backgroundColor: index % 2 === 0 ? '#fff' : '#f9f9f9' },
+                  ]}
+                >
+                  <Text style={styles.remarksColRole}>
+                    {remark.senderRole || 'N/A'}
+                  </Text>
+                  <Text style={styles.remarksColRemark}>
                     {remark.senderRemarks || '-'}
                   </Text>
-                  <Text style={styles.value}>
+                  <Text style={styles.remarksColTime}>
                     {new Date(remark.createdAt).toLocaleTimeString([], {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}{' '}
                     • {new Date(remark.createdAt).toLocaleDateString()}
                   </Text>
-                  <Text style={styles.value}>{remark.actions || '-'}</Text>
+                  <Text style={styles.remarksColAction}>
+                    {remark.actions || '-'}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -339,33 +347,33 @@ const TradeDetails = ({ route }) => {
         </Section>
 
         {/* Buttons */}
-        <View style={{ flexDirection: 'row', gap: 10, marginTop: 15 }}>
+        <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
+            style={styles.actionBtn}
             onPress={() => setShowTradeLicenseModal(true)}
           >
-            <Text style={styles.tradeLicenseText}>View Trade License</Text>
+            <Text style={styles.actionBtnText}>View Trade License</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
+            style={styles.actionBtn}
             onPress={() => setShowDemandModal(true)}
           >
-            <Text style={styles.tradeLicenseText}>View Demand</Text>
+            <Text style={styles.actionBtnText}>View Demand</Text>
           </TouchableOpacity>
           {tradeDetails?.paymentStatus == 0 && (
             <TouchableOpacity
-              style={[styles.tradeLicenseBtn, { flex: 1 }]}
+              style={styles.actionBtn}
               onPress={() => setShowPaymentModal(true)}
             >
-              <Text style={styles.tradeLicenseText}>Make Payment</Text>
+              <Text style={styles.actionBtnText}>Make Payment</Text>
             </TouchableOpacity>
           )}
 
           <TouchableOpacity
-            style={[styles.tradeLicenseBtn, { flex: 1 }]}
+            style={styles.actionBtn}
             onPress={() => setShowDocumentModal(true)}
           >
-            <Text style={styles.tradeLicenseText}>View Documents</Text>
+            <Text style={styles.actionBtnText}>View Documents</Text>
           </TouchableOpacity>
 
           {(tradeDetails?.isApproved === true ||
@@ -373,25 +381,25 @@ const TradeDetails = ({ route }) => {
             <>
               <TouchableOpacity
                 onPress={() => navigation.navigate('AmedmentSummery', { id })}
-                style={[styles.tradeLicenseBtn, { flex: 1 }]}
+                style={styles.actionBtn}
               >
-                <Text style={styles.tradeLicenseText}>Amedment</Text>
+                <Text style={styles.actionBtnText}>Amedment</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() =>
                   navigation.navigate('SurrenderLicensePage', { id })
                 }
-                style={[styles.tradeLicenseBtn, { flex: 1 }]}
+                style={styles.actionBtn}
               >
-                <Text style={styles.tradeLicenseText}>Surrender</Text>
+                <Text style={styles.actionBtnText}>Surrender</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => navigation.navigate('RenewLicensePage', { id })}
-                style={[styles.tradeLicenseBtn, { flex: 1 }]}
+                style={styles.actionBtn}
               >
-                <Text style={styles.tradeLicenseText}>Renew</Text>
+                <Text style={styles.actionBtnText}>Renew</Text>
               </TouchableOpacity>
             </>
           )}
@@ -468,145 +476,161 @@ const DocRow = ({ name, status }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { padding: 10, backgroundColor: '#f4faff' },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
+// const styles = StyleSheet.create({
+//   container: { padding: 10, backgroundColor: '#f4faff' },
+//   loaderContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     backgroundColor: '#fff',
+//   },
 
-  banner: {
-    backgroundColor: '#e6f0ff',
-    borderRadius: 6,
-    padding: 10,
-    marginBottom: 10,
-  },
-  bannerText: { fontSize: 14 },
-  appId: { color: '#ff6600', fontWeight: 'bold' },
-  statusText: { marginTop: 5 },
-  expired: { color: 'red', fontWeight: 'bold' },
+//   banner: {
+//     backgroundColor: '#e6f0ff',
+//     borderRadius: 6,
+//     padding: 10,
+//     marginBottom: 10,
+//   },
+//   bannerText: { fontSize: 14 },
+//   appId: { color: '#ff6600', fontWeight: 'bold' },
+//   statusText: { marginTop: 5 },
+//   expired: { color: 'red', fontWeight: 'bold' },
 
-  section: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 6,
-    padding: 10,
-    marginVertical: 6,
-    elevation: 5, // Android shadow
+//   section: {
+//     backgroundColor: '#FFFFFF',
+//     borderRadius: 6,
+//     padding: 10,
+//     marginVertical: 6,
+//     elevation: 5, // Android shadow
 
-    // iOS Shadow
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  sectionTitle: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    backgroundColor: Colors.primary,
-    color: '#fff',
-    padding: 10,
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
+//     // iOS Shadow
+//     shadowColor: '#000',
+//     shadowOffset: {
+//       width: 0,
+//       height: 2,
+//     },
+//     shadowOpacity: 0.25,
+//     shadowRadius: 3.84,
+//   },
+//   sectionTitle: {
+//     fontWeight: 'bold',
+//     fontSize: 16,
+//     backgroundColor: Colors.primary,
+//     color: '#fff',
+//     padding: 10,
+//     borderTopLeftRadius: 6,
+//     borderTopRightRadius: 6,
+//     elevation: 4,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.25,
+//     shadowRadius: 3.84,
+//   },
 
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: '#DADADA',
-    borderRadius: 8,
-    backgroundColor: '#ffffffff',
-    marginBottom: 8,
-  },
+//   row: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     paddingVertical: 10,
+//     paddingHorizontal: 12,
+//     borderWidth: 1,
+//     borderColor: '#DADADA',
+//     borderRadius: 8,
+//     backgroundColor: '#ffffffff',
+//     marginBottom: 8,
+//   },
 
-  label: { fontWeight: '600', color: '#333', flex: 1 },
-  value: { flex: 1, textAlign: 'right', color: '#000' },
+//   label: { fontWeight: '600', color: '#333', flex: 1 },
+//   value: { flex: 1, textAlign: 'right', color: '#000' },
 
-  ownerHeader: { flexDirection: 'row', backgroundColor: '#f2f2f2', padding: 8 },
-  ownerRow: {
-    flexDirection: 'row',
-    padding: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  ownerCol: { flex: 1, fontWeight: 'bold' },
+//   ownerHeader: { flexDirection: 'row', backgroundColor: '#f2f2f2', padding: 8 },
+//   ownerRow: {
+//     flexDirection: 'row',
+//     padding: 8,
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#ddd',
+//   },
+//   ownerCol: { flex: 1, fontWeight: 'bold' },
 
-  docHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  docRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-    alignItems: 'center',
-  },
-  docCol: { flex: 1, textAlign: 'center' },
+//   docHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     marginBottom: 6,
+//     paddingBottom: 6,
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#ccc',
+//   },
+//   docRow: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     marginBottom: 6,
+//     alignItems: 'center',
+//   },
+//   docCol: { flex: 1, textAlign: 'center' },
 
-  paymentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  paymentCol: { flex: 1, textAlign: 'center' },
-  viewBtn: {
-    backgroundColor: '#0c3c78',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 4,
-  },
-  viewBtnText: { color: '#fff', fontWeight: '600' },
+//   paymentRow: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//   },
+//   paymentCol: { flex: 1, textAlign: 'center' },
+//   viewButton: {
+//     marginTop: responsiveHeight(1),
+//     backgroundColor: Colors.primary,
+//     paddingVertical: responsiveHeight(1),
+//     borderRadius: 5,
+//     alignItems: 'center',
+//     alignSelf: 'flex-end',
+//     paddingHorizontal: responsiveWidth(5),
+//   },
+//   viewButtonText: {
+//     color: '#fff',
+//     fontSize: responsiveFontSize(1.8),
+//     fontWeight: 'bold',
+//   },
 
-  noRemarksContainer: { padding: 10, alignItems: 'center' },
-  noRemarksText: { color: '#999' },
+//   noRemarksContainer: { padding: 10, alignItems: 'center' },
+//   noRemarksText: { color: '#999' },
 
-  noDataContainer: {
-    padding: 20,
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
-    borderRadius: 6,
-  },
-  noDataText: {
-    color: '#666',
-    fontSize: 14,
-    fontStyle: 'italic',
-  },
+//   noDataContainer: {
+//     padding: 20,
+//     alignItems: 'center',
+//     backgroundColor: '#f9f9f9',
+//     borderRadius: 6,
+//   },
+//   noDataText: {
+//     color: '#666',
+//     fontSize: 14,
+//     fontStyle: 'italic',
+//   },
 
-  tradeLicenseBtn: {
-    backgroundColor: '#0f3969ff',
-    marginBottom: 40,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center', // centers content horizontally
-    flexDirection: 'row', // ensures content is in a row
-    // paddingHorizontal: 10, // optional, adds spacing inside the button
-    // paddingVertical: 5, // optional, adjusts height
-    borderWidth: 1, // sets border thickness
-    borderColor: 'red',
-    padding: 2,
-  },
-  tradeLicenseText: {
-    color: '#fff',
-    fontSize: 8,
-    fontWeight: 'bold',
-    marginLeft: 5, // optional, if you have an icon next to text
-  },
-});
+//   buttonContainer: {
+//     flexDirection: 'row',
+//     flexWrap: 'wrap',
+//     gap: 6,
+//     marginTop: 15,
+//     marginBottom: 20,
+//     paddingHorizontal: 5,
+//   },
+//   actionBtn: {
+//     width: 85,
+//     backgroundColor: Colors.primary,
+//     borderRadius: 6,
+//     paddingVertical: 8,
+//     paddingHorizontal: 4,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     elevation: 2,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 1 },
+//     shadowOpacity: 0.2,
+//     shadowRadius: 2,
+//   },
+//   actionBtnText: {
+//     color: '#fff',
+//     fontSize: 9,
+//     fontWeight: 'bold',
+//     textAlign: 'center',
+//   },
+// });
 
 export default TradeDetails;

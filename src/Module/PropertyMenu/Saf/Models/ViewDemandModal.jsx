@@ -63,7 +63,7 @@ export const ViewDemandModal = ({
                         style={[
                           styles.tableCell,
                           styles.headerText,
-                          {minWidth: 700},
+                          { minWidth: 700 },
                         ]}
                       >
                         Tax
@@ -72,7 +72,7 @@ export const ViewDemandModal = ({
                         style={[
                           styles.tableCell,
                           styles.headerText,
-                          {minWidth: 700},
+                          { minWidth: 700 },
                         ]}
                       >
                         Due
@@ -115,9 +115,7 @@ export const ViewDemandModal = ({
                     {demandlist?.map((item, index) => (
                       <View key={index} style={styles.tableRow}>
                         <Text style={styles.tableCell}>{index + 1}</Text>
-                        <Text style={styles.tableCell}>
-                          {item.fyear || ''}
-                        </Text>
+                        <Text style={styles.tableCell}>{item.fyear || ''}</Text>
                         <Text style={styles.tableCell}>
                           {item.dueDate || ''}
                         </Text>
@@ -411,11 +409,11 @@ export const ViewDemandModal = ({
                 </TouchableOpacity>
               </View>
             ) : (
-              <View style={{padding: 20, alignItems: 'center'}}>
-                <Text style={{fontSize: 16, color: '#666'}}>
+              <View style={{ padding: 20, alignItems: 'center' }}>
+                <Text style={{ fontSize: 16, color: '#666' }}>
                   Loading demand data...
                 </Text>
-                <Text style={{fontSize: 12, color: '#999', marginTop: 10}}>
+                <Text style={{ fontSize: 12, color: '#999', marginTop: 10 }}>
                   {demandlist
                     ? 'Data received but structure may be different'
                     : 'No data received'}
@@ -475,10 +473,10 @@ const styles = StyleSheet.create({
   value: {
     fontWeight: 'bold',
     color: '#000',
-    width: '50%',
-    display: 'flex',
+    width: '40%',
     textAlign: 'right',
   },
+
   penaltyBox: {
     backgroundColor: '#ffe6e6',
     padding: 10,

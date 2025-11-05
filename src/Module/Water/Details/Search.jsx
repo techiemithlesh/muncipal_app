@@ -182,7 +182,7 @@ const Search = ({ navigation }) => {
   const renderHeader = () => (
     <View style={styles.seacrhCont}>
       <View style={styles.searchhead}>
-        <Text style={styles.text}>Search Water Application</Text>
+        <Text style={styles.text}>Search Application</Text>
       </View>
 
       <View style={styles.selectWardKey}>
@@ -217,13 +217,15 @@ const Search = ({ navigation }) => {
     <View style={{ flex: 1 }}>
       <HeaderNavigation />
       <View style={styles.container}>
+        {renderHeader()}
+
         <FlatList
           data={searchResults}
           keyExtractor={(item, index) =>
             item.id ? item.id.toString() : index.toString()
           }
           renderItem={renderItem}
-          ListHeaderComponent={renderHeader}
+          // ListHeaderComponent={renderHeader}
           ListFooterComponent={
             <>
               {loadingSearch && (
@@ -416,7 +418,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: responsiveWidth(5),
     borderRadius: 5,
     alignItems: 'center',
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-end',
   },
   viewButtonText: {
     color: '#fff',
