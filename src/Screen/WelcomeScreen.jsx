@@ -52,7 +52,7 @@ const WelcomeScreen = ({ navigation }) => {
         {/* BOTTOM - WELCOME TEXT */}
         <View style={styles.footerSection}>
           <Text style={styles.title}>Welcome to</Text>
-          <Text style={styles.appName}>Ranchi Municipal App</Text>
+          <Text style={styles.appName}>Bihar Municipal App</Text>
         </View>
       </Animated.View>
     </ImageBackground>

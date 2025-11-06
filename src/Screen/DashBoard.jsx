@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from './Header';
 import HeaderNavigation from '../Components/HeaderNavigation';
 import MenuTree from '../Components/MenuTree';
+import FooterSection from './FooterSection';
 
 const DashBoard = ({ navigation }) => {
   const [menuItems, setMenuItems] = useState([]);
@@ -68,7 +69,9 @@ const DashBoard = ({ navigation }) => {
         <MenuTree />
       </View>
 
-      <View style={styles.footer}></View>
+      <View style={styles.footer}>
+        <FooterSection onHomePress={() => navigation.navigate('DashBoard')} />
+      </View>
     </View>
   );
 };
@@ -82,13 +85,14 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   footer: {
-    padding: 20,
+    // padding: 10,
+    // paddingVertical: 12,
     alignItems: 'center',
     backgroundColor: '#e0e0e0',
   },
   footerText: {
     fontSize: 16,
-    color: '#666',
+    // color: '#666',
   },
   loadingContainer: {
     flex: 1,

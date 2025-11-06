@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -7,10 +7,358 @@ import {
   ScrollView,
   StyleSheet,
   Image,
+  FlatList,
+  ActivityIndicator,
+  Alert,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
+import BluetoothPrinter from '@linvix-sistemas/react-native-bluetooth-printer';
+import {
+  Printer,
+  Style,
+  Align,
+  Model,
+  InMemory,
+} from '@linvix-sistemas/react-native-escpos-buffer';
 
 export const PaymentReceiptModal = ({ visible, onClose, receiptData }) => {
   console.log('reciept data', receiptData);
+
+  // Bluetooth states
+  const [showPrinterModal, setShowPrinterModal] = useState(false);
+  const [bluetoothDevices, setBluetoothDevices] = useState([]);
+  const [pairedDevices, setPairedDevices] = useState([]);
+  const [scanning, setScanning] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [connectedDevice, setConnectedDevice] = useState(null);
+  const [printing, setPrinting] = useState(false);
+
+  // Set up Bluetooth event listeners once when component mounts
+  useEffect(() => {
+    // Handler for paired devices - receives an array of devices
+    const handlePairedDevice = devices => {
+      console.log('Paired devices found:', devices);
+      // The callback sends an array of devices, so we handle it accordingly
+      if (Array.isArray(devices)) {
+        setPairedDevices(prev => {
+          const newDevices = [...prev];
+          devices.forEach(device => {
+            // Avoid duplicates
+            const exists = newDevices.some(
+              d => d.address === device.address || d.id === device.id,
+            );
+            if (!exists) {
+              newDevices.push(device);
+            }
+          });
+          return newDevices;
+        });
+      }
+    };
+
+    // Handler for newly found devices - receives a single device
+    const handleDeviceFound = device => {
+      console.log('New device found:', device);
+      setBluetoothDevices(prev => {
+        // Avoid duplicates
+        const exists = prev.some(
+          d => d.address === device.address || d.id === device.id,
+        );
+        return exists ? prev : [...prev, device];
+      });
+    };
+
+    // Handler for scan completion
+    const handleScanDone = () => {
+      console.log('Scan completed');
+      setScanning(false);
+      setShowPrinterModal(true);
+    };
+
+    // Register event listeners
+    BluetoothPrinter.onDeviceAlreadyPaired(handlePairedDevice);
+    BluetoothPrinter.onDeviceFound(handleDeviceFound);
+    BluetoothPrinter.onScanDone(handleScanDone);
+
+    // Cleanup function
+    return () => {
+      // Note: The library may not provide explicit cleanup methods
+      // Event listeners will be automatically removed when component unmounts
+      console.log('Cleaning up Bluetooth event listeners');
+    };
+  }, []);
+
+  // Request Bluetooth permissions for Android
+  const requestBluetoothPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        ]);
+
+        return (
+          granted['android.permission.BLUETOOTH_SCAN'] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted['android.permission.BLUETOOTH_CONNECT'] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted['android.permission.ACCESS_FINE_LOCATION'] ===
+            PermissionsAndroid.RESULTS.GRANTED
+        );
+      } catch (err) {
+        console.warn(err);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // Scan for Bluetooth devices
+  const scanForDevices = async () => {
+    const hasPermission = await requestBluetoothPermission();
+    if (!hasPermission) {
+      Alert.alert(
+        'Permission Required',
+        'Bluetooth and Location permissions are required to scan for devices.',
+      );
+      return;
+    }
+
+    // Clear previous scan results
+    setPairedDevices([]);
+    setBluetoothDevices([]);
+    setScanning(true);
+
+    try {
+      // Start scanning - event listeners are already set up in useEffect
+      await BluetoothPrinter.scanDevices();
+    } catch (error) {
+      console.error('Scan error:', error);
+      Alert.alert('Scan Failed', 'Failed to scan for Bluetooth devices.');
+      setScanning(false);
+    }
+  };
+
+  // Connect to a Bluetooth printer
+  const connectToPrinter = async device => {
+    setConnecting(true);
+    try {
+      await BluetoothPrinter.connect(device.address || device.id);
+      setConnectedDevice(device);
+      Alert.alert('Success', `Connected to ${device.name}`);
+      setShowPrinterModal(false);
+    } catch (error) {
+      console.error('Connection error:', error);
+      Alert.alert('Connection Failed', `Failed to connect to ${device.name}`);
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  // Helper function to convert buffer to bytes
+  const convertBufferToBytes = buffer => {
+    const bytes = [];
+    Array.from(buffer).map(byte => {
+      bytes.push(byte);
+    });
+    return bytes;
+  };
+
+  // Format and print receipt
+  const printReceipt = async () => {
+    if (!connectedDevice) {
+      Alert.alert('No Printer', 'Please connect to a Bluetooth printer first.');
+      scanForDevices();
+      return;
+    }
+
+    setPrinting(true);
+    try {
+      // Create ESC/POS buffer
+      const connection = new InMemory();
+      const printer = await Printer.CONNECT('TM-T20', connection);
+
+      // Build receipt content
+      await printer.feed(1);
+
+      // Header
+      await printer.writeln(
+        '================================',
+        Style.Normal,
+        Align.Center,
+      );
+      await printer.writeln('PAYMENT RECEIPT', Style.Bold, Align.Center);
+      await printer.writeln(
+        '================================',
+        Style.Normal,
+        Align.Center,
+      );
+      await printer.writeln(
+        receiptData?.ulbDtl?.ulbName || 'Municipal Corporation',
+        Style.Normal,
+        Align.Center,
+      );
+      await printer.writeln(
+        '================================',
+        Style.Normal,
+        Align.Center,
+      );
+      await printer.feed(1);
+
+      // Title
+      await printer.writeln(
+        'Water Connection Charge',
+        Style.Bold,
+        Align.Center,
+      );
+      await printer.writeln('Payment Receipt', Style.Normal, Align.Center);
+      await printer.feed(1);
+
+      // Receipt details
+      await printer.writeln(
+        `Receipt No: ${receiptData?.tranNo || 'N/A'}`,
+        Style.Normal,
+        Align.Left,
+      );
+      await printer.writeln(
+        `Date: ${receiptData?.tranDate || 'N/A'}`,
+        Style.Normal,
+        Align.Left,
+      );
+      await printer.writeln(
+        `Ward No: ${receiptData?.wardNo || 'N/A'}`,
+        Style.Normal,
+        Align.Left,
+      );
+      await printer.writeln(
+        `New Ward No: ${receiptData?.newWardNo || 'N/A'}`,
+        Style.Normal,
+        Align.Left,
+      );
+      await printer.writeln(
+        `Received From: ${receiptData?.ownerName || 'N/A'}`,
+        Style.Normal,
+        Align.Left,
+      );
+      await printer.writeln(
+        `Address: ${receiptData?.address || 'N/A'}`,
+        Style.Normal,
+        Align.Left,
+      );
+      await printer.writeln(
+        `Amount: Rs. ${receiptData?.amount || '0.00'}`,
+        Style.Bold,
+        Align.Left,
+      );
+      await printer.writeln(
+        `In Words: ${receiptData?.amountInWords || ''}`,
+        Style.Normal,
+        Align.Left,
+      );
+      await printer.writeln(
+        `Towards: ${receiptData?.accountDescription || ''}`,
+        Style.Normal,
+        Align.Left,
+      );
+      await printer.writeln(
+        `Via: ${receiptData?.paymentMode || 'Cash'}`,
+        Style.Normal,
+        Align.Left,
+      );
+      await printer.feed(1);
+
+      // Table
+      await printer.writeln(
+        '================================',
+        Style.Normal,
+        Align.Center,
+      );
+      await printer.writeln(
+        'Description          Amount',
+        Style.Bold,
+        Align.Center,
+      );
+      await printer.writeln(
+        '================================',
+        Style.Normal,
+        Align.Center,
+      );
+
+      // Collection details
+      for (const item of receiptData?.collection || []) {
+        const desc = (item?.demand?.chargeFor || 'N/A').substring(0, 18);
+        const amt = `Rs. ${item?.amount}`;
+        await printer.writeln(
+          `${desc.padEnd(20)} ${amt}`,
+          Style.Normal,
+          Align.Left,
+        );
+      }
+      console.log('receiptData.fineRebate', printReceipt);
+      // Fine/Rebate
+      for (const fine of receiptData?.fineRebate || []) {
+        const desc = (fine?.headName || '').substring(0, 18);
+        const prefix = fine?.isRebate ? '-' : '+';
+        const amt = `${prefix} Rs. ${fine?.amount}`;
+        await printer.writeln(
+          `${desc.padEnd(20)} ${amt}`,
+          Style.Normal,
+          Align.Left,
+        );
+      }
+
+      await printer.writeln(
+        '================================',
+        Style.Normal,
+        Align.Center,
+      );
+      await printer.writeln(
+        `Total: Rs. ${receiptData?.amount || '0.00'}`,
+        Style.Bold,
+        Align.Right,
+      );
+      await printer.writeln(
+        '================================',
+        Style.Normal,
+        Align.Center,
+      );
+      await printer.feed(1);
+
+      // Footer
+      await printer.writeln(
+        '** This is a computer-generated',
+        Style.Normal,
+        Align.Center,
+      );
+      await printer.writeln(
+        'receipt and does not require',
+        Style.Normal,
+        Align.Center,
+      );
+      await printer.writeln('signature. **', Style.Normal, Align.Center);
+
+      // Cut paper and feed
+      await printer.cutter();
+      await printer.feed(3);
+
+      // Get buffer and convert to bytes
+      const buffer = connection.buffer();
+      const bytes = convertBufferToBytes(buffer);
+
+      // Print the formatted receipt
+      await BluetoothPrinter.printRaw(bytes);
+
+      Alert.alert('Success', 'Receipt printed successfully!');
+    } catch (error) {
+      console.error('Print error:', error);
+      Alert.alert('Print Failed', 'Failed to print receipt. Please try again.');
+    } finally {
+      setPrinting(false);
+    }
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
@@ -158,12 +506,152 @@ export const PaymentReceiptModal = ({ visible, onClose, receiptData }) => {
               </Text>
             </View>
             {/* Download / Print Button */}
-            <TouchableOpacity style={styles.printBtn}>
-              <Text style={styles.printText}>Download / Print</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonContainer}>
+              {connectedDevice && (
+                <Text style={styles.connectedText}>
+                  Connected: {connectedDevice.name}
+                </Text>
+              )}
+              <TouchableOpacity
+                style={styles.printBtn}
+                onPress={printReceipt}
+                disabled={printing}
+              >
+                {printing ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.printText}>
+                    {connectedDevice ? 'Print Receipt' : 'Connect & Print'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.scanBtn}
+                onPress={scanForDevices}
+                disabled={scanning}
+              >
+                {scanning ? (
+                  <ActivityIndicator color="#1E40AF" />
+                ) : (
+                  <Text style={styles.scanText}>
+                    {connectedDevice ? 'Change Printer' : 'Scan for Printers'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </ScrollView>
         </View>
       </View>
+
+      {/* Printer Selection Modal */}
+      <Modal
+        visible={showPrinterModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPrinterModal(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.printerModalContent}>
+            <View style={styles.printerModalHeader}>
+              <Text style={styles.printerModalTitle}>
+                Select Bluetooth Printer
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowPrinterModal(false)}
+                style={styles.closeIconBtn}
+              >
+                <Text style={styles.closeText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.printerList}>
+              {/* Paired Devices */}
+              {pairedDevices && (
+                <>
+                  <Text style={styles.sectionTitle}>Paired Devices</Text>
+                  {pairedDevices.map((device, index) => (
+                    <TouchableOpacity
+                      key={`paired-${index}`}
+                      style={[
+                        styles.deviceItem,
+                        connectedDevice?.address === device.address &&
+                          styles.connectedDevice,
+                      ]}
+                      onPress={() => connectToPrinter(device)}
+                      disabled={connecting}
+                    >
+                      <View>
+                        <Text style={styles.deviceName}>
+                          {device.name || 'Unknown Device'}
+                        </Text>
+                        <Text style={styles.deviceAddress}>
+                          {device.address || device.id}
+                        </Text>
+                      </View>
+                      {connecting ? (
+                        <ActivityIndicator size="small" color="#1E40AF" />
+                      ) : connectedDevice?.address === device.address ? (
+                        <Text style={styles.connectedTag}>Connected</Text>
+                      ) : null}
+                    </TouchableOpacity>
+                  ))}
+                </>
+              )}
+
+              {/* Scanned Devices */}
+              {bluetoothDevices.length > 0 && (
+                <>
+                  <Text style={styles.sectionTitle}>Available Devices</Text>
+                  {bluetoothDevices.map((device, index) => (
+                    <TouchableOpacity
+                      key={`scanned-${index}`}
+                      style={styles.deviceItem}
+                      onPress={() => connectToPrinter(device)}
+                      disabled={connecting}
+                    >
+                      <View>
+                        <Text style={styles.deviceName}>
+                          {device.name || 'Unknown Device'}
+                        </Text>
+                        <Text style={styles.deviceAddress}>
+                          {device.address || device.id}
+                        </Text>
+                      </View>
+                      {connecting && (
+                        <ActivityIndicator size="small" color="#1E40AF" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </>
+              )}
+
+              {pairedDevices.length === 0 && bluetoothDevices.length === 0 && (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyText}>
+                    No Bluetooth devices found.
+                  </Text>
+                  <Text style={styles.emptySubtext}>
+                    Make sure your printer is turned on and paired.
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={styles.rescanBtn}
+              onPress={scanForDevices}
+              disabled={scanning}
+            >
+              {scanning ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.rescanText}>Rescan Devices</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </Modal>
   );
 };
@@ -291,15 +779,142 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 16,
   },
+  buttonContainer: {
+    marginTop: 16,
+  },
+  connectedText: {
+    fontSize: 13,
+    color: '#16a34a',
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
   printBtn: {
     backgroundColor: '#1E40AF',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    marginTop: 16,
     alignItems: 'center',
+    marginBottom: 10,
   },
   printText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  scanBtn: {
+    backgroundColor: '#fff',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#1E40AF',
+  },
+  scanText: {
+    color: '#1E40AF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  // Printer Modal Styles
+  printerModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    maxHeight: '80%',
+    width: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 10,
+  },
+  printerModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  printerModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1E40AF',
+  },
+  closeIconBtn: {
+    padding: 4,
+  },
+  printerList: {
+    maxHeight: 400,
+    padding: 16,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#374151',
+    marginTop: 8,
+    marginBottom: 12,
+    textTransform: 'uppercase',
+  },
+  deviceItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  connectedDevice: {
+    backgroundColor: '#dbeafe',
+    borderColor: '#1E40AF',
+    borderWidth: 2,
+  },
+  deviceName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  deviceAddress: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  connectedTag: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#16a34a',
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#6b7280',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 13,
+    color: '#9ca3af',
+    textAlign: 'center',
+  },
+  rescanBtn: {
+    backgroundColor: '#1E40AF',
+    paddingVertical: 12,
+    margin: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  rescanText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
